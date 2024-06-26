@@ -30,11 +30,16 @@ def set_paragraph_font(paragraph, font_size):
     for run in paragraph.runs:
         run.font.size = Pt(font_size)
 
+def sort_songs(song_list):
+    return sorted(song_list, key=lambda x: re.sub(r'[^a-zA-Z0-9]', '', x['Title']).lower())
+
 def get_song_lyrics_info(song_list, genius_client):
     lyrics_cache = load_cache('data/cache/lyrics_cache.json')
     song_info = []
 
-    for song in sorted(song_list, key=lambda x: x['Title']):
+    sorted_songs = sort_songs(song_list)
+
+    for song in sorted_songs:
         artist = song['Artist']
         title = song['Title']
         cache_key = f"{artist} - {title}"
@@ -73,7 +78,9 @@ def generate_documents(song_list, genius_client, lyrics_output, chords_output):
     set_document_margins(lyrics_document, 0.5)
     set_document_margins(chords_document, 0.5)
 
-    for song in sorted(song_list, key=lambda x: x['Title']):
+    sorted_songs = sort_songs(song_list)
+
+    for song in sorted_songs:
         artist = song['Artist']
         title = song['Title']
         logger.debug(f"Processing {title} by {artist}...")
