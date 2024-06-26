@@ -1,7 +1,5 @@
 from docx import Document
 from docx.shared import Pt
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
 import re
 import logging
 from app.fetch_data import get_lyrics_from_genius
@@ -11,9 +9,29 @@ from app.cache import cache_data, load_cache
 logger = logging.getLogger(__name__)
 
 def remove_contributors_and_embeds(lyrics):
-    """Remove the Contributors and Embed sections from the lyrics."""
+    """Remove the Contributors, Embed sections, and unwanted advertisements from the lyrics."""
     lyrics = re.sub(r'^.*Contributors', '', lyrics, flags=re.DOTALL)
     lyrics = re.sub(r'Embed\s*$', '', lyrics, flags=re.MULTILINE)
+    return lyrics
+
+def remove_unwanted_phrases(lyrics):
+    """Remove unwanted phrases and advertisements from the lyrics without removing the entire line."""
+    patterns_to_remove = [
+        r'You might also like.*?',
+        r'See .*? LiveGet tickets as low as \$\d+',
+        r'.*? Lyrics'
+    ]
+    
+    # Remove each pattern, but only the matched part, not the entire line
+    for pattern in patterns_to_remove:
+        lyrics = re.sub(pattern, '', lyrics, flags=re.MULTILINE)
+    
+    return lyrics
+
+def clean_lyrics(lyrics):
+    """Clean the lyrics by removing contributors, embeds, and unwanted phrases."""
+    lyrics = remove_contributors_and_embeds(lyrics)
+    lyrics = remove_unwanted_phrases(lyrics)
     return lyrics
 
 def set_document_margins(document, margin_in_inches):
@@ -31,9 +49,11 @@ def set_paragraph_font(paragraph, font_size):
         run.font.size = Pt(font_size)
 
 def sort_songs(song_list):
+    """Sort songs case-insensitively and ignoring special characters."""
     return sorted(song_list, key=lambda x: re.sub(r'[^a-zA-Z0-9]', '', x['Title']).lower())
 
 def get_song_lyrics_info(song_list, genius_client):
+    """Get song titles and the character length of the lyrics for those songs."""
     lyrics_cache = load_cache('data/cache/lyrics_cache.json')
     song_info = []
 
@@ -49,7 +69,7 @@ def get_song_lyrics_info(song_list, genius_client):
             logger.debug("Lyrics loaded from cache.")
         else:
             lyrics = get_lyrics_from_genius(title, artist, genius_client)
-            cleaned_lyrics = remove_contributors_and_embeds(lyrics)
+            cleaned_lyrics = clean_lyrics(lyrics)
             num_characters = len(cleaned_lyrics)
             
             if bool(lyrics) and lyrics != "Lyrics not found." and num_characters <= 5000:
@@ -60,7 +80,7 @@ def get_song_lyrics_info(song_list, genius_client):
                 lyrics = "Lyrics not found."
                 logger.debug("Lyrics not found or too long.")
 
-        cleaned_lyrics = remove_contributors_and_embeds(lyrics)
+        cleaned_lyrics = clean_lyrics(lyrics)
         num_characters = len(cleaned_lyrics)
         song_info.append((title, num_characters))
 
@@ -91,7 +111,7 @@ def generate_documents(song_list, genius_client, lyrics_output, chords_output):
             logger.debug("Lyrics loaded from cache.")
         else:
             lyrics = get_lyrics_from_genius(title, artist, genius_client)
-            cleaned_lyrics = remove_contributors_and_embeds(lyrics)
+            cleaned_lyrics = clean_lyrics(lyrics)
             num_characters = len(cleaned_lyrics)
             
             if lyrics and lyrics != "Lyrics not found." and num_characters <= 5000:
@@ -102,7 +122,7 @@ def generate_documents(song_list, genius_client, lyrics_output, chords_output):
                 lyrics = "Lyrics not found."
                 logger.debug("Lyrics not found or too long.")
 
-        cleaned_lyrics = remove_contributors_and_embeds(lyrics)
+        cleaned_lyrics = clean_lyrics(lyrics)
         num_characters = len(cleaned_lyrics)
         
         if num_characters <= 5000:
@@ -113,7 +133,6 @@ def generate_documents(song_list, genius_client, lyrics_output, chords_output):
             # Add lyrics
             paragraph = lyrics_document.add_paragraph(cleaned_lyrics)
             set_paragraph_font(paragraph, 12)  # Set lyrics font size
-            # lyrics_document.add_page_break()
         else:
             logger.debug(f"Lyrics for {title} are too long and have been excluded.")
 
@@ -123,4 +142,3 @@ def generate_documents(song_list, genius_client, lyrics_output, chords_output):
     # Save chords document if needed
     # chords_document.save(chords_output)
     # logger.info(f"Chords document saved as {chords_output}.")
-
