@@ -26,13 +26,16 @@ def get_song_lyrics_info(song_list, genius_client):
             logger.debug("Lyrics loaded from cache.")
         else:
             lyrics = get_lyrics_from_genius(title, artist, genius_client)
-            if bool(lyrics) and lyrics != "Lyrics not found.":
+            cleaned_lyrics = remove_contributors_and_embeds(lyrics)
+            num_characters = len(cleaned_lyrics)
+            
+            if bool(lyrics) and lyrics != "Lyrics not found." and num_characters <= 5000:
                 lyrics_cache[cache_key] = lyrics
                 cache_data('data/cache/lyrics_cache.json', lyrics_cache)  # Update the cache file immediately
                 logger.debug("Lyrics fetched and cached.")
             else:
                 lyrics = "Lyrics not found."
-                logger.debug("Lyrics not found.")
+                logger.debug("Lyrics not found or too long.")
 
         cleaned_lyrics = remove_contributors_and_embeds(lyrics)
         num_characters = len(cleaned_lyrics)
@@ -59,18 +62,26 @@ def generate_documents(song_list, genius_client, lyrics_output, chords_output):
             logger.debug("Lyrics loaded from cache.")
         else:
             lyrics = get_lyrics_from_genius(title, artist, genius_client)
-            if lyrics and lyrics != "Lyrics not found.":
+            cleaned_lyrics = remove_contributors_and_embeds(lyrics)
+            num_characters = len(cleaned_lyrics)
+            
+            if lyrics and lyrics != "Lyrics not found." and num_characters <= 5000:
                 lyrics_cache[cache_key] = lyrics
                 cache_data('data/cache/lyrics_cache.json', lyrics_cache)  # Update the cache file immediately
                 logger.debug("Lyrics fetched and cached.")
             else:
                 lyrics = "Lyrics not found."
-                logger.debug("Lyrics not found.")
+                logger.debug("Lyrics not found or too long.")
 
         cleaned_lyrics = remove_contributors_and_embeds(lyrics)
-        lyrics_document.add_heading(f"{title} by {artist}", level=1)
-        lyrics_document.add_paragraph(cleaned_lyrics)
-        lyrics_document.add_page_break()
+        num_characters = len(cleaned_lyrics)
+        
+        if num_characters <= 5000:
+            lyrics_document.add_heading(f"{title} by {artist}", level=1)
+            lyrics_document.add_paragraph(cleaned_lyrics)
+            # lyrics_document.add_page_break()
+        else:
+            logger.debug(f"Lyrics for {title} are too long and have been excluded.")
 
     lyrics_document.save(lyrics_output)
     logger.info(f"Lyrics document saved as {lyrics_output}.")
