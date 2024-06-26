@@ -1,6 +1,6 @@
 from docx import Document
 import time
-from .fetch_data.py import get_lyrics_from_genius, get_chords_from_ultimate_guitar
+from .fetch_data import get_lyrics_from_genius, get_chords_from_ultimate_guitar
 from .cache import cache_data, load_cache
 
 def generate_documents(song_list, api_key, lyrics_output, chords_output):

@@ -21,18 +21,23 @@ def get_lyrics_from_genius(song_title, artist_name, api_key):
     search_url = f"{base_url}/search"
     params = {'q': f"{song_title} {artist_name}"}
     response = requests.get(search_url, headers=headers, params=params)
+    response.raise_for_status()
+    
     json_response = response.json()
     remote_song_info = None
     for hit in json_response['response']['hits']:
         if artist_name.lower() in hit['result']['primary_artist']['name'].lower():
             remote_song_info = hit
             break
+    
     if remote_song_info:
         song_path = remote_song_info['result']['path']
         song_url = f"https://genius.com{song_path}"
         song_page = requests.get(song_url)
         song_page_soup = BeautifulSoup(song_page.text, 'html.parser')
         lyrics_div = song_page_soup.find("div", class_="lyrics")
+        if not lyrics_div:
+            lyrics_div = song_page_soup.find("div", class_="SongPage__Section__Lyrics")
         lyrics = lyrics_div.get_text() if lyrics_div else "Lyrics not found."
         return lyrics
     return "Lyrics not found."
