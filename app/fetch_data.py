@@ -1,5 +1,12 @@
 import requests
+from requests_oauthlib import OAuth2Session
 from bs4 import BeautifulSoup
+
+def get_access_token(client_id, client_secret):
+    token_url = "https://api.genius.com/oauth/token"
+    oauth = OAuth2Session(client_id, redirect_uri='urn:ietf:wg:oauth:2.0:oob')
+    token = oauth.fetch_token(token_url=token_url, client_id=client_id, client_secret=client_secret)
+    return token['access_token']
 
 def get_chords_from_ultimate_guitar(song_title, artist_name):
     search_url = f"https://www.ultimate-guitar.com/search.php?search_type=title&value={song_title} {artist_name}"
@@ -15,9 +22,9 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
         return chords
     return "Chords not found."
 
-def get_lyrics_from_genius(song_title, artist_name, api_key):
+def get_lyrics_from_genius(song_title, artist_name, access_token):
     base_url = "https://api.genius.com"
-    headers = {'Authorization': f'Bearer {api_key}'}
+    headers = {'Authorization': f'Bearer {access_token}'}
     search_url = f"{base_url}/search"
     params = {'q': f"{song_title} {artist_name}"}
     response = requests.get(search_url, headers=headers, params=params)
@@ -41,3 +48,4 @@ def get_lyrics_from_genius(song_title, artist_name, api_key):
         lyrics = lyrics_div.get_text() if lyrics_div else "Lyrics not found."
         return lyrics
     return "Lyrics not found."
+
