@@ -2,7 +2,7 @@ import pandas as pd
 import json
 import logging
 from app.generate_documents import generate_documents
-from app.fetch_data import get_access_token
+from app.fetch_data import get_genius_client
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -12,17 +12,11 @@ logging.info("Loading configuration...")
 with open('data/config/config.json', 'r') as config_file:
     config = json.load(config_file)
 
-website_url = config['genius']['website_url']
-client_id = config['genius']['client_id']
-client_secret = config['genius']['client_secret']
+access_token = config['genius']['client_access_token']
 
-# Get access token
-logging.info("Getting access token...")
-try:
-    access_token = get_access_token(website_url, client_id, client_secret)
-except Exception as e:
-    logging.error(f"Failed to get access token: {e}")
-    raise
+# Initialize Genius client
+logging.info("Initializing Genius client...")
+genius_client = get_genius_client(access_token)
 
 # Load songs from CSV file
 csv_file = 'data/src/CampfireSongs.csv'
@@ -38,5 +32,5 @@ lyrics_output = "Lyrics_Document.docx"
 chords_output = "Chords_Document.docx"
 
 logging.info("Generating documents...")
-generate_documents(songs, access_token, lyrics_output, chords_output)
+generate_documents(songs, genius_client, lyrics_output, chords_output)
 logging.info("Documents generated successfully.")

@@ -1,13 +1,13 @@
 from docx import Document
 import time
 import logging
-from app.fetch_data import get_lyrics_from_genius, get_chords_from_ultimate_guitar
+from app.fetch_data import get_lyrics_from_genius
 from app.cache import cache_data, load_cache
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def generate_documents(song_list, access_token, lyrics_output, chords_output):
+def generate_documents(song_list, genius_client, lyrics_output, chords_output):
     logger.info("Loading cache data...")
     lyrics_cache = load_cache('data/cache/lyrics_cache.json')
     chords_cache = load_cache('data/cache/chords_cache.json')
@@ -15,9 +15,9 @@ def generate_documents(song_list, access_token, lyrics_output, chords_output):
     lyrics_document = Document()
     chords_document = Document()
 
-    for song in sorted(song_list, key=lambda x: x['title']):
-        artist = song['artist']
-        title = song['title']
+    for song in sorted(song_list, key=lambda x: x['Title']):
+        artist = song['Artist']
+        title = song['Title']
         logger.debug(f"Processing {title} by {artist}...")
 
         cache_key = f"{artist} - {title}"
@@ -25,7 +25,7 @@ def generate_documents(song_list, access_token, lyrics_output, chords_output):
             lyrics = lyrics_cache[cache_key]
             logger.debug("Lyrics loaded from cache.")
         else:
-            lyrics = get_lyrics_from_genius(title, artist, access_token)
+            lyrics = get_lyrics_from_genius(title, artist, genius_client)
             lyrics_cache[cache_key] = lyrics
             logger.debug("Lyrics fetched and cached.")
 
