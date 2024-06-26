@@ -28,8 +28,8 @@ except Exception as e:
     logging.error(f"Failed to load songs: {e}")
     raise
 
-lyrics_output = "Lyrics_Document.docx"
-chords_output = "Chords_Document.docx"
+lyrics_output = "data/output/Lyrics_Document.docx"
+chords_output = "data/output/Chords_Document.docx"
 
 logging.info("Generating documents...")
 generate_documents(songs, genius_client, lyrics_output, chords_output)

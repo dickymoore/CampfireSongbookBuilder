@@ -133,3 +133,7 @@ cython_debug/
 
 # Other
 *.log
+
+data/cache/*
+data/output/*
+data/config/config.json
