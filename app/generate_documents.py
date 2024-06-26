@@ -1,5 +1,7 @@
 from docx import Document
-from docx.shared import Pt
+from docx.shared import Pt, Inches
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 import re
 import logging
 from app.fetch_data import get_lyrics_from_genius
@@ -38,15 +40,22 @@ def set_document_margins(document, margin_in_inches):
     """Set the margins of the document."""
     sections = document.sections
     for section in sections:
-        section.top_margin = Pt(margin_in_inches * 72)
-        section.bottom_margin = Pt(margin_in_inches * 72)
-        section.left_margin = Pt(margin_in_inches * 72)
-        section.right_margin = Pt(margin_in_inches * 72)
+        section.top_margin = Inches(margin_in_inches)
+        section.bottom_margin = Inches(margin_in_inches)
+        section.left_margin = Inches(margin_in_inches)
+        section.right_margin = Inches(margin_in_inches)
 
 def set_paragraph_font(paragraph, font_size):
     """Set the font size of a paragraph."""
     for run in paragraph.runs:
         run.font.size = Pt(font_size)
+
+def create_two_column_section(document):
+    """Create a new section with two columns."""
+    section = document.add_section()
+    sectPr = section._sectPr
+    cols = sectPr.xpath('./w:cols')[0]
+    cols.set(qn('w:num'), '2')
 
 def sort_songs(song_list):
     """Sort songs case-insensitively and ignoring special characters."""
@@ -98,6 +107,9 @@ def generate_documents(song_list, genius_client, lyrics_output, chords_output):
     set_document_margins(lyrics_document, 0.5)
     set_document_margins(chords_document, 0.5)
 
+    # Create two-column section
+    create_two_column_section(lyrics_document)
+
     sorted_songs = sort_songs(song_list)
 
     for song in sorted_songs:
@@ -142,3 +154,4 @@ def generate_documents(song_list, genius_client, lyrics_output, chords_output):
     # Save chords document if needed
     # chords_document.save(chords_output)
     # logger.info(f"Chords document saved as {chords_output}.")
+
