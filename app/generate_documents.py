@@ -57,6 +57,33 @@ def create_two_column_section(document):
     cols = sectPr.xpath('./w:cols')[0]
     cols.set(qn('w:num'), '2')
 
+def add_header_footer(document):
+    """Add a header and footer with page numbers to the document."""
+    # Add header
+    header = document.sections[0].header
+    paragraph = header.paragraphs[0]
+    paragraph.text = "Campfire Songs"
+    paragraph.style.font.size = Pt(14)
+
+    # Add footer with page numbers
+    footer = document.sections[0].footer
+    paragraph = footer.paragraphs[0]
+    paragraph.text = "Page "
+    paragraph.style.font.size = Pt(12)
+    
+    # Add the page number field to the footer
+    run = paragraph.add_run()
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'begin')
+    run._r.append(fldChar)
+    instrText = OxmlElement('w:instrText')
+    instrText.set(qn('xml:space'), 'preserve')
+    instrText.text = 'PAGE'
+    run._r.append(instrText)
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'end')
+    run._r.append(fldChar)
+
 def sort_songs(song_list):
     """Sort songs case-insensitively and ignoring special characters."""
     return sorted(song_list, key=lambda x: re.sub(r'[^a-zA-Z0-9]', '', x['Title']).lower())
@@ -110,6 +137,9 @@ def generate_documents(song_list, genius_client, lyrics_output, chords_output):
     # Create two-column section
     create_two_column_section(lyrics_document)
 
+    # Add header and footer with page numbers
+    add_header_footer(lyrics_document)
+
     sorted_songs = sort_songs(song_list)
 
     for song in sorted_songs:
@@ -154,4 +184,3 @@ def generate_documents(song_list, genius_client, lyrics_output, chords_output):
     # Save chords document if needed
     # chords_document.save(chords_output)
     # logger.info(f"Chords document saved as {chords_output}.")
-
