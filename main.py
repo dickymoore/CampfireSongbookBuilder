@@ -1,12 +1,18 @@
+import pandas as pd
+import json
 from app.generate_documents import generate_documents
 
-songs = [
-    {"artist": "Arcade Fire", "title": "Wake Up"},
-    {"artist": "Idina Menzel", "title": "Let It Go - From Frozen/Soundtrack Version"},
-    # Add more songs here
-]
+# Load configuration
+with open('data/config/config.json', 'r') as config_file:
+    config = json.load(config_file)
 
-api_key = "your_genius_api_key"
+api_key = config['genius']['api_key']
+
+# Load songs from CSV file
+csv_file = 'data/src/songs.csv'
+songs_df = pd.read_csv(csv_file)
+songs = songs_df.to_dict('records')
+
 lyrics_output = "Lyrics_Document.docx"
 chords_output = "Chords_Document.docx"
 
