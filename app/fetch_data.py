@@ -34,7 +34,7 @@ def get_chords_from_chordie(song_title, artist_name):
 
     # Check if chords are already in cache
     if cache_key in chords_cache and bool(chords_cache[cache_key]):
-        logger.debug(f"Chords loaded from cache for {song_title} by {artist_name}.")
+        logger.debug(f"Chords loaded from cache for {song_title} by {artist_name}. Cache content: {chords_cache[cache_key][:100]}...")  # Log first 100 chars
         return chords_cache[cache_key]
 
     search_url = f"https://www.chordie.com/result.php?q={song_title.replace(' ', '+')}+by+{artist_name.replace(' ', '+')}"
@@ -72,10 +72,16 @@ def get_chords_from_chordie(song_title, artist_name):
                 return chords
             else:
                 logger.debug(f"Chords content not found in the page for {song_title} by {artist_name}.")
+                chords_cache[cache_key] = "Chords not found."
+                cache_data('data/cache/chords_cache.json', chords_cache)
                 return "Chords not found."
         else:
             logger.debug(f"Chords link not found in the search results for {song_title} by {artist_name}.")
+            chords_cache[cache_key] = "Chords not found."
+            cache_data('data/cache/chords_cache.json', chords_cache)
             return "Chords not found."
     except Exception as e:
         logger.error(f"Error fetching chords for {song_title} by {artist_name}: {e}")
+        chords_cache[cache_key] = "Chords not found."
+        cache_data('data/cache/chords_cache.json', chords_cache)
         return "Chords not found."

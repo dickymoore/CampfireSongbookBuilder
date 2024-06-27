@@ -36,12 +36,11 @@ def clean_chords(chords):
     chords = re.sub(r'^(Received|From|Message-Id|To|Date|Subject|X-.*|MIME-Version|Content-.*):.*\n', '', chords, flags=re.MULTILINE)
     
     # Remove other unnecessary lines often found in chords
-    chords = re.sub(r'^.*by.*$', '', chords, flags=re.MULTILINE)
-    chords = re.sub(r'^.*with.*$', '', chords, flags=re.MULTILINE)
-    chords = re.sub(r'^.*version.*$', '', chords, flags=re.MULTILINE)
     chords = re.sub(r'^.*To:.*$', '', chords, flags=re.MULTILINE)
     chords = re.sub(r'^.*Email:.*$', '', chords, flags=re.MULTILINE)
+
+    # Remove extra newlines and spaces
+    chords = re.sub(r'\n\s*\n', '\n', chords)
+    chords = re.sub(r'\s+\n', '\n', chords)
     
-    # Remove leading lines until the first chord appears
-    chords = re.sub(r'^\s*\n', '', chords, flags=re.MULTILINE)
     return chords
