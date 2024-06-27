@@ -33,6 +33,8 @@ def cache_lyrics(song_list, genius_client):
 
 def cache_chords(song_list):
     logger.info("Caching chords...")
+    
+    # Load the existing cache
     chords_cache = load_cache('data/cache/chords_cache.json')
     sorted_songs = sort_songs(song_list)
 
@@ -41,13 +43,18 @@ def cache_chords(song_list):
         title = song['Title']
         cache_key = f"{artist} - {title}"
 
+        # Check if the cache already contains chords for this song
         if cache_key not in chords_cache or not bool(chords_cache[cache_key]) or chords_cache[cache_key] == "Chords not found.":
+            # Fetch chords from Chordie
             chords = get_chords_from_chordie(title, artist)
             if bool(chords) and chords != "Chords not found.":
                 chords_cache[cache_key] = chords
-                logger.debug("Chords fetched and cached.")
+                logger.debug(f"Chords fetched and cached for {title} by {artist}.")
             else:
                 chords_cache[cache_key] = "Chords not found."
-                logger.debug("Chords not found.")
+                logger.debug(f"Chords not found for {title} by {artist}.")
 
+            # Save the updated cache
             cache_data('data/cache/chords_cache.json', chords_cache)
+        else:
+            logger.debug(f"Chords already cached for {title} by {artist}.")

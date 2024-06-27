@@ -11,13 +11,13 @@ from app.cache import load_cache
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
 def main():
     # Argument parser setup
     parser = argparse.ArgumentParser(description="Process some songs.")
     parser.add_argument('--get-song-info', action='store_true', help='Get song titles and the character length of the lyrics')
     parser.add_argument('--lyrics-only', action='store_true', help='Generate document for lyrics only')
     parser.add_argument('--chords-only', action='store_true', help='Generate document for chords only')
+    parser.add_argument('--generate-from-cache', action='store_true', help='Generate documents from cache only')
     args = parser.parse_args()
 
     # Load configuration
@@ -56,20 +56,26 @@ def main():
         lyrics_cache = load_cache('data/cache/lyrics_cache.json')
         chords_cache = load_cache('data/cache/chords_cache.json')
 
-        if args.lyrics_only:
-            cache_lyrics(songs, genius_client)
-            lyrics_output = "data/output/Lyrics_Document.docx"
-            create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=lyrics_output)
-        elif args.chords_only:
-            cache_chords(songs)
-            chords_output = "data/output/Chords_Document.docx"
-            create_document_from_cache(songs, lyrics_cache, chords_cache, chords_output=chords_output)
-        else:
-            cache_lyrics(songs, genius_client)
-            cache_chords(songs)
-            lyrics_output = "data/output/Lyrics_Document.docx"
-            chords_output = "data/output/Chords_Document.docx"
+        if args.generate_from_cache:
+            logging.info("Generating documents from cache only.")
+            lyrics_output = "data/output/Lyrics_Document.docx" if args.lyrics_only else None
+            chords_output = "data/output/Chords_Document.docx" if args.chords_only else None
             create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=lyrics_output, chords_output=chords_output)
+        else:
+            if args.lyrics_only:
+                cache_lyrics(songs, genius_client)
+                lyrics_output = "data/output/Lyrics_Document.docx"
+                create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=lyrics_output)
+            elif args.chords_only:
+                cache_chords(songs)
+                chords_output = "data/output/Chords_Document.docx"
+                create_document_from_cache(songs, lyrics_cache, chords_cache, chords_output=chords_output)
+            else:
+                cache_lyrics(songs, genius_client)
+                cache_chords(songs)
+                lyrics_output = "data/output/Lyrics_Document.docx"
+                chords_output = "data/output/Chords_Document.docx"
+                create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=lyrics_output, chords_output=chords_output)
 
 if __name__ == "__main__":
     main()
