@@ -25,3 +25,23 @@ def clean_lyrics(lyrics):
     lyrics = remove_contributors_and_embeds(lyrics)
     lyrics = remove_unwanted_phrases(lyrics)
     return lyrics
+
+def clean_chords(chords):
+    """Clean the chords by removing unnecessary introductory lines and email headers."""
+    # Remove lines starting with {t:...} and {st:...}
+    chords = re.sub(r'{t:.*?}\n', '', chords)
+    chords = re.sub(r'{st:.*?}\n', '', chords)
+    
+    # Remove email headers
+    chords = re.sub(r'^(Received|From|Message-Id|To|Date|Subject|X-.*|MIME-Version|Content-.*):.*\n', '', chords, flags=re.MULTILINE)
+    
+    # Remove other unnecessary lines often found in chords
+    chords = re.sub(r'^.*by.*$', '', chords, flags=re.MULTILINE)
+    chords = re.sub(r'^.*with.*$', '', chords, flags=re.MULTILINE)
+    chords = re.sub(r'^.*version.*$', '', chords, flags=re.MULTILINE)
+    chords = re.sub(r'^.*To:.*$', '', chords, flags=re.MULTILINE)
+    chords = re.sub(r'^.*Email:.*$', '', chords, flags=re.MULTILINE)
+    
+    # Remove leading lines until the first chord appears
+    chords = re.sub(r'^\s*\n', '', chords, flags=re.MULTILINE)
+    return chords
