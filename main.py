@@ -58,9 +58,9 @@ def main():
 
         if args.generate_from_cache:
             logging.info("Generating documents from cache only.")
-            lyrics_output = "data/output/Lyrics_Document.docx" if args.lyrics_only else None
-            chords_output = "data/output/Chords_Document.docx" if args.chords_only else None
-            create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=lyrics_output, chords_output=chords_output)
+            lyrics_output = "data/output/Lyrics_Document.docx" if not args.chords_only else None
+            chords_output = "data/output/Chords_Document.docx" if not args.lyrics_only else None
+            create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output, chords_output)
         else:
             if args.lyrics_only:
                 cache_lyrics(songs, genius_client)

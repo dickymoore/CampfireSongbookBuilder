@@ -7,16 +7,20 @@ from app.text_cleaning import clean_lyrics, clean_chords
 logger = logging.getLogger(__name__)
 
 def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_output=None, chords_output=None):
+    logger.debug("Running create_document_from_cache function")
+
     if lyrics_output:
+        logger.debug("Initializing lyrics document")
         lyrics_document = Document()
         set_document_margins(lyrics_document, 0.5)
         create_two_column_section(lyrics_document)
         add_header_footer(lyrics_document)
 
     if chords_output:
+        logger.debug("Initializing chords document")
         chords_document = Document()
         set_document_margins(chords_document, 0.5)
-        create_two_column_section(chords_document)  # Add this line to ensure two-column layout for chords
+        create_two_column_section(chords_document)
         add_header_footer(chords_document)
 
     sorted_songs = sort_songs(song_list)
@@ -29,7 +33,8 @@ def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_out
         if lyrics_output and cache_key in lyrics_cache and bool(lyrics_cache[cache_key]):
             lyrics = clean_lyrics(lyrics_cache[cache_key])
             num_characters = len(lyrics)
-            
+            logger.debug(f"Adding lyrics for {title} by {artist}")
+
             if num_characters <= 5000:
                 heading = lyrics_document.add_heading(f"{title} by {artist}", level=1)
                 set_paragraph_font(heading, 14)
@@ -40,6 +45,7 @@ def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_out
 
         if chords_output and cache_key in chords_cache and bool(chords_cache[cache_key]):
             chords = clean_chords(chords_cache[cache_key])
+            logger.debug(f"Adding chords for {title} by {artist}")
             heading = chords_document.add_heading(f"{title} by {artist}", level=1)
             set_paragraph_font(heading, 14)
             paragraph = chords_document.add_paragraph(chords)
