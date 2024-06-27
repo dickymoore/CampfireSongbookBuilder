@@ -31,6 +31,13 @@ def main():
     logging.info(f"Loading songs from {csv_file}...")
     try:
         songs_df = pd.read_csv(csv_file)
+        
+        # Check if 'Skip' column exists and filter out rows where 'Skip' is set to 'skip'
+        if 'Skip' in songs_df.columns:
+            songs_df = songs_df[songs_df['Skip'].str.lower() != 'skip']
+        else:
+            logging.warning("'Skip' column not found in CSV. Proceeding without skipping any songs.")
+        
         songs = songs_df.to_dict('records')
     except Exception as e:
         logging.error(f"Failed to load songs: {e}")
