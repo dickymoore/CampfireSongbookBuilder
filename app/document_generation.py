@@ -1,92 +1,12 @@
 from docx import Document
-from docx.shared import Pt, Inches
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
-import re
 import logging
 from app.fetch_data import get_lyrics_from_genius, get_chords_from_chordie
 from app.cache import cache_data, load_cache
+from app.text_cleaning import clean_lyrics
+from app.document_formatting import set_document_margins, set_paragraph_font, create_two_column_section, add_header_footer, sort_songs
 
 # Configure logging
 logger = logging.getLogger(__name__)
-
-def remove_contributors_and_embeds(lyrics):
-    """Remove the Contributors, Embed sections, and unwanted advertisements from the lyrics."""
-    lyrics = re.sub(r'^.*Contributors', '', lyrics, flags=re.DOTALL)
-    lyrics = re.sub(r'Embed\s*$', '', lyrics, flags=re.MULTILINE)
-    return lyrics
-
-def remove_unwanted_phrases(lyrics):
-    """Remove unwanted phrases and advertisements from the lyrics without removing the entire line."""
-    patterns_to_remove = [
-        r'You might also like.*?',
-        r'See .*? LiveGet tickets as low as \$\d+',
-        r'.*? Lyrics'
-    ]
-    
-    # Remove each pattern, but only the matched part, not the entire line
-    for pattern in patterns_to_remove:
-        lyrics = re.sub(pattern, '', lyrics, flags=re.MULTILINE)
-    
-    return lyrics
-
-def clean_lyrics(lyrics):
-    """Clean the lyrics by removing contributors, embeds, and unwanted phrases."""
-    lyrics = remove_contributors_and_embeds(lyrics)
-    lyrics = remove_unwanted_phrases(lyrics)
-    return lyrics
-
-def set_document_margins(document, margin_in_inches):
-    """Set the margins of the document."""
-    sections = document.sections
-    for section in sections:
-        section.top_margin = Inches(margin_in_inches)
-        section.bottom_margin = Inches(margin_in_inches)
-        section.left_margin = Inches(margin_in_inches)
-        section.right_margin = Inches(margin_in_inches)
-
-def set_paragraph_font(paragraph, font_size):
-    """Set the font size of a paragraph."""
-    for run in paragraph.runs:
-        run.font.size = Pt(font_size)
-
-def create_two_column_section(document):
-    """Create a new section with two columns."""
-    section = document.add_section()
-    sectPr = section._sectPr
-    cols = sectPr.xpath('./w:cols')[0]
-    cols.set(qn('w:num'), '2')
-
-def add_header_footer(document):
-    """Add a header and footer with page numbers to the document."""
-    # Add header
-    header = document.sections[0].header
-    paragraph = header.paragraphs[0]
-    paragraph.text = "Campfire Songs"
-    paragraph.style.font.size = Pt(14)
-
-    # Add footer with page numbers
-    footer = document.sections[0].footer
-    paragraph = footer.paragraphs[0]
-    paragraph.text = "Page "
-    paragraph.style.font.size = Pt(12)
-    
-    # Add the page number field to the footer
-    run = paragraph.add_run()
-    fldChar = OxmlElement('w:fldChar')
-    fldChar.set(qn('w:fldCharType'), 'begin')
-    run._r.append(fldChar)
-    instrText = OxmlElement('w:instrText')
-    instrText.set(qn('xml:space'), 'preserve')
-    instrText.text = 'PAGE'
-    run._r.append(instrText)
-    fldChar = OxmlElement('w:fldChar')
-    fldChar.set(qn('w:fldCharType'), 'end')
-    run._r.append(fldChar)
-
-def sort_songs(song_list):
-    """Sort songs case-insensitively and ignoring special characters."""
-    return sorted(song_list, key=lambda x: re.sub(r'[^a-zA-Z0-9]', '', x['Title']).lower())
 
 def get_song_lyrics_info(song_list, genius_client):
     """Get song titles and the character length of the lyrics for those songs."""

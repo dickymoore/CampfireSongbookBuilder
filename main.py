@@ -2,7 +2,7 @@ import pandas as pd
 import json
 import logging
 import argparse
-from app.generate_documents import generate_documents, get_song_lyrics_info
+from app.document_generation import generate_documents, get_song_lyrics_info
 from app.fetch_data import get_genius_client
 
 # Configure logging
