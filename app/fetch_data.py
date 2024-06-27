@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import logging
+from app.cache import cache_data, load_cache
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -26,22 +27,45 @@ def get_lyrics_from_genius(song_title, artist_name, genius_client):
 
 def get_chords_from_chordie(song_title, artist_name):
     logger.debug(f"Searching for chords for {song_title} by {artist_name} on Chordie...")
+    
+    # Load chords cache
+    chords_cache = load_cache('data/cache/chords_cache.json')
+    cache_key = f"{artist_name} - {song_title}"
+
+    # Check if chords are already in cache
+    if cache_key in chords_cache and bool(chords_cache[cache_key]):
+        logger.debug("Chords loaded from cache.")
+        return chords_cache[cache_key]
+
     search_url = f"https://www.chordie.com/result.php?q={song_title.replace(' ', '+')}+by+{artist_name.replace(' ', '+')}"
     try:
         response = requests.get(search_url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        # Find the first link to the chord page
-        result = soup.find('a', class_='tlink')
-        if result:
-            chords_page_url = "https://www.chordie.com" + result['href']
+        song_links = soup.find_all('div', class_='clearfix songList')
+        
+        chords_page_url = None
+        for song in song_links:
+            link = song.find('a', href=True)
+            if link and song_title in link.text:
+                song_link = link['href']
+                chords_page_url = "https://www.chordie.com" + song_link
+                break
+
+        if chords_page_url:
+            if not chords_page_url.startswith('https://'):
+                chords_page_url = "https://www.chordie.com" + chords_page_url
             logger.debug(f"Chords page URL found: {chords_page_url}")
             chords_response = requests.get(chords_page_url)
+            chords_response.raise_for_status()
             chords_soup = BeautifulSoup(chords_response.text, 'html.parser')
-            chords_div = chords_soup.find("pre", class_="js-tab-content")
+            chords_div = chords_soup.find("textarea", {"id": "chordproContent"})
             if chords_div:
                 chords = chords_div.get_text()
                 logger.debug("Chords found.")
+                # Cache the chords
+                chords_cache[cache_key] = chords
+                cache_data('data/cache/chords_cache.json', chords_cache)
                 return chords
             else:
                 logger.debug("Chords content not found in the page.")
