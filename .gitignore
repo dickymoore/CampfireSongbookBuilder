@@ -136,3 +136,5 @@ cython_debug/
 
 data/output/*
 data/config/config.json
+venv/*
+app/__pycache__
