@@ -9,7 +9,7 @@ def cache_data(filename, data):
     logger.debug(f"Saving cache to {filename}...")
     try:
         with open(filename, 'w') as f:
-            json.dump(data, f)
+            json.dump(data, f, indent=4)  # Use indent=4 to prettify JSON
         logger.debug("Cache saved successfully.")
     except Exception as e:
         logger.error(f"Error saving cache: {e}")
