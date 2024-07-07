@@ -54,7 +54,7 @@ def cache_chords(song_list):
                 chords_cache[cache_key] = "Chords not found."
                 logger.debug(f"Chords not found for {title} by {artist}.")
 
-            # Save the updated cache
+            # Save the updated cache with prettified JSON
             cache_data('data/cache/chords_cache.json', chords_cache)
         else:
             logger.debug(f"Chords already cached for {title} by {artist}.")

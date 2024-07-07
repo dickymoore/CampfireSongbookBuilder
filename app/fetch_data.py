@@ -72,7 +72,7 @@ def get_chords_from_chordie(song_title, artist_name):
                 logger.debug(f"Chords found for {song_title} by {artist_name}.")
                 # Cache the chords
                 chords_cache[cache_key] = chords
-                cache_data('data/cache/chords_cache.json', chords_cache)
+                cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
                 return chords
             else:
                 logger.debug(f"Chords content not found in the page for {song_title} by {artist_name}.")
@@ -96,7 +96,6 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
         logger.debug(f"Chords loaded from cache for {song_title} by {artist_name}. Cache content: {chords_cache[cache_key][:100]}...")  # Log first 100 chars
         return chords_cache[cache_key]
 
-
     search_url = f"https://www.ultimate-guitar.com/search.php?search_type=title&value={song_title.replace(' ', '%20')}+{artist_name.replace(' ', '%20')}"
     try:
         response = requests.get(search_url)
@@ -115,7 +114,7 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
         else:
             logger.debug(f"No matching URL found in the search results for {song_title} by {artist_name}.")
             chords_cache[cache_key] = "Chords not found."
-            cache_data('data/cache/chords_cache.json', chords_cache)
+            cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
             return "Chords not found."
 
         if chords_page_url:
@@ -138,25 +137,25 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
                     logger.debug(f"Chords found for {song_title} by {artist_name}.")
                     # Cache the chords
                     chords_cache[cache_key] = chords
-                    cache_data('data/cache/chords_cache.json', chords_cache)
+                    cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
                     return chords
                 else:
                     logger.debug(f"Chords content not found in the page for {song_title} by {artist_name}.")
                     chords_cache[cache_key] = "Chords not found."
-                    cache_data('data/cache/chords_cache.json', chords_cache)
+                    cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
                     return "Chords not found."
             except Exception as e:
                 logger.error(f"Error fetching chords for {song_title} by {artist_name}: {e}")
                 chords_cache[cache_key] = "Chords not found."
-                cache_data('data/cache/chords_cache.json', chords_cache)
+                cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
                 return "Chords not found."
         else:
             logger.debug(f"Chords link not found in the search results for {song_title} by {artist_name}.")
             chords_cache[cache_key] = "Chords not found."
-            cache_data('data/cache/chords_cache.json', chords_cache)
+            cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
             return "Chords not found."
     except Exception as e:
         logger.error(f"Error fetching chords for {song_title} by {artist_name}: {e}")
         chords_cache[cache_key] = "Chords not found."
-        cache_data('data/cache/chords_cache.json', chords_cache)
+        cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
         return "Chords not found."
