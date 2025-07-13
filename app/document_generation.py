@@ -1,5 +1,5 @@
 import logging
-from app.fetch_data import get_lyrics_from_genius, get_chords_from_chordie
+from app.fetch_data import get_lyrics_from_sources, get_chords_from_chordie
 from app.cache import cache_data, load_cache
 from app.text_cleaning import clean_lyrics
 from app.document_formatting import sort_songs
@@ -12,6 +12,7 @@ def cache_lyrics(song_list, genius_client):
     lyrics_cache = load_cache('data/cache/lyrics_cache.json')
     sorted_songs = sort_songs(song_list)
     missing_lyrics = []
+    missing_lyrics_log = []
 
     for song in sorted_songs:
         artist = song['Artist']
@@ -19,12 +20,12 @@ def cache_lyrics(song_list, genius_client):
         cache_key = f"{artist} - {title}"
         found = False
         if cache_key not in lyrics_cache or not bool(lyrics_cache[cache_key]) or lyrics_cache[cache_key] == "Lyrics not found.":
-            lyrics = get_lyrics_from_genius(title, artist, genius_client)
+            lyrics, source, tried_log = get_lyrics_from_sources(title, artist, genius_client)
             cleaned_lyrics = clean_lyrics(lyrics)
             num_characters = len(cleaned_lyrics)
             if bool(lyrics) and lyrics != "Lyrics not found." and num_characters <= 5000:
                 lyrics_cache[cache_key] = lyrics
-                logger.debug("Lyrics fetched and cached.")
+                logger.debug(f"Lyrics fetched and cached from {source}.")
                 found = True
             else:
                 lyrics_cache[cache_key] = "Lyrics not found."
@@ -33,12 +34,18 @@ def cache_lyrics(song_list, genius_client):
             found = True
         if not found:
             missing_lyrics.append(f"{artist} – {title}")
+            missing_lyrics_log.append((artist, title, tried_log))
         cache_data('data/cache/lyrics_cache.json', lyrics_cache)
 
     if missing_lyrics:
         print("\nSummary: Missing Lyrics")
         for song in missing_lyrics:
             print(f"- {song}")
+        print("\nDetails of sources/queries tried for missing lyrics:")
+        for artist, title, tried_log in missing_lyrics_log:
+            print(f"{artist} – {title}:")
+            for attempt in tried_log:
+                print(f"  Tried: {attempt}")
     else:
         print("\nAll lyrics found!")
 

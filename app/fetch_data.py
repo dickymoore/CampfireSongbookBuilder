@@ -6,9 +6,65 @@ import json
 import re
 import html
 import time
+import os
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+# Helper: Remove 'The' from artist
+def strip_the(artist):
+    return re.sub(r'^the\s+', '', artist, flags=re.IGNORECASE).strip()
+
+# Helper: Remove punctuation from title
+def strip_punct(title):
+    return re.sub(r'[^\w\s]', '', title)
+
+# Helper: Load manual lyrics from file
+MANUAL_LYRICS_PATH = 'data/manual_lyrics.json'
+def get_manual_lyrics(song_title, artist_name):
+    if not os.path.exists(MANUAL_LYRICS_PATH):
+        return None
+    try:
+        with open(MANUAL_LYRICS_PATH, 'r', encoding='utf-8') as f:
+            manual = json.load(f)
+        key = f"{artist_name} - {song_title}"
+        return manual.get(key)
+    except Exception as e:
+        logger.error(f"Error loading manual lyrics: {e}")
+        return None
+
+# AZLyrics scraper
+AZLYRICS_BASE = "https://www.azlyrics.com/lyrics"
+def get_lyrics_from_azlyrics(song_title, artist_name):
+    logger.debug(f"Trying AZLyrics for {song_title} by {artist_name}...")
+    # AZLyrics URLs are like: https://www.azlyrics.com/lyrics/artist/title.html
+    artist_url = re.sub(r'[^a-z0-9]', '', artist_name.lower().replace(' ', ''))
+    title_url = re.sub(r'[^a-z0-9]', '', song_title.lower().replace(' ', ''))
+    url = f"{AZLYRICS_BASE}/{artist_url}/{title_url}.html"
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code != 200:
+            logger.debug(f"AZLyrics returned status {response.status_code} for {url}")
+            return "Lyrics not found."
+        soup = BeautifulSoup(response.text, 'html.parser')
+        # Lyrics are in the first div after all <div class="ringtone">
+        divs = soup.find_all('div')
+        for i, div in enumerate(divs):
+            if div.get('class') == ['ringtone']:
+                # Lyrics are in the next div without a class
+                for next_div in divs[i+1:]:
+                    if not next_div.get('class'):
+                        lyrics = next_div.get_text("\n", strip=True)
+                        if lyrics:
+                            logger.debug(f"Lyrics found on AZLyrics for {song_title} by {artist_name}.")
+                            return lyrics
+                        break
+                break
+        logger.debug(f"Lyrics not found on AZLyrics for {song_title} by {artist_name}.")
+        return "Lyrics not found."
+    except Exception as e:
+        logger.error(f"Error scraping AZLyrics for {song_title} by {artist_name}: {e}")
+        return "Lyrics not found."
 
 def get_genius_client(genius_access_token):
     import lyricsgenius
@@ -46,6 +102,37 @@ def get_lyrics_from_lyrics_ovh(song_title, artist_name):
     except Exception as e:
         logger.error(f"Error fetching lyrics from Lyrics.ovh for {song_title} by {artist_name}: {e}")
         return "Lyrics not found."
+
+def get_lyrics_from_sources(song_title, artist_name, genius_client=None):
+    """
+    Try all sources and flexible queries for lyrics. Log which sources/queries were tried.
+    Returns: (lyrics, source_name, tried_log)
+    """
+    tried_log = []
+    queries = [
+        (artist_name, song_title),
+        (strip_the(artist_name), song_title),
+        (artist_name, strip_punct(song_title)),
+        (strip_the(artist_name), strip_punct(song_title)),
+    ]
+    sources = [
+        ("Genius", lambda t, a: get_lyrics_from_genius(t, a, genius_client)),
+        ("Lyrics.ovh", get_lyrics_from_lyrics_ovh),
+        ("AZLyrics", get_lyrics_from_azlyrics),
+        ("Manual", get_manual_lyrics),
+    ]
+    for artist, title in queries:
+        for source_name, fetch_func in sources:
+            try:
+                lyrics = fetch_func(title, artist)
+                tried_log.append(f"{source_name} ({artist} – {title})")
+                if lyrics and lyrics.lower() not in ["lyrics not found.", "", None]:
+                    logger.info(f"Lyrics found for {artist} – {title} from {source_name}")
+                    return lyrics, source_name, tried_log
+            except Exception as e:
+                logger.error(f"Error with {source_name} for {artist} – {title}: {e}")
+    logger.info(f"Lyrics not found for {artist_name} – {song_title} after trying all sources/queries.")
+    return "Lyrics not found.", None, tried_log
 
 def get_chords_from_chordie(song_title, artist_name):
     logger.debug(f"Searching for chords for {song_title} by {artist_name} on Chordie...")
