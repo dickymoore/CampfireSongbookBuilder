@@ -1,5 +1,5 @@
 import logging
-from app.fetch_data import get_lyrics_from_sources, get_chords_from_chordie
+from app.fetch_data import get_lyrics_from_sources, get_chords_from_sources
 from app.cache import cache_data, load_cache
 from app.text_cleaning import clean_lyrics
 from app.document_formatting import sort_songs
@@ -54,6 +54,7 @@ def cache_chords(song_list):
     chords_cache = load_cache('data/cache/chords_cache.json')
     sorted_songs = sort_songs(song_list)
     missing_chords = []
+    missing_chords_log = []
 
     for song in sorted_songs:
         artist = song['Artist']
@@ -61,10 +62,10 @@ def cache_chords(song_list):
         cache_key = f"{artist} - {title}"
         found = False
         if cache_key not in chords_cache or not bool(chords_cache[cache_key]) or chords_cache[cache_key] == "Chords not found.":
-            chords = get_chords_from_chordie(title, artist)
+            chords, source, tried_log = get_chords_from_sources(title, artist)
             if bool(chords) and chords != "Chords not found.":
                 chords_cache[cache_key] = chords
-                logger.debug(f"Chords fetched and cached for {title} by {artist}.")
+                logger.debug(f"Chords fetched and cached from {source}.")
                 found = True
             else:
                 chords_cache[cache_key] = "Chords not found."
@@ -73,11 +74,17 @@ def cache_chords(song_list):
             found = True
         if not found:
             missing_chords.append(f"{artist} – {title}")
+            missing_chords_log.append((artist, title, tried_log))
         cache_data('data/cache/chords_cache.json', chords_cache)
 
     if missing_chords:
         print("\nSummary: Missing Chords")
         for song in missing_chords:
             print(f"- {song}")
+        print("\nDetails of sources/queries tried for missing chords:")
+        for artist, title, tried_log in missing_chords_log:
+            print(f"{artist} – {title}:")
+            for attempt in tried_log:
+                print(f"  Tried: {attempt}")
     else:
         print("\nAll chords found!")
