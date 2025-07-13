@@ -24,9 +24,27 @@ def get_lyrics_from_genius(song_title, artist_name, genius_client):
             return lyrics
         else:
             logger.debug(f"Lyrics not found for {song_title} by {artist_name}.")
+            return get_lyrics_from_lyrics_ovh(song_title, artist_name)
+    except Exception as e:
+        logger.error(f"Error fetching lyrics for {song_title} by {artist_name} from Genius: {e}")
+        return get_lyrics_from_lyrics_ovh(song_title, artist_name)
+
+def get_lyrics_from_lyrics_ovh(song_title, artist_name):
+    logger.debug(f"Trying Lyrics.ovh for {song_title} by {artist_name}...")
+    url = f"https://api.lyrics.ovh/v1/{artist_name}/{song_title}"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        lyrics = data.get("lyrics", "Lyrics not found.")
+        if lyrics and lyrics != "Lyrics not found.":
+            logger.debug(f"Lyrics found on Lyrics.ovh for {song_title} by {artist_name}.")
+            return lyrics
+        else:
+            logger.debug(f"Lyrics not found on Lyrics.ovh for {song_title} by {artist_name}.")
             return "Lyrics not found."
     except Exception as e:
-        logger.error(f"Error fetching lyrics for {song_title} by {artist_name}: {e}")
+        logger.error(f"Error fetching lyrics from Lyrics.ovh for {song_title} by {artist_name}: {e}")
         return "Lyrics not found."
 
 def get_chords_from_chordie(song_title, artist_name):
@@ -103,14 +121,24 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         script_tag = soup.find("div", class_="js-store")
+        chords_page_url = None  # Always initialize
         if script_tag:
-            data_content = json.loads(script_tag["data-content"])
-            search_results = data_content.get("store", {}).get("page", {}).get("data", {}).get("results", [])
-            for result in search_results:
-                if result["type"] == "Chords" and song_title.lower() in result["song_name"].lower() and artist_name.lower() in result["artist_name"].lower():
-                    chords_page_url = result["tab_url"]
-                    logger.debug(f"Chords page URL matched: {chords_page_url}")
-                    break
+            try:
+                data_content = json.loads(script_tag["data-content"])
+                search_results = data_content.get("store", {}).get("page", {}).get("data", {}).get("results", [])
+                for result in search_results:
+                    if (
+                        isinstance(result, dict)
+                        and result.get("type") == "Chords"
+                        and song_title.lower() in result.get("song_name", "").lower()
+                        and artist_name.lower() in result.get("artist_name", "").lower()
+                        and "tab_url" in result
+                    ):
+                        chords_page_url = result["tab_url"]
+                        logger.debug(f"Chords page URL matched: {chords_page_url}")
+                        break
+            except Exception as e:
+                logger.error(f"Error parsing Ultimate Guitar search results: {e}")
         else:
             logger.debug(f"No matching URL found in the search results for {song_title} by {artist_name}.")
             chords_cache[cache_key] = "Chords not found."
@@ -125,37 +153,44 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
                 chords_response.raise_for_status()
                 chords_soup = BeautifulSoup(chords_response.text, 'html.parser')
                 chords_div = chords_soup.find('div', class_='js-store')
-                
                 if chords_div:
-                    data_content = chords_div['data-content']
-                    decoded_data_content = html.unescape(data_content)
-                    json_content = json.loads(decoded_data_content)
-                    content_value = json_content['store']['page']['data']['tab_view']['wiki_tab']['content']
-
-                    # Use content_value as the chords
-                    chords = content_value
-                    logger.debug(f"Chords found for {song_title} by {artist_name}.")
-                    # Cache the chords
-                    chords_cache[cache_key] = chords
-                    cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
-                    return chords
-                else:
-                    logger.debug(f"Chords content not found in the page for {song_title} by {artist_name}.")
-                    chords_cache[cache_key] = "Chords not found."
-                    cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
-                    return "Chords not found."
+                    try:
+                        data_content = chords_div['data-content']
+                        decoded_data_content = html.unescape(data_content)
+                        json_content = json.loads(decoded_data_content)
+                        content_value = (
+                            json_content.get('store', {})
+                            .get('page', {})
+                            .get('data', {})
+                            .get('tab_view', {})
+                            .get('wiki_tab', {})
+                            .get('content')
+                        )
+                        if content_value:
+                            chords = content_value
+                            logger.debug(f"Chords found for {song_title} by {artist_name}.")
+                            chords_cache[cache_key] = chords
+                            cache_data('data/cache/chords_cache.json', chords_cache)
+                            return chords
+                        else:
+                            logger.debug(f"Chords content not found in the page for {song_title} by {artist_name}.")
+                    except Exception as e:
+                        logger.error(f"Error parsing chords content for {song_title} by {artist_name}: {e}")
+                chords_cache[cache_key] = "Chords not found."
+                cache_data('data/cache/chords_cache.json', chords_cache)
+                return "Chords not found."
             except Exception as e:
                 logger.error(f"Error fetching chords for {song_title} by {artist_name}: {e}")
                 chords_cache[cache_key] = "Chords not found."
-                cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
+                cache_data('data/cache/chords_cache.json', chords_cache)
                 return "Chords not found."
         else:
             logger.debug(f"Chords link not found in the search results for {song_title} by {artist_name}.")
             chords_cache[cache_key] = "Chords not found."
-            cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
+            cache_data('data/cache/chords_cache.json', chords_cache)
             return "Chords not found."
     except Exception as e:
         logger.error(f"Error fetching chords for {song_title} by {artist_name}: {e}")
         chords_cache[cache_key] = "Chords not found."
-        cache_data('data/cache/chords_cache.json', chords_cache)  # Save with prettified JSON
+        cache_data('data/cache/chords_cache.json', chords_cache)
         return "Chords not found."

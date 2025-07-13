@@ -18,12 +18,28 @@ CHORDS_CACHE_PATH = 'data/cache/chords_cache.json'
 LYRICS_DOC_PATH = 'data/output/Lyrics_Document.docx'
 CHORDS_DOC_PATH = 'data/output/Chords_Document.docx'
 
+def test_genius_api(genius_client):
+    """Test the Genius API key by searching for a well-known song."""
+    try:
+        song = genius_client.search_song("Imagine", "John Lennon")
+        if song:
+            print("Genius API key is valid! Example search succeeded: Found song:", song.title)
+            return True
+        else:
+            print("Genius API key appears valid, but test song not found.")
+            return False
+    except Exception as e:
+        print("Genius API key test failed:", e)
+        return False
+
 def main():
     parser = argparse.ArgumentParser(description="Generate chord and lyrics documents from a list of songs.")
     parser.add_argument('--get-song-info', action='store_true', help='Get song titles and the character length of the lyrics')
     parser.add_argument('--lyrics-only', action='store_true', help='Generate document for lyrics only')
     parser.add_argument('--chords-only', action='store_true', help='Generate document for chords only')
     parser.add_argument('--generate-from-cache', action='store_true', help='Generate documents from cache only')
+    parser.add_argument('--test-api', action='store_true', help='Test the Genius API key')
+    parser.add_argument('--cache-only', action='store_true', help='Fetch and cache all lyrics and chords, but do not generate documents')
     args = parser.parse_args()
 
     # Load config
@@ -36,6 +52,12 @@ def main():
         logging.error(f"Failed to load config: {e}")
         sys.exit(1)
 
+    genius_client = get_genius_client(genius_access_token)
+
+    if args.test_api:
+        test_genius_api(genius_client)
+        return
+
     # Load songs
     try:
         songs = load_songs(SONGS_CSV_PATH)
@@ -43,7 +65,12 @@ def main():
         logging.error(f"Failed to load songs: {e}")
         sys.exit(1)
 
-    genius_client = get_genius_client(genius_access_token)
+    if args.cache_only:
+        logging.info("Caching all lyrics and chords for the song list (no document generation)...")
+        cache_lyrics(songs, genius_client)
+        cache_chords(songs)
+        logging.info("Caching complete.")
+        return
 
     if args.get_song_info:
         song_info = get_song_lyrics_info(songs, genius_client)
