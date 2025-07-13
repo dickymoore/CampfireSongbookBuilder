@@ -38,7 +38,7 @@ Campfire Songbook Builder is a Python-based application designed to generate son
 
 4. Set up the directory structure:
    ```sh
-   mkdir -p data/config data/output # On Windows use `"data/config", "data/output" | ForEach-Object { New-Item -ItemType Directory -Path $_ -Force }`
+   mkdir -p data/config data/output # On Windows use `@("data/config", "data/output") | ForEach-Object { New-Item -ItemType Directory -Path $_ -Force }`
    ```
 
 5. Create a configuration file at `data/config/config.json` with your Genius API credentials:

@@ -10,9 +10,9 @@ import time
 # Configure logging
 logger = logging.getLogger(__name__)
 
-def get_genius_client(access_token):
+def get_genius_client(genius_access_token):
     import lyricsgenius
-    return lyricsgenius.Genius(access_token)
+    return lyricsgenius.Genius(genius_access_token)
 
 def get_lyrics_from_genius(song_title, artist_name, genius_client):
     logger.debug(f"Searching for lyrics for {song_title} by {artist_name}...")
