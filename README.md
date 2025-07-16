@@ -41,7 +41,12 @@ Campfire Songbook Builder is a Python-based application designed to generate son
    mkdir -p data/config data/output # On Windows use `@("data/config", "data/output") | ForEach-Object { New-Item -ItemType Directory -Path $_ -Force }`
    ```
 
-5. Create a configuration file at `data/config/config.json` with your Genius API credentials:
+5. Copy the example config and fill in your Genius API credentials:
+   ```sh
+   cp data/config/config.example.json data/config/config.json
+   # Then edit data/config/config.json and add your Genius API token
+   ```
+   Example config:
    ```json
    {
        "genius": {
@@ -76,6 +81,19 @@ Run the application from the command line with various options:
   python main.py --generate-from-cache
   ```
 
+## Running Tests & Linting
+
+A minimal test and linter configuration is provided for code quality:
+
+- To run tests (after adding tests to the `tests/` directory):
+  ```sh
+  python -m unittest discover tests
+  ```
+- To check code style with flake8:
+  ```sh
+  flake8 app/ main.py
+  ```
+
 ## Project Structure
 
 ```
@@ -93,6 +111,7 @@ CampfireSongbookBuilder/
 │
 ├── data/
 │   ├── config/
+│   │   ├── config.example.json
 │   │   └── config.json
 │   ├── src/
 │   │   └── CampfireSongs.csv

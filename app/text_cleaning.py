@@ -27,7 +27,7 @@ def clean_lyrics(lyrics):
     return lyrics
 
 def clean_chords(chords):
-    """Clean the chords by removing unnecessary introductory lines and email headers."""
+    """Clean the chords by removing unnecessary introductory lines, email headers, and [ch] tags."""
     # Remove lines starting with {t:...} and {st:...}
     chords = re.sub(r'{t:.*?}\n', '', chords)
     chords = re.sub(r'{st:.*?}\n', '', chords)
@@ -38,6 +38,10 @@ def clean_chords(chords):
     # Remove other unnecessary lines often found in chords
     chords = re.sub(r'^.*To:.*$', '', chords, flags=re.MULTILINE)
     chords = re.sub(r'^.*Email:.*$', '', chords, flags=re.MULTILINE)
+
+    # Remove [ch] and [/ch] tags and any similar bracketed tags
+    chords = re.sub(r'\[/?ch\]', '', chords, flags=re.IGNORECASE)
+    chords = re.sub(r'\[/?[a-zA-Z]+\]', '', chords)  # Remove any other bracketed tags like [tab], [/tab], etc.
 
     # Remove extra newlines and spaces
     chords = re.sub(r'\n\s*\n', '\n', chords)
