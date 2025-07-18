@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import logging
-from app.cache import cache_data, load_cache
+from app.cache import jsonl_save_entry, jsonl_load_entry, jsonl_load_all
 import json
 import re
 import html
@@ -37,14 +37,20 @@ def get_manual_lyrics(song_title, artist_name):
 AZLYRICS_BASE = "https://www.azlyrics.com/lyrics"
 def get_lyrics_from_azlyrics(song_title, artist_name):
     logger.debug(f"Trying AZLyrics for {song_title} by {artist_name}...")
+    # Check cache first
+    cached = jsonl_load_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, 'lyrics')
+    if cached and cached != "Lyrics not found.":
+        logger.debug(f"Lyrics loaded from cache for {song_title} by {artist_name}.")
+        return cached
     # AZLyrics URLs are like: https://www.azlyrics.com/lyrics/artist/title.html
     artist_url = re.sub(r'[^a-z0-9]', '', artist_name.lower().replace(' ', ''))
     title_url = re.sub(r'[^a-z0-9]', '', song_title.lower().replace(' ', ''))
-    url = f"{AZLYRICS_BASE}/{artist_url}/{title_url}.html"
+    url = f"https://www.azlyrics.com/lyrics/{artist_url}/{title_url}.html"
     try:
         response = requests.get(url, timeout=10)
         if response.status_code != 200:
             logger.debug(f"AZLyrics returned status {response.status_code} for {url}")
+            jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
             return "Lyrics not found."
         soup = BeautifulSoup(response.text, 'html.parser')
         # Lyrics are in the first div after all <div class="ringtone">
@@ -57,13 +63,16 @@ def get_lyrics_from_azlyrics(song_title, artist_name):
                         lyrics = next_div.get_text("\n", strip=True)
                         if lyrics:
                             logger.debug(f"Lyrics found on AZLyrics for {song_title} by {artist_name}.")
+                            jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, lyrics, 'lyrics')
                             return lyrics
                         break
                 break
         logger.debug(f"Lyrics not found on AZLyrics for {song_title} by {artist_name}.")
+        jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
         return "Lyrics not found."
     except Exception as e:
         logger.error(f"Error scraping AZLyrics for {song_title} by {artist_name}: {e}")
+        jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
         return "Lyrics not found."
 
 def get_genius_client(genius_access_token):
@@ -72,21 +81,34 @@ def get_genius_client(genius_access_token):
 
 def get_lyrics_from_genius(song_title, artist_name, genius_client):
     logger.debug(f"Searching for lyrics for {song_title} by {artist_name}...")
+    # Check cache first
+    cached = jsonl_load_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, 'lyrics')
+    if cached and cached != "Lyrics not found.":
+        logger.debug(f"Lyrics loaded from cache for {song_title} by {artist_name}.")
+        return cached
     try:
         song = genius_client.search_song(song_title, artist_name)
         if song:
             lyrics = song.lyrics
             logger.debug(f"Lyrics found for {song_title} by {artist_name}.")
+            jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, lyrics, 'lyrics')
             return lyrics
         else:
             logger.debug(f"Lyrics not found for {song_title} by {artist_name}.")
+            jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
             return get_lyrics_from_lyrics_ovh(song_title, artist_name)
     except Exception as e:
         logger.error(f"Error fetching lyrics for {song_title} by {artist_name} from Genius: {e}")
+        jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
         return get_lyrics_from_lyrics_ovh(song_title, artist_name)
 
 def get_lyrics_from_lyrics_ovh(song_title, artist_name):
     logger.debug(f"Trying Lyrics.ovh for {song_title} by {artist_name}...")
+    # Check cache first
+    cached = jsonl_load_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, 'lyrics')
+    if cached and cached != "Lyrics not found.":
+        logger.debug(f"Lyrics loaded from cache for {song_title} by {artist_name}.")
+        return cached
     url = f"https://api.lyrics.ovh/v1/{artist_name}/{song_title}"
     try:
         response = requests.get(url)
@@ -95,12 +117,15 @@ def get_lyrics_from_lyrics_ovh(song_title, artist_name):
         lyrics = data.get("lyrics", "Lyrics not found.")
         if lyrics and lyrics != "Lyrics not found.":
             logger.debug(f"Lyrics found on Lyrics.ovh for {song_title} by {artist_name}.")
+            jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, lyrics, 'lyrics')
             return lyrics
         else:
             logger.debug(f"Lyrics not found on Lyrics.ovh for {song_title} by {artist_name}.")
+            jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
             return "Lyrics not found."
     except Exception as e:
         logger.error(f"Error fetching lyrics from Lyrics.ovh for {song_title} by {artist_name}: {e}")
+        jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
         return "Lyrics not found."
 
 def get_lyrics_from_sources(song_title, artist_name, genius_client=None):
@@ -196,7 +221,7 @@ def get_chords_from_songsterr(song_title, artist_name):
 
 def get_chords_from_chordie(song_title, artist_name):
     logger.debug(f"Searching for chords for {song_title} by {artist_name} on Chordie...")
-    chords_cache = load_cache('data/cache/chords_cache.json')
+    chords_cache = jsonl_load_all('data/cache/chords_cache.jsonl', 'chords')
     cache_key = f"{artist_name} - {song_title}"
     if cache_key in chords_cache and bool(chords_cache[cache_key]) and chords_cache[cache_key] != "Chords not found.":
         logger.debug(f"Chords loaded from cache for {song_title} by {artist_name}. Cache content: {chords_cache[cache_key][:100]}...")
@@ -228,8 +253,7 @@ def get_chords_from_chordie(song_title, artist_name):
             if chords_div:
                 chords = chords_div.get_text()
                 logger.debug(f"Chords found for {song_title} by {artist_name}.")
-                chords_cache[cache_key] = chords
-                cache_data('data/cache/chords_cache.json', chords_cache)
+                jsonl_save_entry('data/cache/chords_cache.jsonl', artist_name, song_title, chords, 'chords')
                 return chords
             else:
                 logger.debug(f"Chords content not found in the page for {song_title} by {artist_name}.")
@@ -243,7 +267,7 @@ def get_chords_from_chordie(song_title, artist_name):
 
 def get_chords_from_ultimate_guitar(song_title, artist_name):
     logger.debug(f"Searching for chords for {song_title} by {artist_name} on Ultimate Guitar...")
-    chords_cache = load_cache('data/cache/chords_cache.json')
+    chords_cache = jsonl_load_all('data/cache/chords_cache.jsonl', 'chords')
     cache_key = f"{artist_name} - {song_title}"
     if cache_key in chords_cache and bool(chords_cache[cache_key]) and chords_cache[cache_key] != "Chords not found.":
         logger.debug(f"Chords loaded from cache for {song_title} by {artist_name}. Cache content: {chords_cache[cache_key][:100]}...")
@@ -276,7 +300,7 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
         else:
             logger.debug(f"No matching URL found in the search results for {song_title} by {artist_name}.")
             chords_cache[cache_key] = "Chords not found."
-            cache_data('data/cache/chords_cache.json', chords_cache)
+            jsonl_save_entry('data/cache/chords_cache.jsonl', artist_name, song_title, "Chords not found.", 'chords')
             return "Chords not found."
         if chords_page_url:
             logger.debug(f"Fetching chords from URL: {chords_page_url}")
@@ -302,30 +326,29 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
                         if content_value:
                             chords = content_value
                             logger.debug(f"Chords found for {song_title} by {artist_name}.")
-                            chords_cache[cache_key] = chords
-                            cache_data('data/cache/chords_cache.json', chords_cache)
+                            jsonl_save_entry('data/cache/chords_cache.jsonl', artist_name, song_title, chords, 'chords')
                             return chords
                         else:
                             logger.debug(f"Chords content not found in the page for {song_title} by {artist_name}.")
                     except Exception as e:
                         logger.error(f"Error parsing chords content for {song_title} by {artist_name}: {e}")
                 chords_cache[cache_key] = "Chords not found."
-                cache_data('data/cache/chords_cache.json', chords_cache)
+                jsonl_save_entry('data/cache/chords_cache.jsonl', artist_name, song_title, "Chords not found.", 'chords')
                 return "Chords not found."
             except Exception as e:
                 logger.error(f"Error fetching chords for {song_title} by {artist_name}: {e}")
                 chords_cache[cache_key] = "Chords not found."
-                cache_data('data/cache/chords_cache.json', chords_cache)
+                jsonl_save_entry('data/cache/chords_cache.jsonl', artist_name, song_title, "Chords not found.", 'chords')
                 return "Chords not found."
         else:
             logger.debug(f"Chords link not found in the search results for {song_title} by {artist_name}.")
             chords_cache[cache_key] = "Chords not found."
-            cache_data('data/cache/chords_cache.json', chords_cache)
+            jsonl_save_entry('data/cache/chords_cache.jsonl', artist_name, song_title, "Chords not found.", 'chords')
             return "Chords not found."
     except Exception as e:
         logger.error(f"Error fetching chords for {song_title} by {artist_name}: {e}")
         chords_cache[cache_key] = "Chords not found."
-        cache_data('data/cache/chords_cache.json', chords_cache)
+        jsonl_save_entry('data/cache/chords_cache.jsonl', artist_name, song_title, "Chords not found.", 'chords')
         return "Chords not found."
 
 # Yousician scraper

@@ -6,15 +6,14 @@ from app.load_songs import load_songs
 from app.document_generation import cache_lyrics, cache_chords
 from app.fetch_data import get_genius_client
 from app.song_info import get_song_lyrics_info
-from app.document_creation import create_document_from_cache
-from app.cache import load_cache
+# from app.cache import load_cache  # Remove this import, not needed with JSONL
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 CONFIG_PATH = 'data/config/config.json'
 SONGS_CSV_PATH = 'data/src/CampfireSongs.csv'
-LYRICS_CACHE_PATH = 'data/cache/lyrics_cache.json'
-CHORDS_CACHE_PATH = 'data/cache/chords_cache.json'
+LYRICS_CACHE_PATH = 'data/cache/lyrics_cache.jsonl'
+CHORDS_CACHE_PATH = 'data/cache/chords_cache.jsonl'
 LYRICS_DOC_PATH = 'data/output/Lyrics_Document.docx'
 CHORDS_DOC_PATH = 'data/output/Chords_Document.docx'
 
@@ -78,33 +77,45 @@ def main():
             print(f"{title}: {num_characters} characters")
         return
 
-    lyrics_cache = load_cache(LYRICS_CACHE_PATH)
-    chords_cache = load_cache(CHORDS_CACHE_PATH)
+    # The following cache loading is not needed with the new JSONL logic
+    # lyrics_cache = load_cache(LYRICS_CACHE_PATH)
+    # chords_cache = load_cache(CHORDS_CACHE_PATH)
 
     if args.generate_from_cache:
         logging.info("Generating documents from cache only.")
         lyrics_output = LYRICS_DOC_PATH if not args.chords_only else None
         chords_output = CHORDS_DOC_PATH if not args.lyrics_only else None
+        # The document generation functions will now load from JSONL as needed
+        from app.cache import jsonl_load_all
+        lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
+        chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+        from app.document_creation import create_document_from_cache
         create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output, chords_output)
         return
 
     if args.lyrics_only:
         cache_lyrics(songs, genius_client)
-        lyrics_cache = load_cache(LYRICS_CACHE_PATH)
-        create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=LYRICS_DOC_PATH)
+        from app.cache import jsonl_load_all
+        lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
+        from app.document_creation import create_document_from_cache
+        create_document_from_cache(songs, lyrics_cache, {}, lyrics_output=LYRICS_DOC_PATH)
         return
 
     if args.chords_only:
         cache_chords(songs)
-        chords_cache = load_cache(CHORDS_CACHE_PATH)
-        create_document_from_cache(songs, lyrics_cache, chords_cache, chords_output=CHORDS_DOC_PATH)
+        from app.cache import jsonl_load_all
+        chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+        from app.document_creation import create_document_from_cache
+        create_document_from_cache(songs, {}, chords_cache, chords_output=CHORDS_DOC_PATH)
         return
 
     # Default: cache both and generate both docs
     cache_lyrics(songs, genius_client)
     cache_chords(songs)
-    lyrics_cache = load_cache(LYRICS_CACHE_PATH)
-    chords_cache = load_cache(CHORDS_CACHE_PATH)
+    from app.cache import jsonl_load_all
+    lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
+    chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+    from app.document_creation import create_document_from_cache
     create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=LYRICS_DOC_PATH, chords_output=CHORDS_DOC_PATH)
 
 if __name__ == "__main__":
