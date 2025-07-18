@@ -38,7 +38,12 @@ def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_out
             if num_characters <= 5000:
                 heading = lyrics_document.add_heading(f"{title} by {artist}", level=1)
                 set_paragraph_font(heading, 14)
-                paragraph = lyrics_document.add_paragraph(lyrics)
+                paragraph = lyrics_document.add_paragraph()
+                lines = lyrics.split('\n')
+                for i, line in enumerate(lines):
+                    if i > 0:
+                        paragraph.add_run().add_break()
+                    paragraph.add_run(line)
                 set_paragraph_font(paragraph, 12)
             else:
                 logger.debug(f"Lyrics for {title} are too long and have been excluded.")
@@ -48,7 +53,12 @@ def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_out
             logger.debug(f"Adding chords for {title} by {artist}")
             heading = chords_document.add_heading(f"{title} by {artist}", level=1)
             set_paragraph_font(heading, 14)
-            paragraph = chords_document.add_paragraph(chords)
+            paragraph = chords_document.add_paragraph()
+            lines = chords.split('\n')
+            for i, line in enumerate(lines):
+                if i > 0:
+                    paragraph.add_run().add_break()
+                paragraph.add_run(line)
             set_paragraph_font(paragraph, 12)
 
     if lyrics_output:

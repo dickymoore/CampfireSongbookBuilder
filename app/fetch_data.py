@@ -48,6 +48,7 @@ def get_lyrics_from_azlyrics(song_title, artist_name):
     url = f"https://www.azlyrics.com/lyrics/{artist_url}/{title_url}.html"
     try:
         response = requests.get(url, timeout=10)
+        response.encoding = response.apparent_encoding
         if response.status_code != 200:
             logger.debug(f"AZLyrics returned status {response.status_code} for {url}")
             jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
@@ -112,6 +113,7 @@ def get_lyrics_from_lyrics_ovh(song_title, artist_name):
     url = f"https://api.lyrics.ovh/v1/{artist_name}/{song_title}"
     try:
         response = requests.get(url)
+        response.encoding = response.apparent_encoding
         response.raise_for_status()
         data = response.json()
         lyrics = data.get("lyrics", "Lyrics not found.")
@@ -169,6 +171,7 @@ def get_chords_from_echords(song_title, artist_name):
     url = f"{E_CHORDS_BASE}/{artist_url}/{title_url}"
     try:
         response = requests.get(url, timeout=10)
+        response.encoding = response.apparent_encoding
         if response.status_code != 200:
             logger.debug(f"E-Chords returned status {response.status_code} for {url}")
             return "Chords not found."
@@ -193,6 +196,7 @@ def get_chords_from_songsterr(song_title, artist_name):
     url = f"{SONGSTERR_SEARCH}{requests.utils.quote(query)}"
     try:
         response = requests.get(url, timeout=10)
+        response.encoding = response.apparent_encoding
         if response.status_code != 200:
             logger.debug(f"Songsterr returned status {response.status_code} for {url}")
             return "Chords not found."
@@ -202,6 +206,7 @@ def get_chords_from_songsterr(song_title, artist_name):
         if link and 'href' in link.attrs:
             song_url = f"https://www.songsterr.com{link['href']}"
             song_response = requests.get(song_url, timeout=10)
+            song_response.encoding = song_response.apparent_encoding
             if song_response.status_code != 200:
                 logger.debug(f"Songsterr song page returned status {song_response.status_code} for {song_url}")
                 return "Chords not found."
@@ -229,6 +234,7 @@ def get_chords_from_chordie(song_title, artist_name):
     search_url = f"https://www.chordie.com/result.php?q={song_title.replace(' ', '+')}+by+{artist_name.replace(' ', '+')}"
     try:
         response = requests.get(search_url)
+        response.encoding = response.apparent_encoding
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         song_links = soup.find_all('div', class_='clearfix songList')
@@ -247,6 +253,7 @@ def get_chords_from_chordie(song_title, artist_name):
                 chords_page_url = "https://www.chordie.com" + chords_page_url
             logger.debug(f"Fetching chords from URL: {chords_page_url}")
             chords_response = requests.get(chords_page_url)
+            chords_response.encoding = chords_response.apparent_encoding
             chords_response.raise_for_status()
             chords_soup = BeautifulSoup(chords_response.text, 'html.parser')
             chords_div = chords_soup.find("textarea", {"id": "chordproContent"})
@@ -275,6 +282,7 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
     search_url = f"https://www.ultimate-guitar.com/search.php?search_type=title&value={song_title.replace(' ', '%20')}+{artist_name.replace(' ', '%20')}"
     try:
         response = requests.get(search_url)
+        response.encoding = response.apparent_encoding
         time.sleep(1)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -306,6 +314,7 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
             logger.debug(f"Fetching chords from URL: {chords_page_url}")
             try:
                 chords_response = requests.get(chords_page_url)
+                chords_response.encoding = chords_response.apparent_encoding
                 time.sleep(1)
                 chords_response.raise_for_status()
                 chords_soup = BeautifulSoup(chords_response.text, 'html.parser')
@@ -362,6 +371,7 @@ def get_chords_from_yousician(song_title, artist_name):
     url = f"https://yousician.com/chords/{artist_url}/{title_url}"
     try:
         response = requests.get(url, timeout=10)
+        response.encoding = response.apparent_encoding
         if response.status_code != 200:
             logger.debug(f"Yousician returned status {response.status_code} for {url}")
             return "Chords not found."
