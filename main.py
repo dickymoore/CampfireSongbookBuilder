@@ -1,72 +1,122 @@
-# import pandas as pd
-# import json
 import logging
 import argparse
+import sys
 from app.load_config import load_config
-# from app.document_generation import cache_lyrics, cache_chords
-# from app.fetch_data import get_genius_client
-# from app.song_info import get_song_lyrics_info
-# from app.document_creation import create_document_from_cache
-# from app.cache import load_cache
+from app.load_songs import load_songs
+from app.document_generation import cache_lyrics, cache_chords
+from app.fetch_data import get_genius_client
+from app.song_info import get_song_lyrics_info
+# from app.cache import load_cache  # Remove this import, not needed with JSONL
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s') # Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+CONFIG_PATH = 'data/config/config.json'
+SONGS_CSV_PATH = 'data/src/CampfireSongs.csv'
+LYRICS_CACHE_PATH = 'data/cache/lyrics_cache.jsonl'
+CHORDS_CACHE_PATH = 'data/cache/chords_cache.jsonl'
+LYRICS_DOC_PATH = 'data/output/Lyrics_Document.docx'
+CHORDS_DOC_PATH = 'data/output/Chords_Document.docx'
+
+def test_genius_api(genius_client):
+    """Test the Genius API key by searching for a well-known song."""
+    try:
+        song = genius_client.search_song("Imagine", "John Lennon")
+        if song:
+            print("Genius API key is valid! Example search succeeded: Found song:", song.title)
+            return True
+        else:
+            print("Genius API key appears valid, but test song not found.")
+            return False
+    except Exception as e:
+        print("Genius API key test failed:", e)
+        return False
 
 def main():
-    # Argument parser setup
-    parser = argparse.ArgumentParser(description="generate chord and lyrics documents from a list of songs.")
+    parser = argparse.ArgumentParser(description="Generate chord and lyrics documents from a list of songs.")
     parser.add_argument('--get-song-info', action='store_true', help='Get song titles and the character length of the lyrics')
     parser.add_argument('--lyrics-only', action='store_true', help='Generate document for lyrics only')
     parser.add_argument('--chords-only', action='store_true', help='Generate document for chords only')
     parser.add_argument('--generate-from-cache', action='store_true', help='Generate documents from cache only')
+    parser.add_argument('--test-api', action='store_true', help='Test the Genius API key')
+    parser.add_argument('--cache-only', action='store_true', help='Fetch and cache all lyrics and chords, but do not generate documents')
     args = parser.parse_args()
 
-    match args:
-        case argparse.Namespace(get_song_info=True):
-            logging.debug("get_song_info")
-            load_config('data/config/config.json')
-        case argparse.Namespace(generate_from_cache=True):
-            logging.info("generate_from_cache")
-        case argparse.Namespace(lyrics_only=True):
-            logging.info("lyrics_only")
-        case argparse.Namespace(chords_only=True):
-            logging.info("chords_only")
-        case _:
-            logging.info("Running in default mode")
-    
+    # Load config
+    try:
+        config = load_config(CONFIG_PATH)
+        if not config or 'genius' not in config or 'client_access_token' not in config['genius']:
+            raise ValueError("Missing 'genius' or 'client_access_token' in config file.")
+        genius_access_token = config['genius']['client_access_token']
+    except Exception as e:
+        logging.error(f"Failed to load config: {e}")
+        sys.exit(1)
 
+    genius_client = get_genius_client(genius_access_token)
 
-    # genius_access_token = config['genius']['client_genius_access_token']  # Load the access token for use with genius
-    # logging.info("Initializing Genius client...")
-    # genius_client = get_genius_client(genius_access_token)
+    if args.test_api:
+        test_genius_api(genius_client)
+        return
 
-#     if args.get_song_info:
-#         song_info = get_song_lyrics_info(songs, genius_client)
-#         for title, num_characters in song_info:
-#             print(f"{title}: {num_characters} characters")
-#     else:
-#         lyrics_cache = load_cache('data/cache/lyrics_cache.json')
-#         chords_cache = load_cache('data/cache/chords_cache.json')
+    # Load songs
+    try:
+        songs = load_songs(SONGS_CSV_PATH)
+    except Exception as e:
+        logging.error(f"Failed to load songs: {e}")
+        sys.exit(1)
 
-#         if args.generate_from_cache:
-#             logging.info("Generating documents from cache only.")
-#             lyrics_output = "data/output/Lyrics_Document.docx" if not args.chords_only else None
-#             chords_output = "data/output/Chords_Document.docx" if not args.lyrics_only else None
-#             create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output, chords_output)
-#         else:
-#             if args.lyrics_only:
-#                 cache_lyrics(songs, genius_client)
-#                 lyrics_output = "data/output/Lyrics_Document.docx"
-#                 create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=lyrics_output)
-#             elif args.chords_only:
-#                 cache_chords(songs)
-#                 chords_output = "data/output/Chords_Document.docx"
-#                 create_document_from_cache(songs, lyrics_cache, chords_cache, chords_output=chords_output)
-#             else:
-#                 cache_lyrics(songs, genius_client)
-#                 cache_chords(songs)
-#                 lyrics_output = "data/output/Lyrics_Document.docx"
-#                 chords_output = "data/output/Chords_Document.docx"
-#                 create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=lyrics_output, chords_output=chords_output)
+    if args.cache_only:
+        logging.info("Caching all lyrics and chords for the song list (no document generation)...")
+        cache_lyrics(songs, genius_client)
+        cache_chords(songs)
+        logging.info("Caching complete.")
+        return
+
+    if args.get_song_info:
+        song_info = get_song_lyrics_info(songs, genius_client)
+        for title, num_characters in song_info:
+            print(f"{title}: {num_characters} characters")
+        return
+
+    # The following cache loading is not needed with the new JSONL logic
+    # lyrics_cache = load_cache(LYRICS_CACHE_PATH)
+    # chords_cache = load_cache(CHORDS_CACHE_PATH)
+
+    if args.generate_from_cache:
+        logging.info("Generating documents from cache only.")
+        lyrics_output = LYRICS_DOC_PATH if not args.chords_only else None
+        chords_output = CHORDS_DOC_PATH if not args.lyrics_only else None
+        # The document generation functions will now load from JSONL as needed
+        from app.cache import jsonl_load_all
+        lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
+        chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+        from app.document_creation import create_document_from_cache
+        create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output, chords_output)
+        return
+
+    if args.lyrics_only:
+        cache_lyrics(songs, genius_client)
+        from app.cache import jsonl_load_all
+        lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
+        from app.document_creation import create_document_from_cache
+        create_document_from_cache(songs, lyrics_cache, {}, lyrics_output=LYRICS_DOC_PATH)
+        return
+
+    if args.chords_only:
+        cache_chords(songs)
+        from app.cache import jsonl_load_all
+        chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+        from app.document_creation import create_document_from_cache
+        create_document_from_cache(songs, {}, chords_cache, chords_output=CHORDS_DOC_PATH)
+        return
+
+    # Default: cache both and generate both docs
+    cache_lyrics(songs, genius_client)
+    cache_chords(songs)
+    from app.cache import jsonl_load_all
+    lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
+    chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+    from app.document_creation import create_document_from_cache
+    create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=LYRICS_DOC_PATH, chords_output=CHORDS_DOC_PATH)
 
 if __name__ == "__main__":
     main()
