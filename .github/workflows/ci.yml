@@ -1,25 +1,21 @@
-name: CI
+name: Python CI
 
 on:
   push:
-    branches:
-      - misc_improvements
+    branches: [ misc_improvements ]
   pull_request:
-    branches:
-      - main
-      - misc_improvements
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.x'
 
       - name: Install dependencies
         run: |
@@ -28,9 +24,10 @@ jobs:
           pip install flake8
 
       - name: Lint with flake8
-        run: |
-          flake8 . --exit-zero
+        run: flake8 . --exit-zero
 
       - name: Run unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
-       PYTHONPATH=$GITHUB_WORKSPACE python -m unittest discover -s tests -p 'test_*.py'
+          python -m unittest discover -s tests -p 'test_*.py'
