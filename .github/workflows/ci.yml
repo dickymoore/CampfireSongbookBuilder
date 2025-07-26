@@ -33,4 +33,4 @@ jobs:
 
       - name: Run unit tests
         run: |
-          PYTHONPATH=${{ github.workspace }} python -m unittest discover -s tests -p 'test_*.py'
+       PYTHONPATH=$GITHUB_WORKSPACE python -m unittest discover -s tests -p 'test_*.py'
