@@ -1,37 +1,43 @@
+#!/usr/bin/env python3
+"""Utility script to strip bracketed directives from the chords cache.
+
+Many scraped chord charts contain inline directives enclosed in square brackets
+such as ``[ch]``, ``[intro]`` or custom comments.  When creating printable
+songbooks these tags should be removed.  This script reads the existing
+chords cache JSONL file, removes any content enclosed in brackets and
+rewrites the file.
+
+Example usage::
+
+    python clean_chords_cache_brackets.py
+"""
+
 import json
 import os
 import re
 
-MARKUP_TAGS = [
-    'ch', '/ch', 'tab', '/tab', 'verse', '/verse', 'intro', '/intro',
-    'outro', '/outro', 'pre-chorus', '/pre-chorus', 'chorus', '/chorus',
-    'bridge', '/bridge', 'solo', '/solo', 'instrumental', '/instrumental',
-    'repeat', '/repeat', 'end', '/end', 'coda', '/coda', 'refrain', '/refrain'
-]
 
-def remove_markup_tags(text):
-    if not isinstance(text, str):
-        return text
-    pattern = r'\[(' + '|'.join(re.escape(tag) for tag in MARKUP_TAGS) + r')\]'
-    return re.sub(pattern, '', text, flags=re.IGNORECASE)
-
-def clean_jsonl_file(filename, value_field):
-    if not os.path.exists(filename):
-        print(f"File not found: {filename}")
+def clean_chords_cache_brackets(cache_path: str = 'data/cache/chords_cache.jsonl') -> None:
+    """Remove bracketed content from all chord entries in the cache."""
+    if not os.path.exists(cache_path):
+        print(f"Cache file {cache_path} does not exist")
         return
-    lines = []
-    with open(filename, 'r', encoding='utf-8') as f:
+    new_entries = []
+    with open(cache_path, 'r', encoding='utf-8') as f:
         for line in f:
             try:
                 entry = json.loads(line)
-                if value_field in entry and entry[value_field]:
-                    entry[value_field] = remove_markup_tags(entry[value_field])
-                lines.append(entry)
-            except Exception:
-                lines.append(line)
-    with open(filename, 'w', encoding='utf-8') as f:
-        for entry in lines:
+            except json.JSONDecodeError:
+                continue
+            chords = entry.get('chords', '')
+            # Remove anything enclosed in [ ] brackets
+            cleaned = re.sub(r'\[[^\]]*\]', '', chords)
+            entry['chords'] = cleaned
+            new_entries.append(entry)
+    with open(cache_path, 'w', encoding='utf-8') as f:
+        for entry in new_entries:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
 
-clean_jsonl_file('data/cache/chords_cache.jsonl', 'chords')
-print("Markup tags removed from chords cache.") 
+
+if __name__ == '__main__':
+    clean_chords_cache_brackets()

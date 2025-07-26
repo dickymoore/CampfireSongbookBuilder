@@ -1,3 +1,5 @@
+"""Entry point for the Campfire Songbook Builder CLI."""
+
 import logging
 import argparse
 import sys
@@ -6,7 +8,6 @@ from app.load_songs import load_songs
 from app.document_generation import cache_lyrics, cache_chords
 from app.fetch_data import get_genius_client
 from app.song_info import get_song_lyrics_info
-# from app.cache import load_cache  # Remove this import, not needed with JSONL
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -17,8 +18,8 @@ CHORDS_CACHE_PATH = 'data/cache/chords_cache.jsonl'
 LYRICS_DOC_PATH = 'data/output/Lyrics_Document.docx'
 CHORDS_DOC_PATH = 'data/output/Chords_Document.docx'
 
-def test_genius_api(genius_client):
-    """Test the Genius API key by searching for a well-known song."""
+def test_genius_api(genius_client) -> bool:
+    """Test the Genius API key by searching for a well‑known song."""
     try:
         song = genius_client.search_song("Imagine", "John Lennon")
         if song:
@@ -31,7 +32,7 @@ def test_genius_api(genius_client):
         print("Genius API key test failed:", e)
         return False
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Generate chord and lyrics documents from a list of songs.")
     parser.add_argument('--get-song-info', action='store_true', help='Get song titles and the character length of the lyrics')
     parser.add_argument('--lyrics-only', action='store_true', help='Generate document for lyrics only')
@@ -44,14 +45,18 @@ def main():
     # Load config
     try:
         config = load_config(CONFIG_PATH)
-        if not config or 'genius' not in config or 'client_access_token' not in config['genius']:
-            raise ValueError("Missing 'genius' or 'client_access_token' in config file.")
         genius_access_token = config['genius']['client_access_token']
     except Exception as e:
         logging.error(f"Failed to load config: {e}")
         sys.exit(1)
 
-    genius_client = get_genius_client(genius_access_token)
+    # Initialise genius client.  In offline environments this may still
+    # initialise successfully, but API calls will fail.
+    try:
+        genius_client = get_genius_client(genius_access_token)
+    except Exception as e:
+        logging.error(f"Failed to initialise Genius client: {e}")
+        genius_client = None
 
     if args.test_api:
         test_genius_api(genius_client)
@@ -77,15 +82,10 @@ def main():
             print(f"{title}: {num_characters} characters")
         return
 
-    # The following cache loading is not needed with the new JSONL logic
-    # lyrics_cache = load_cache(LYRICS_CACHE_PATH)
-    # chords_cache = load_cache(CHORDS_CACHE_PATH)
-
     if args.generate_from_cache:
         logging.info("Generating documents from cache only.")
         lyrics_output = LYRICS_DOC_PATH if not args.chords_only else None
         chords_output = CHORDS_DOC_PATH if not args.lyrics_only else None
-        # The document generation functions will now load from JSONL as needed
         from app.cache import jsonl_load_all
         lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
         chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')

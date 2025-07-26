@@ -1,14 +1,11 @@
-beautifulsoup4==4.12.3
-certifi==2024.6.2
-charset-normalizer==3.3.2
+beautifulsoup4==4.13.4
 lxml==5.2.2
-oauthlib==3.2.2
-pandas==2.2.2
+pandas==1.5.3
 python-dateutil==2.9.0.post0
-python-docx==1.1.2
-pytz==2024.1
-requests==2.32.3
-requests-oauthlib==2.0.0
+requests==2.32.4
 six==1.16.0
 urllib3==2.2.2
+# lyricsgenius and python-docx are optional.  They are required for network lyric fetching
+# and document generation respectively.  Install them if you intend to use those features.
 lyricsgenius==3.0.1
+python-docx==1.1.2

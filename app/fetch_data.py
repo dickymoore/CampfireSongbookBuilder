@@ -1,7 +1,23 @@
+"""Functions to fetch lyrics and chords from various external sources.
+
+This module contains helper functions and flexible pipelines to retrieve
+lyrics and chord charts from several online sites.  For lyrics the sources
+currently tried (in order) are Genius, Lyrics.ovh, AZLyrics and a manual
+lyrics file.  For chords the sources tried include Chordie, Ultimate Guitar,
+E‑Chords, Songsterr and Yousician.  Each fetch function checks the cache
+first and attempts to write successful results back to the cache via
+``jsonl_save_entry``.
+
+These functions may make HTTP requests; in environments without network
+access they will return ``"Lyrics not found."`` or ``"Chords not found."``
+gracefully.  See ``app/document_generation.py`` for the high level caching
+orchestration.
+"""
+
 import requests
 from bs4 import BeautifulSoup
 import logging
-from app.cache import jsonl_save_entry, jsonl_load_entry, jsonl_load_all
+from .cache import jsonl_save_entry, jsonl_load_entry, jsonl_load_all
 import json
 import re
 import html
@@ -12,16 +28,16 @@ import os
 logger = logging.getLogger(__name__)
 
 # Helper: Remove 'The' from artist
-def strip_the(artist):
+def strip_the(artist: str) -> str:
     return re.sub(r'^the\s+', '', artist, flags=re.IGNORECASE).strip()
 
 # Helper: Remove punctuation from title
-def strip_punct(title):
+def strip_punct(title: str) -> str:
     return re.sub(r'[^\w\s]', '', title)
 
 # Helper: Load manual lyrics from file
 MANUAL_LYRICS_PATH = 'data/manual_lyrics.json'
-def get_manual_lyrics(song_title, artist_name):
+def get_manual_lyrics(song_title: str, artist_name: str) -> str | None:
     if not os.path.exists(MANUAL_LYRICS_PATH):
         return None
     try:
@@ -35,14 +51,12 @@ def get_manual_lyrics(song_title, artist_name):
 
 # AZLyrics scraper
 AZLYRICS_BASE = "https://www.azlyrics.com/lyrics"
-def get_lyrics_from_azlyrics(song_title, artist_name):
+def get_lyrics_from_azlyrics(song_title: str, artist_name: str) -> str:
     logger.debug(f"Trying AZLyrics for {song_title} by {artist_name}...")
-    # Check cache first
     cached = jsonl_load_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, 'lyrics')
     if cached and cached != "Lyrics not found.":
         logger.debug(f"Lyrics loaded from cache for {song_title} by {artist_name}.")
         return cached
-    # AZLyrics URLs are like: https://www.azlyrics.com/lyrics/artist/title.html
     artist_url = re.sub(r'[^a-z0-9]', '', artist_name.lower().replace(' ', ''))
     title_url = re.sub(r'[^a-z0-9]', '', song_title.lower().replace(' ', ''))
     url = f"https://www.azlyrics.com/lyrics/{artist_url}/{title_url}.html"
@@ -58,7 +72,6 @@ def get_lyrics_from_azlyrics(song_title, artist_name):
         divs = soup.find_all('div')
         for i, div in enumerate(divs):
             if div.get('class') == ['ringtone']:
-                # Lyrics are in the next div without a class
                 for next_div in divs[i+1:]:
                     if not next_div.get('class'):
                         lyrics = next_div.get_text("\n", strip=True)
@@ -76,13 +89,12 @@ def get_lyrics_from_azlyrics(song_title, artist_name):
         jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
         return "Lyrics not found."
 
-def get_genius_client(genius_access_token):
+def get_genius_client(genius_access_token: str):
     import lyricsgenius
     return lyricsgenius.Genius(genius_access_token)
 
-def get_lyrics_from_genius(song_title, artist_name, genius_client):
+def get_lyrics_from_genius(song_title: str, artist_name: str, genius_client) -> str:
     logger.debug(f"Searching for lyrics for {song_title} by {artist_name}...")
-    # Check cache first
     cached = jsonl_load_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, 'lyrics')
     if cached and cached != "Lyrics not found.":
         logger.debug(f"Lyrics loaded from cache for {song_title} by {artist_name}.")
@@ -103,9 +115,8 @@ def get_lyrics_from_genius(song_title, artist_name, genius_client):
         jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
         return get_lyrics_from_lyrics_ovh(song_title, artist_name)
 
-def get_lyrics_from_lyrics_ovh(song_title, artist_name):
+def get_lyrics_from_lyrics_ovh(song_title: str, artist_name: str) -> str:
     logger.debug(f"Trying Lyrics.ovh for {song_title} by {artist_name}...")
-    # Check cache first
     cached = jsonl_load_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, 'lyrics')
     if cached and cached != "Lyrics not found.":
         logger.debug(f"Lyrics loaded from cache for {song_title} by {artist_name}.")
@@ -130,12 +141,13 @@ def get_lyrics_from_lyrics_ovh(song_title, artist_name):
         jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist_name, song_title, "Lyrics not found.", 'lyrics')
         return "Lyrics not found."
 
-def get_lyrics_from_sources(song_title, artist_name, genius_client=None):
+def get_lyrics_from_sources(song_title: str, artist_name: str, genius_client=None):
     """
-    Try all sources and flexible queries for lyrics. Log which sources/queries were tried.
+    Try all sources and flexible queries for lyrics.  Log which sources/queries were tried.
+
     Returns: (lyrics, source_name, tried_log)
     """
-    tried_log = []
+    tried_log: list[str] = []
     queries = [
         (artist_name, song_title),
         (strip_the(artist_name), song_title),
@@ -153,7 +165,7 @@ def get_lyrics_from_sources(song_title, artist_name, genius_client=None):
             try:
                 lyrics = fetch_func(title, artist)
                 tried_log.append(f"{source_name} ({artist} – {title})")
-                if lyrics and lyrics.lower() not in ["lyrics not found.", "", None]:
+                if lyrics and isinstance(lyrics, str) and lyrics.lower() not in ["lyrics not found.", "", None]:
                     logger.info(f"Lyrics found for {artist} – {title} from {source_name}")
                     return lyrics, source_name, tried_log
             except Exception as e:
@@ -161,11 +173,10 @@ def get_lyrics_from_sources(song_title, artist_name, genius_client=None):
     logger.info(f"Lyrics not found for {artist_name} – {song_title} after trying all sources/queries.")
     return "Lyrics not found.", None, tried_log
 
-# E-Chords scraper
+# E‑Chords scraper
 E_CHORDS_BASE = "https://www.e-chords.com/chords"
-def get_chords_from_echords(song_title, artist_name):
-    logger.debug(f"Trying E-Chords for {song_title} by {artist_name}...")
-    # E-Chords URLs are like: https://www.e-chords.com/chords/artist/title
+def get_chords_from_echords(song_title: str, artist_name: str) -> str:
+    logger.debug(f"Trying E‑Chords for {song_title} by {artist_name}...")
     artist_url = re.sub(r'[^a-z0-9]', '-', artist_name.lower())
     title_url = re.sub(r'[^a-z0-9]', '-', song_title.lower())
     url = f"{E_CHORDS_BASE}/{artist_url}/{title_url}"
@@ -173,24 +184,24 @@ def get_chords_from_echords(song_title, artist_name):
         response = requests.get(url, timeout=10)
         response.encoding = response.apparent_encoding
         if response.status_code != 200:
-            logger.debug(f"E-Chords returned status {response.status_code} for {url}")
+            logger.debug(f"E‑Chords returned status {response.status_code} for {url}")
             return "Chords not found."
         soup = BeautifulSoup(response.text, 'html.parser')
         chords_div = soup.find('pre', class_='core')
         if chords_div:
             chords = chords_div.get_text("\n", strip=True)
             if chords:
-                logger.debug(f"Chords found on E-Chords for {song_title} by {artist_name}.")
+                logger.debug(f"Chords found on E‑Chords for {song_title} by {artist_name}.")
                 return chords
-        logger.debug(f"Chords not found on E-Chords for {song_title} by {artist_name}.")
+        logger.debug(f"Chords not found on E‑Chords for {song_title} by {artist_name}.")
         return "Chords not found."
     except Exception as e:
-        logger.error(f"Error scraping E-Chords for {song_title} by {artist_name}: {e}")
+        logger.error(f"Error scraping E‑Chords for {song_title} by {artist_name}: {e}")
         return "Chords not found."
 
 # Songsterr scraper
 SONGSTERR_SEARCH = "https://www.songsterr.com/a/wa/search?pattern="
-def get_chords_from_songsterr(song_title, artist_name):
+def get_chords_from_songsterr(song_title: str, artist_name: str) -> str:
     logger.debug(f"Trying Songsterr for {song_title} by {artist_name}...")
     query = f"{song_title} {artist_name}"
     url = f"{SONGSTERR_SEARCH}{requests.utils.quote(query)}"
@@ -201,7 +212,6 @@ def get_chords_from_songsterr(song_title, artist_name):
             logger.debug(f"Songsterr returned status {response.status_code} for {url}")
             return "Chords not found."
         soup = BeautifulSoup(response.text, 'html.parser')
-        # Find the first song link
         link = soup.find('a', href=True, class_='song')
         if link and 'href' in link.attrs:
             song_url = f"https://www.songsterr.com{link['href']}"
@@ -211,7 +221,6 @@ def get_chords_from_songsterr(song_title, artist_name):
                 logger.debug(f"Songsterr song page returned status {song_response.status_code} for {song_url}")
                 return "Chords not found."
             song_soup = BeautifulSoup(song_response.text, 'html.parser')
-            # Songsterr tabs are in <pre> tags with class 'js-tab-content'
             tab_pre = song_soup.find('pre', class_='js-tab-content')
             if tab_pre:
                 chords = tab_pre.get_text("\n", strip=True)
@@ -224,7 +233,7 @@ def get_chords_from_songsterr(song_title, artist_name):
         logger.error(f"Error scraping Songsterr for {song_title} by {artist_name}: {e}")
         return "Chords not found."
 
-def get_chords_from_chordie(song_title, artist_name):
+def get_chords_from_chordie(song_title: str, artist_name: str) -> str:
     logger.debug(f"Searching for chords for {song_title} by {artist_name} on Chordie...")
     chords_cache = jsonl_load_all('data/cache/chords_cache.jsonl', 'chords')
     cache_key = f"{artist_name} - {song_title}"
@@ -272,8 +281,8 @@ def get_chords_from_chordie(song_title, artist_name):
         logger.error(f"Error fetching chords for {song_title} by {artist_name}: {e}")
         return get_chords_from_ultimate_guitar(song_title, artist_name)
 
-def get_chords_from_ultimate_guitar(song_title, artist_name):
-    logger.debug(f"Searching for chords for {song_title} by {artist_name} on Ultimate Guitar...")
+def get_chords_from_ultimate_guitar(song_title: str, artist_name: str) -> str:
+    logger.debug(f"Searching for chords for {song_title} by {artist_name} on Ultimate Guitar...")
     chords_cache = jsonl_load_all('data/cache/chords_cache.jsonl', 'chords')
     cache_key = f"{artist_name} - {song_title}"
     if cache_key in chords_cache and bool(chords_cache[cache_key]) and chords_cache[cache_key] != "Chords not found.":
@@ -304,7 +313,7 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
                         logger.debug(f"Chords page URL matched: {chords_page_url}")
                         break
             except Exception as e:
-                logger.error(f"Error parsing Ultimate Guitar search results: {e}")
+                logger.error(f"Error parsing Ultimate Guitar search results: {e}")
         else:
             logger.debug(f"No matching URL found in the search results for {song_title} by {artist_name}.")
             chords_cache[cache_key] = "Chords not found."
@@ -361,10 +370,9 @@ def get_chords_from_ultimate_guitar(song_title, artist_name):
         return "Chords not found."
 
 # Yousician scraper
-def get_chords_from_yousician(song_title, artist_name):
+def get_chords_from_yousician(song_title: str, artist_name: str) -> str:
     logger.debug(f"Trying Yousician for {song_title} by {artist_name}...")
-    # Yousician URLs: https://yousician.com/chords/artist/song
-    def format_for_url(s):
+    def format_for_url(s: str) -> str:
         return re.sub(r'[^a-z0-9]+', '-', s.lower()).strip('-')
     artist_url = format_for_url(artist_name)
     title_url = format_for_url(song_title)
@@ -376,7 +384,6 @@ def get_chords_from_yousician(song_title, artist_name):
             logger.debug(f"Yousician returned status {response.status_code} for {url}")
             return "Chords not found."
         soup = BeautifulSoup(response.text, 'html.parser')
-        # Chords are often in a <pre> tag or a div with class 'chords'
         chords_pre = soup.find('pre')
         if chords_pre:
             chords = chords_pre.get_text("\n", strip=True)
@@ -395,13 +402,13 @@ def get_chords_from_yousician(song_title, artist_name):
         logger.error(f"Error scraping Yousician for {song_title} by {artist_name}: {e}")
         return "Chords not found."
 
-# Robust, flexible chord fetching pipeline
-def get_chords_from_sources(song_title, artist_name):
+def get_chords_from_sources(song_title: str, artist_name: str):
     """
-    Try all sources and flexible queries for chords. Log which sources/queries were tried.
+    Try all sources and flexible queries for chords.  Log which sources/queries were tried.
+
     Returns: (chords, source_name, tried_log)
     """
-    tried_log = []
+    tried_log: list[str] = []
     queries = [
         (artist_name, song_title),
         (strip_the(artist_name), song_title),
@@ -412,7 +419,7 @@ def get_chords_from_sources(song_title, artist_name):
     sources = [
         ("Chordie", get_chords_from_chordie),
         ("Ultimate Guitar", get_chords_from_ultimate_guitar),
-        ("E-Chords", get_chords_from_echords),
+        ("E‑Chords", get_chords_from_echords),
         ("Songsterr", get_chords_from_songsterr),
         ("Yousician", get_chords_from_yousician),
     ]
@@ -421,7 +428,7 @@ def get_chords_from_sources(song_title, artist_name):
             try:
                 chords = fetch_func(title, artist)
                 tried_log.append(f"{source_name} ({artist} – {title})")
-                if chords and chords.lower() not in ["chords not found.", "", None]:
+                if chords and isinstance(chords, str) and chords.lower() not in ["chords not found.", "", None]:
                     logger.info(f"Chords found for {artist} – {title} from {source_name}")
                     return chords, source_name, tried_log
             except Exception as e:

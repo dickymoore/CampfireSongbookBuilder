@@ -1,40 +1,44 @@
+#!/usr/bin/env python3
+"""Fix mojibake (encoding issues) in JSONL cache files.
+
+Some cached entries may be improperly encoded due to upstream source errors or
+incorrect decoding when saving.  This utility reads each JSONL file in
+``data/cache`` and attempts to reparse entries that fail to decode.  Lines
+that still cannot be decoded are skipped.
+
+Example usage::
+
+    python fix_mojibake_in_cache.py
+"""
+
 import json
 import os
 
-def fix_mojibake(text):
-    if not isinstance(text, str):
-        return text
-    return (text
-        .replace('â€™', '’')
-        .replace('â€œ', '“')
-        .replace('â€�', '”')
-        .replace('â€“', '–')
-        .replace('â€”', '—')
-        .replace('â€¦', '…')
-        .replace('Ã©', 'é')
-        .replace('Ã¨', 'è')
-        .replace('Ã', 'à')
-        # Add more replacements as needed
-    )
 
-def clean_jsonl_file(filename, value_field):
-    if not os.path.exists(filename):
-        print(f"File not found: {filename}")
-        return
-    lines = []
-    with open(filename, 'r', encoding='utf-8') as f:
+def fix_mojibake_in_cache(cache_file: str) -> None:
+    """Attempt to fix JSON decoding errors for a single cache file."""
+    new_entries = []
+    with open(cache_file, 'r', encoding='utf-8') as f:
         for line in f:
             try:
-                entry = json.loads(line)
-                if value_field in entry and entry[value_field]:
-                    entry[value_field] = fix_mojibake(entry[value_field])
-                lines.append(entry)
-            except Exception:
-                lines.append(line)
-    with open(filename, 'w', encoding='utf-8') as f:
-        for entry in lines:
+                new_entries.append(json.loads(line))
+            except json.JSONDecodeError:
+                # Attempt a best‑effort fix by ignoring encoding errors
+                try:
+                    fixed_line = line.encode('latin1', errors='ignore').decode('utf-8', errors='ignore')
+                    new_entries.append(json.loads(fixed_line))
+                except Exception:
+                    # Skip irreparable lines
+                    continue
+    # Rewrite the cache file with cleaned entries
+    with open(cache_file, 'w', encoding='utf-8') as f:
+        for entry in new_entries:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
 
-clean_jsonl_file('data/cache/lyrics_cache.jsonl', 'lyrics')
-clean_jsonl_file('data/cache/chords_cache.jsonl', 'chords')
-print("Cache files cleaned.") 
+
+if __name__ == '__main__':
+    cache_dir = 'data/cache'
+    for filename in os.listdir(cache_dir):
+        if filename.endswith('.jsonl'):
+            path = os.path.join(cache_dir, filename)
+            fix_mojibake_in_cache(path)

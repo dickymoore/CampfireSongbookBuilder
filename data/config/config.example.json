@@ -1,5 +1,5 @@
 {
-    "genius": {
-        "client_access_token": "your_genius_client_access_token"
-    }
-} 
+  "genius": {
+    "client_access_token": "YOUR_GENIUS_CLIENT_ACCESS_TOKEN"
+  }
+}

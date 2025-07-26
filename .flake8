@@ -1,3 +1,10 @@
 [flake8]
 max-line-length = 100
-exclude = venv, __pycache__, data, output 
+extend-ignore = E203, W503
+exclude = 
+    .git,
+    __pycache__,
+    build,
+    dist,
+    venv,
+    data/
