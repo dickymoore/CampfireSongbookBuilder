@@ -1,5 +1,6 @@
 from docx import Document
 import logging
+import os
 from app.document_formatting import set_document_margins, set_paragraph_font, create_two_column_section, add_header_footer, sort_songs
 from app.text_cleaning import clean_lyrics, clean_chords
 
@@ -62,9 +63,11 @@ def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_out
             set_paragraph_font(paragraph, 12)
 
     if lyrics_output:
+        os.makedirs(os.path.dirname(lyrics_output), exist_ok=True)
         lyrics_document.save(lyrics_output)
         logger.info(f"Lyrics document saved as {lyrics_output}.")
 
     if chords_output:
+        os.makedirs(os.path.dirname(chords_output), exist_ok=True)
         chords_document.save(chords_output)
         logger.info(f"Chords document saved as {chords_output}.")
