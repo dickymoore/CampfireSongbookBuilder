@@ -17,7 +17,8 @@ def load_songs(csv_file):
         
         # Check if 'Skip' column exists and filter out rows where 'Skip' is set to 'skip'
         if 'Skip' in songs_df.columns:
-            songs_df = songs_df[songs_df['Skip'].str.lower() != 'skip']
+            # Fill NaN values with empty string to avoid AttributeError when using .str accessor
+            songs_df = songs_df[songs_df['Skip'].fillna('').str.lower() != 'skip']
         else:
             logging.warning("'Skip' column not found in CSV. Proceeding without skipping any songs.")
         

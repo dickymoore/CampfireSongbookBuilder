@@ -22,6 +22,8 @@ def remove_unwanted_phrases(lyrics):
 
 def clean_lyrics(lyrics):
     """Clean the lyrics by removing contributors, embeds, and unwanted phrases."""
+    if lyrics is None or not isinstance(lyrics, str):
+        return ''
     lyrics = remove_contributors_and_embeds(lyrics)
     lyrics = remove_unwanted_phrases(lyrics)
     return lyrics
@@ -35,6 +37,8 @@ MARKUP_TAGS = [
 
 def clean_chords(chords):
     """Clean the chords by removing unnecessary introductory lines, email headers, and only markup tags like [ch], [tab], etc. (not chords like [G])."""
+    if chords is None or not isinstance(chords, str):
+        return ''
     # Remove lines starting with {t:...} and {st:...}
     chords = re.sub(r'{t:.*?}\n', '', chords)
     chords = re.sub(r'{st:.*?}\n', '', chords)
