@@ -133,6 +133,8 @@ cython_debug/
 
 # Other
 *.log
+.codex/
+_bmad/*.user.toml
 
 data/output/*
 data/config/config.json
