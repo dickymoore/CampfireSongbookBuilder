@@ -7,6 +7,7 @@ from app.content_models import (
     SIGNAL_SEVERITIES,
     SOURCE_OUTCOMES,
     build_candidate_record,
+    build_favourite_record,
     build_quality_signal,
     build_quality_status,
     build_review_decision,
@@ -65,6 +66,29 @@ class TestContentModels(unittest.TestCase):
         self.assertEqual(candidate["status"], "candidate")
         self.assertIsNone(candidate["error"])
         self.assertEqual(candidate["retrieved_at"], "2026-05-19T13:00:00+01:00")
+
+    def test_build_favourite_record_preserves_exact_identity_and_derives_song_key(self):
+        favourite = build_favourite_record(
+            "  The Campfire Band ",
+            "Singalong Night  ",
+        )
+
+        self.assertEqual(
+            favourite,
+            {
+                "artist": "  The Campfire Band ",
+                "title": "Singalong Night  ",
+                "song_key": "  The Campfire Band  - Singalong Night  ",
+            },
+        )
+
+    def test_build_favourite_record_rejects_mismatched_song_key(self):
+        with self.assertRaises(ValueError):
+            build_favourite_record(
+                "The Campfire Band",
+                "Singalong Night",
+                song_key="Other Artist - Other Song",
+            )
 
     def test_build_quality_signal_uses_known_fields(self):
         signal = build_quality_signal(

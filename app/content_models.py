@@ -58,6 +58,30 @@ def derive_song_key(artist, title):
     return "{} - {}".format(artist_value, title_value)
 
 
+def build_favourite_record(artist, title, song_key=None):
+    artist_value = _require_text("artist", artist)
+    title_value = _require_text("title", title)
+    derived_song_key = derive_song_key(artist_value, title_value)
+
+    if song_key is None:
+        song_key_value = derived_song_key
+    else:
+        song_key_value = _require_text("song_key", song_key)
+        if song_key_value != derived_song_key:
+            raise ValueError(
+                "song_key must match derived song identity {}; got {!r}".format(
+                    derived_song_key,
+                    song_key_value,
+                )
+            )
+
+    return {
+        "artist": artist_value,
+        "title": title_value,
+        "song_key": song_key_value,
+    }
+
+
 def compute_content_hash(content):
     content_value = _require_text("content", content)
     digest = hashlib.sha256(content_value.encode("utf-8")).hexdigest()
