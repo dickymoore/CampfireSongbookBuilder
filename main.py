@@ -83,10 +83,16 @@ def main():
         logging.error(f"Failed to load config: {e}")
         sys.exit(1)
 
-    genius_client = get_genius_client(genius_access_token)
+    genius_client = None
+
+    def _lazy_genius_client():
+        nonlocal genius_client
+        if genius_client is None:
+            genius_client = get_genius_client(genius_access_token)
+        return genius_client
 
     if args.test_api:
-        test_genius_api(genius_client)
+        test_genius_api(_lazy_genius_client())
         return
 
     # Load songs
@@ -103,13 +109,13 @@ def main():
 
     if args.cache_only:
         logging.info("Caching all lyrics and chords for the song list (no document generation)...")
-        cache_lyrics(songs, genius_client)
+        cache_lyrics(songs, _lazy_genius_client())
         cache_chords(songs)
         logging.info("Caching complete.")
         return
 
     if args.get_song_info:
-        song_info = get_song_lyrics_info(songs, genius_client)
+        song_info = get_song_lyrics_info(songs, _lazy_genius_client())
         for title, num_characters in song_info:
             print(f"{title}: {num_characters} characters")
         return
@@ -140,7 +146,7 @@ def main():
         return
 
     if args.lyrics_only:
-        cache_lyrics(songs, genius_client)
+        cache_lyrics(songs, _lazy_genius_client())
         from app.cache import jsonl_load_all
         lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
         from app.document_creation import create_document_from_cache
@@ -172,7 +178,7 @@ def main():
         return
 
     # Default: cache both and generate both docs
-    cache_lyrics(songs, genius_client)
+    cache_lyrics(songs, _lazy_genius_client())
     cache_chords(songs)
     from app.cache import jsonl_load_all
     lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')

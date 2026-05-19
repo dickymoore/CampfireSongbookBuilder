@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-19T12:56:48+01:00
-last_updated: 2026-05-19T22:36:00+01:00
+last_updated: 2026-05-19T22:38:00+01:00
 project: CampfireSongbookBuilder
 project_key: NOKEY
 tracking_system: file-system
@@ -67,8 +67,8 @@ development_status:
   4-3-generate-quality-filtered-favourite-and-selection-books: done
   4-4-report-selection-completeness-before-output: done
   epic-4-retrospective: optional
-  epic-5: backlog
-  5-1-enforce-network-free-offline-generation: backlog
+  epic-5: in-progress
+  5-1-enforce-network-free-offline-generation: done
   5-2-preserve-backward-compatible-cache-reads: backlog
   5-3-render-accepted-content-to-markdown: backlog
   5-4-generate-docx-from-accepted-content: backlog

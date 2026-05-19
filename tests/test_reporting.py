@@ -411,7 +411,7 @@ class TestReporting(unittest.TestCase):
                         }
                     ],
                 ),
-            ), patch.object(main, "get_genius_client", return_value=object()), patch(
+            ), patch.object(main, "get_genius_client", return_value=object()) as mock_get_genius_client, patch(
                 "app.cache.jsonl_load_all",
                 side_effect=[{"The Campfire Trio - Trail Song": "First line"}, {}],
             ), patch(
@@ -432,6 +432,7 @@ class TestReporting(unittest.TestCase):
         self.assertIn("clean 1", output)
         self.assertIn("invalid input 1", output)
         self.assertNotIn("secret-token", output)
+        mock_get_genius_client.assert_not_called()
 
     def test_cli_summary_mentions_report_path_for_lyrics_only(self):
         report_data = {
