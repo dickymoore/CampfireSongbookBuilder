@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-19T12:56:48+01:00
-last_updated: 2026-05-19T22:45:00+01:00
+last_updated: 2026-05-19T22:43:00+01:00
 project: CampfireSongbookBuilder
 project_key: NOKEY
 tracking_system: file-system
@@ -49,14 +49,14 @@ development_status:
   1-4-detect-print-hostile-and-low-confidence-content: done
   1-5-persist-current-quality-status-for-cached-content: done
   epic-1-retrospective: done
-  epic-2: in-progress
+  epic-2: done
   2-1-record-source-attempts-during-fetching: done
   2-2-retry-alternate-sources-before-final-questionable-status: done
   2-3-persist-review-decisions-with-content-hashes: done
   2-4-apply-questionable-exclusion-and-override-rules: done
   2-5-produce-traceable-quality-reports: done
   epic-2-retrospective: optional
-  epic-3: in-progress
+  epic-3: done
   3-1-validate-source-list-rows-before-fetching: done
   3-2-summarize-newly-added-song-outcomes: done
   3-3-keep-file-and-cli-workflows-agent-friendly: done
@@ -67,11 +67,11 @@ development_status:
   4-3-generate-quality-filtered-favourite-and-selection-books: done
   4-4-report-selection-completeness-before-output: done
   epic-4-retrospective: optional
-  epic-5: in-progress
+  epic-5: done
   5-1-enforce-network-free-offline-generation: done
   5-2-preserve-backward-compatible-cache-reads: done
   5-3-render-accepted-content-to-markdown: done
   5-4-generate-docx-from-accepted-content: done
   5-5-add-recoverable-optional-pdf-conversion: done
-  5-6-apply-basic-printable-layout-quality-checks: backlog
+  5-6-apply-basic-printable-layout-quality-checks: done
   epic-5-retrospective: optional

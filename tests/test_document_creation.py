@@ -62,6 +62,10 @@ class TestDocumentCreation(unittest.TestCase):
             self.assertTrue(report_entries["Trail Song"]["included"])
             self.assertFalse(report_entries["Missing Song"]["included"])
             self.assertFalse(report_entries["Long Song"]["included"])
+            self.assertIn(
+                "print_hostile_content",
+                [signal["code"] for signal in report_entries["Long Song"]["signals"]],
+            )
             self.assertEqual(
                 report_entries["Long Song"]["reason"],
                 "Questionable content is excluded by default.",
