@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from app.content_models import build_favourite_record, build_review_decision, compute_content_hash
 from app.review_state import save_review_decisions
@@ -216,6 +217,59 @@ class TestDocumentCreation(unittest.TestCase):
             self.assertEqual(report_data["selection_issues"][0]["song_key"], "The Campfire Trio - Missing Song")
             self.assertEqual(report_data["selection_issues"][0]["issue_type"], "missing_content")
             self.assertEqual(report_data["source"], "generate_from_selection")
+
+    def test_create_document_from_cache_writes_pdf_when_converter_succeeds(self):
+        song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
+        lyrics_cache = {"The Campfire Trio - Trail Song": "First line\nSecond line"}
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            output_path = Path(tmp_dir) / "lyrics.docx"
+
+            def fake_convert(docx_path, pdf_path=None, runner=None, which=None):  # noqa: ARG001
+                target_path = Path(docx_path).with_suffix(".pdf")
+                target_path.write_text("pdf", encoding="utf-8")
+                return target_path, None
+
+            with patch("app.document_creation.convert_document_to_pdf", side_effect=fake_convert):
+                report_data = create_document_from_cache(
+                    song_list,
+                    lyrics_cache,
+                    {},
+                    lyrics_output=output_path,
+                    pdf_output=True,
+                )
+
+            self.assertTrue(output_path.exists())
+            self.assertTrue(output_path.with_suffix(".md").exists())
+            self.assertTrue(output_path.with_suffix(".pdf").exists())
+            self.assertEqual(report_data["pdf_outputs"], [str(output_path.with_suffix(".pdf"))])
+            self.assertEqual(report_data["pdf_errors"], [])
+
+    def test_create_document_from_cache_preserves_artifacts_when_pdf_conversion_fails(self):
+        song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
+        lyrics_cache = {"The Campfire Trio - Trail Song": "First line\nSecond line"}
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            output_path = Path(tmp_dir) / "lyrics.docx"
+
+            with patch(
+                "app.document_creation.convert_document_to_pdf",
+                return_value=(None, "converter missing"),
+            ):
+                report_data = create_document_from_cache(
+                    song_list,
+                    lyrics_cache,
+                    {},
+                    lyrics_output=output_path,
+                    pdf_output=True,
+                )
+
+            self.assertTrue(output_path.exists())
+            self.assertTrue(output_path.with_suffix(".md").exists())
+            self.assertFalse(output_path.with_suffix(".pdf").exists())
+            self.assertEqual(report_data["pdf_outputs"], [])
+            self.assertEqual(len(report_data["pdf_errors"]), 1)
+            self.assertEqual(report_data["pdf_errors"][0]["reason"], "converter missing")
 
 
 if __name__ == "__main__":

@@ -172,6 +172,8 @@ def build_traceable_quality_report(
     generated_at=None,
     invalid_song_rows=None,
     selection_issues=None,
+    pdf_outputs=None,
+    pdf_errors=None,
 ):
     generated_at_value = generated_at or _now_iso()
     source_attempts_by_song = _group_source_attempts(source_attempts)
@@ -187,6 +189,16 @@ def build_traceable_quality_report(
     selection_issue_rows = [
         _build_selection_issue_entry(record)
         for record in selection_issues or []
+        if isinstance(record, dict)
+    ]
+    pdf_output_rows = [str(path) for path in pdf_outputs or [] if path]
+    pdf_error_rows = [
+        {
+            "source": record.get("source"),
+            "target": record.get("target"),
+            "reason": record.get("reason"),
+        }
+        for record in pdf_errors or []
         if isinstance(record, dict)
     ]
     clean_songs = [
@@ -229,6 +241,8 @@ def build_traceable_quality_report(
         "excluded_clean_count": len(excluded_clean_songs),
         "invalid_input_count": len(invalid_input_rows),
         "selection_issue_count": len(selection_issue_rows),
+        "pdf_output_count": len(pdf_output_rows),
+        "pdf_error_count": len(pdf_error_rows),
         "counts": {
             "clean": len(clean_songs),
             "excluded_clean": len(excluded_clean_songs),
@@ -236,6 +250,8 @@ def build_traceable_quality_report(
             "missing": len(missing_songs),
             "invalid_input": len(invalid_input_rows),
             "selection_issue": len(selection_issue_rows),
+            "pdf_output": len(pdf_output_rows),
+            "pdf_error": len(pdf_error_rows),
         },
         "clean_songs": clean_songs,
         "excluded_clean_songs": excluded_clean_songs,
@@ -243,6 +259,8 @@ def build_traceable_quality_report(
         "missing_songs": missing_songs,
         "invalid_input_rows": invalid_input_rows,
         "selection_issues": selection_issue_rows,
+        "pdf_outputs": pdf_output_rows,
+        "pdf_errors": pdf_error_rows,
     }
 
     report = {
@@ -252,6 +270,8 @@ def build_traceable_quality_report(
         "summary": summary,
         "songs": songs,
         "selection_issues": selection_issue_rows,
+        "pdf_outputs": pdf_output_rows,
+        "pdf_errors": pdf_error_rows,
     }
 
     return _sanitize_value(report)

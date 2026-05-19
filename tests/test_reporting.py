@@ -219,6 +219,32 @@ class TestReporting(unittest.TestCase):
         self.assertEqual(report["summary"]["selection_issues"][0]["selection_name"], "trip-night")
         self.assertEqual(report["selection_issues"], selection_issues)
 
+    def test_build_traceable_quality_report_includes_pdf_artifacts(self):
+        generation_results = []
+        pdf_outputs = ["/tmp/output/lyrics.pdf"]
+        pdf_errors = [
+            {
+                "source": "/tmp/output/lyrics.docx",
+                "target": "/tmp/output/lyrics.pdf",
+                "reason": "converter missing",
+            }
+        ]
+
+        report = build_traceable_quality_report(
+            generation_results,
+            source="generate_from_selection",
+            generated_at="2026-05-19T15:14:19+01:00",
+            pdf_outputs=pdf_outputs,
+            pdf_errors=pdf_errors,
+        )
+
+        self.assertEqual(report["summary"]["pdf_output_count"], 1)
+        self.assertEqual(report["summary"]["pdf_error_count"], 1)
+        self.assertEqual(report["summary"]["counts"]["pdf_output"], 1)
+        self.assertEqual(report["summary"]["counts"]["pdf_error"], 1)
+        self.assertEqual(report["pdf_outputs"], pdf_outputs)
+        self.assertEqual(report["pdf_errors"], pdf_errors)
+
     def test_build_traceable_quality_report_preserves_source_attempt_errors(self):
         generation_results = [
             {

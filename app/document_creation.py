@@ -20,6 +20,7 @@ from app.review_state import (
     load_quality_status,
     load_review_decisions,
 )
+from app.pdf_generation import convert_document_to_pdf
 from app.text_cleaning import clean_chords, clean_lyrics
 
 
@@ -99,6 +100,7 @@ def create_document_from_cache(
     chords_output=None,
     selection_records=None,
     report_source=None,
+    pdf_output=False,
 ):
     logger.debug("Running create_document_from_cache function")
 
@@ -139,6 +141,8 @@ def create_document_from_cache(
     songs_to_process = selection_records if selection_records is not None else sort_songs(song_list)
     report_entries = []
     selection_issues = []
+    pdf_outputs = []
+    pdf_errors = []
 
     for song in songs_to_process:
         artist = _song_artist(song)
@@ -263,6 +267,18 @@ def create_document_from_cache(
         os.makedirs(os.path.dirname(lyrics_output), exist_ok=True)
         lyrics_document.save(lyrics_output)
         logger.info("Lyrics document saved as %s.", lyrics_output)
+        if pdf_output:
+            lyrics_pdf_path, lyrics_pdf_error = convert_document_to_pdf(lyrics_output)
+            if lyrics_pdf_path is not None:
+                pdf_outputs.append(str(lyrics_pdf_path))
+            if lyrics_pdf_error is not None:
+                pdf_errors.append(
+                    {
+                        "source": lyrics_output,
+                        "target": str(Path(lyrics_output).with_suffix(".pdf")),
+                        "reason": lyrics_pdf_error,
+                    }
+                )
 
     if chords_output:
         chords_markdown_path = Path(chords_output).with_suffix(".md")
@@ -270,6 +286,18 @@ def create_document_from_cache(
         os.makedirs(os.path.dirname(chords_output), exist_ok=True)
         chords_document.save(chords_output)
         logger.info("Chords document saved as %s.", chords_output)
+        if pdf_output:
+            chords_pdf_path, chords_pdf_error = convert_document_to_pdf(chords_output)
+            if chords_pdf_path is not None:
+                pdf_outputs.append(str(chords_pdf_path))
+            if chords_pdf_error is not None:
+                pdf_errors.append(
+                    {
+                        "source": chords_output,
+                        "target": str(Path(chords_output).with_suffix(".pdf")),
+                        "reason": chords_pdf_error,
+                    }
+                )
 
     return {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
@@ -277,4 +305,6 @@ def create_document_from_cache(
         "source": report_source or DEFAULT_REPORT_SOURCE,
         "entries": report_entries,
         "selection_issues": selection_issues,
+        "pdf_outputs": pdf_outputs,
+        "pdf_errors": pdf_errors,
     }
