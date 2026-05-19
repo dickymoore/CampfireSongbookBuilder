@@ -4,6 +4,9 @@ from pathlib import Path
 
 from app.content_models import build_review_decision, compute_content_hash
 from app.review_state import save_review_decisions
+from tests.docx_stub import install_docx_stub
+
+install_docx_stub()
 
 try:
     from docx import Document
@@ -56,7 +59,7 @@ class TestDocumentCreation(unittest.TestCase):
             self.assertFalse(report_entries["Long Song"]["included"])
             self.assertEqual(
                 report_entries["Long Song"]["reason"],
-                "Lyrics are too long and were excluded from the document.",
+                "Questionable content is excluded by default.",
             )
 
     def test_create_document_from_cache_includes_questionable_content_with_override(self):

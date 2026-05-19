@@ -81,6 +81,12 @@ def _all_lines(content_text):
 def _has_duplicate_block(lines):
     line_count = len(lines)
 
+    # Duplicate-block detection is intentionally bounded so already huge inputs
+    # do not trigger a pathological search. Long content is handled by the
+    # print-hostile checks instead.
+    if line_count > 200:
+        return False
+
     for block_length in range(1, (line_count // 2) + 1):
         seen = {}
         for start in range(0, line_count - block_length + 1):

@@ -81,6 +81,7 @@ def _group_source_attempts(source_attempts):
                 "content_type": content_type,
                 "source": attempt.get("source"),
                 "status": attempt.get("status"),
+                "error": attempt.get("error"),
                 "retrieved_at": attempt.get("retrieved_at"),
             }
         )

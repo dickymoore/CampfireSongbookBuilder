@@ -9,6 +9,7 @@ from app.content_models import build_quality_status, compute_content_hash, build
 from app.review_state import save_quality_status
 from app.source_attempts import load_source_attempts
 
+from tests.docx_stub import install_docx_stub
 
 if "bs4" not in sys.modules:
     bs4_stub = types.ModuleType("bs4")
@@ -19,31 +20,7 @@ if "bs4" not in sys.modules:
     bs4_stub.BeautifulSoup = _BeautifulSoupStub
     sys.modules["bs4"] = bs4_stub
 
-if "docx" not in sys.modules:
-    docx_stub = types.ModuleType("docx")
-    shared_stub = types.ModuleType("docx.shared")
-    oxml_stub = types.ModuleType("docx.oxml")
-    oxml_ns_stub = types.ModuleType("docx.oxml.ns")
-
-    class _UnitStub:
-        def __init__(self, value):
-            self.value = value
-
-    def _qn(value):
-        return value
-
-    def _oxml_element(name):
-        return {"name": name}
-
-    shared_stub.Pt = _UnitStub
-    shared_stub.Inches = _UnitStub
-    oxml_ns_stub.qn = _qn
-    oxml_stub.OxmlElement = _oxml_element
-
-    sys.modules["docx"] = docx_stub
-    sys.modules["docx.shared"] = shared_stub
-    sys.modules["docx.oxml"] = oxml_stub
-    sys.modules["docx.oxml.ns"] = oxml_ns_stub
+install_docx_stub()
 
 from app import document_generation, fetch_data
 
@@ -133,6 +110,56 @@ class TestSourceRetry(unittest.TestCase):
                 side_effect=AssertionError("quality status should not be rewritten for clean cached content"),
             ):
                 document_generation.cache_lyrics(song_list, genius_client=None)
+
+    def test_stale_clean_quality_status_does_not_skip_reassessment(self):
+        song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
+        stale_clean_status = build_quality_status(
+            "The Campfire Trio",
+            "Trail Song",
+            "lyrics",
+            compute_content_hash("First line\nSecond line"),
+            "clean",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            quality_path = Path(tmp_dir) / "data" / "review" / "quality_status.json"
+            save_quality_status(quality_path, [stale_clean_status])
+
+            reassessed_quality = {
+                "quality": "clean",
+                "signals": [],
+                "summary": {
+                    "line_count": 1,
+                    "total_characters": 15,
+                    "longest_line_length": 15,
+                    "has_print_hostile_content": False,
+                    "has_html_residue": False,
+                },
+            }
+
+            with patch.object(document_generation, "QUALITY_STATUS_PATH", quality_path), patch.object(
+                document_generation, "sort_songs", return_value=song_list
+            ), patch.object(
+                document_generation, "jsonl_load_entry", return_value="<div>Verse</div>"
+            ), patch.object(
+                document_generation, "get_lyrics_from_sources",
+                return_value=("<div>Verse</div>", "AZLyrics", ["AZLyrics (...)"], reassessed_quality),
+            ) as fetch_mock, patch.object(
+                document_generation, "jsonl_save_entry"
+            ) as save_cache_mock, patch.object(
+                document_generation, "save_quality_status",
+                return_value={"version": 1, "updated_at": None, "entries": {}},
+            ):
+                document_generation.cache_lyrics(song_list, genius_client=None)
+
+        fetch_mock.assert_called_once()
+        save_cache_mock.assert_called_once_with(
+            "data/cache/lyrics_cache.jsonl",
+            "The Campfire Trio",
+            "Trail Song",
+            "<div>Verse</div>",
+            "lyrics",
+        )
 
     def test_questionable_final_candidate_is_persisted_through_quality_status(self):
         song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]

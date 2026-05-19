@@ -38,11 +38,12 @@ def _save_quality_status_record(artist, title, content_type, content, quality_re
         logger.warning("Quality status load reported %d recoverable issue(s).", len(errors))
 
     records = _flatten_quality_status_records(state)
+    content_hash = compute_content_hash(content)
     record = build_quality_status(
         artist,
         title,
         content_type,
-        compute_content_hash(content),
+        content_hash,
         "clean" if quality_result["quality"] == "clean" else "questionable",
         signals=quality_result["signals"],
         assessed_at=datetime.now().astimezone().isoformat(timespec="seconds"),
@@ -83,7 +84,12 @@ def cache_lyrics(song_list, genius_client):
         cached = jsonl_load_entry('data/cache/lyrics_cache.jsonl', artist, title, 'lyrics')
         cached_quality_status = _load_quality_status_record(artist, title, "lyrics")
         if cached and cached != "Lyrics not found.":
-            if cached_quality_status and cached_quality_status["quality"] == "clean":
+            cached_content_hash = compute_content_hash(cached)
+            if (
+                cached_quality_status
+                and cached_quality_status["quality"] == "clean"
+                and cached_quality_status.get("content_hash") == cached_content_hash
+            ):
                 found = True
             else:
                 cached_quality = _assess_cached_content(artist, title, "lyrics", cached)
@@ -133,7 +139,12 @@ def cache_chords(song_list):
         cached = jsonl_load_entry('data/cache/chords_cache.jsonl', artist, title, 'chords')
         cached_quality_status = _load_quality_status_record(artist, title, "chords")
         if cached and cached != "Chords not found.":
-            if cached_quality_status and cached_quality_status["quality"] == "clean":
+            cached_content_hash = compute_content_hash(cached)
+            if (
+                cached_quality_status
+                and cached_quality_status["quality"] == "clean"
+                and cached_quality_status.get("content_hash") == cached_content_hash
+            ):
                 found = True
             else:
                 cached_quality = _assess_cached_content(artist, title, "chords", cached)

@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from tests.docx_stub import install_docx_stub
 from app.reporting import (
     build_traceable_quality_report,
     summarize_traceable_quality_report,
@@ -15,26 +16,7 @@ from app.reporting import (
 
 
 def _install_docx_stubs():
-    if "docx" in sys.modules:
-        return
-
-    docx_stub = types.ModuleType("docx")
-    docx_stub.Document = lambda *args, **kwargs: None
-
-    shared_stub = types.ModuleType("docx.shared")
-    shared_stub.Pt = lambda value: value
-    shared_stub.Inches = lambda value: value
-
-    oxml_stub = types.ModuleType("docx.oxml")
-    oxml_stub.OxmlElement = lambda *args, **kwargs: None
-
-    ns_stub = types.ModuleType("docx.oxml.ns")
-    ns_stub.qn = lambda value: value
-
-    sys.modules["docx"] = docx_stub
-    sys.modules["docx.shared"] = shared_stub
-    sys.modules["docx.oxml"] = oxml_stub
-    sys.modules["docx.oxml.ns"] = ns_stub
+    install_docx_stub()
 
 
 def _install_bs4_stub():
@@ -150,6 +132,7 @@ class TestReporting(unittest.TestCase):
                 "content_type": "lyrics",
                 "source": "Genius",
                 "status": "candidate",
+                "error": None,
                 "retrieved_at": "2026-05-19T15:00:00+01:00",
             }
         ]
@@ -191,6 +174,49 @@ class TestReporting(unittest.TestCase):
         self.assertEqual(report["songs"][0]["source_attempts"], source_attempts)
         self.assertEqual(report["songs"][1]["source_attempts"], [])
         self.assertEqual(report["songs"][2]["review_decision"]["decision"], "override")
+
+    def test_build_traceable_quality_report_preserves_source_attempt_errors(self):
+        generation_results = [
+            {
+                "artist": "The Campfire Trio",
+                "title": "Trail Song",
+                "song_key": "The Campfire Trio - Trail Song",
+                "content_type": "lyrics",
+                "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "quality": "missing",
+                "included": False,
+                "decision_source": "quality_missing",
+                "reason": "Missing content is excluded by default.",
+                "signals": [],
+                "quality_status": {
+                    "content_type": "lyrics",
+                    "quality": "missing",
+                },
+                "review_decision": None,
+            }
+        ]
+        source_attempts = [
+            {
+                "artist": "The Campfire Trio",
+                "title": "Trail Song",
+                "song_key": "The Campfire Trio - Trail Song",
+                "content_type": "lyrics",
+                "source": "Genius",
+                "status": "error",
+                "error": "timeout while fetching lyrics",
+                "retrieved_at": "2026-05-19T15:00:00+01:00",
+            }
+        ]
+
+        report = build_traceable_quality_report(
+            generation_results,
+            source="generate_from_cache",
+            source_attempts=source_attempts,
+            generated_at="2026-05-19T15:14:19+01:00",
+        )
+
+        self.assertEqual(report["songs"][0]["source_attempts"][0]["status"], "error")
+        self.assertEqual(report["songs"][0]["source_attempts"][0]["error"], "timeout while fetching lyrics")
 
     def test_build_traceable_quality_report_handles_excluded_clean_and_invalid_rows(self):
         generation_results = [
