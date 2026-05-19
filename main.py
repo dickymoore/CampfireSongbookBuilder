@@ -43,6 +43,7 @@ def _write_generation_report(report_data):
         source_attempts=source_attempt_records,
         generated_at=report_data.get("generated_at"),
         invalid_song_rows=report_data.get("invalid_song_rows", []),
+        selection_issues=report_data.get("selection_issues", []),
     )
     report_path = write_traceable_quality_report(report)
     print(summarize_traceable_quality_report(report, report_path))

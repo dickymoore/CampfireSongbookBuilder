@@ -175,6 +175,44 @@ class TestDocumentCreation(unittest.TestCase):
             self.assertEqual(report_entries["Override Song"]["decision_source"], "review_override")
             self.assertEqual(report_data["source"], "generate_from_selection")
 
+    def test_create_document_from_cache_reports_selection_completeness_issues_before_output(self):
+        selection_records = [
+            build_favourite_record("The Campfire Trio", "Trail Song"),
+            build_favourite_record("The Campfire Trio", "Missing Song"),
+        ]
+        lyrics_cache = {
+            "The Campfire Trio - Trail Song": "First line\nSecond line",
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            output_path = tmp_path / "lyrics.docx"
+
+            report_data = create_document_from_cache(
+                [],
+                lyrics_cache,
+                {},
+                lyrics_output=output_path,
+                selection_records=selection_records,
+                report_source="generate_from_selection",
+            )
+
+            text = self._read_document_text(output_path)
+            report_entries = {entry["title"]: entry for entry in report_data["entries"]}
+
+            self.assertIn("Trail Song by The Campfire Trio", text)
+            self.assertNotIn("Missing Song by The Campfire Trio", text)
+            self.assertTrue(report_entries["Trail Song"]["included"])
+            self.assertFalse(report_entries["Missing Song"]["included"])
+            self.assertEqual(
+                report_entries["Missing Song"]["reason"],
+                "Missing content is excluded by default.",
+            )
+            self.assertEqual(len(report_data["selection_issues"]), 1)
+            self.assertEqual(report_data["selection_issues"][0]["song_key"], "The Campfire Trio - Missing Song")
+            self.assertEqual(report_data["selection_issues"][0]["issue_type"], "missing_content")
+            self.assertEqual(report_data["source"], "generate_from_selection")
+
 
 if __name__ == "__main__":
     unittest.main()

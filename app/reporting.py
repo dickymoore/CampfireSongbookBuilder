@@ -144,6 +144,26 @@ def _build_invalid_input_entry(record):
     return entry
 
 
+def _build_selection_issue_entry(record):
+    entry = {
+        "selection_name": record.get("selection_name"),
+        "issue_type": record.get("issue_type"),
+        "artist": record.get("artist"),
+        "title": record.get("title"),
+        "song_key": record.get("song_key"),
+        "content_type": record.get("content_type"),
+        "reason": record.get("reason"),
+    }
+
+    if "file_path" in record:
+        entry["file_path"] = record.get("file_path")
+
+    if "field" in record:
+        entry["field"] = record.get("field")
+
+    return entry
+
+
 def build_traceable_quality_report(
     generation_results,
     source="generate_from_cache",
@@ -151,6 +171,7 @@ def build_traceable_quality_report(
     source_attempts=None,
     generated_at=None,
     invalid_song_rows=None,
+    selection_issues=None,
 ):
     generated_at_value = generated_at or _now_iso()
     source_attempts_by_song = _group_source_attempts(source_attempts)
@@ -161,6 +182,11 @@ def build_traceable_quality_report(
     invalid_input_rows = [
         _build_invalid_input_entry(record)
         for record in invalid_song_rows or []
+        if isinstance(record, dict)
+    ]
+    selection_issue_rows = [
+        _build_selection_issue_entry(record)
+        for record in selection_issues or []
         if isinstance(record, dict)
     ]
     clean_songs = [
@@ -202,18 +228,21 @@ def build_traceable_quality_report(
         "clean_count": len(clean_songs),
         "excluded_clean_count": len(excluded_clean_songs),
         "invalid_input_count": len(invalid_input_rows),
+        "selection_issue_count": len(selection_issue_rows),
         "counts": {
             "clean": len(clean_songs),
             "excluded_clean": len(excluded_clean_songs),
             "questionable": len(questionable_songs),
             "missing": len(missing_songs),
             "invalid_input": len(invalid_input_rows),
+            "selection_issue": len(selection_issue_rows),
         },
         "clean_songs": clean_songs,
         "excluded_clean_songs": excluded_clean_songs,
         "questionable_songs": questionable_songs,
         "missing_songs": missing_songs,
         "invalid_input_rows": invalid_input_rows,
+        "selection_issues": selection_issue_rows,
     }
 
     report = {
@@ -222,6 +251,7 @@ def build_traceable_quality_report(
         "source": source,
         "summary": summary,
         "songs": songs,
+        "selection_issues": selection_issue_rows,
     }
 
     return _sanitize_value(report)
@@ -255,13 +285,14 @@ def summarize_traceable_quality_report(report, report_path):
     return (
         "Quality report written to {} "
         "(clean {}, questionable {}, missing {}, invalid input {}; "
-        "included {}, excluded {}, overridden {})."
+        "selection issues {}; included {}, excluded {}, overridden {})."
     ).format(
         report_path,
         counts.get("clean", summary.get("clean_count", 0)),
         counts.get("questionable", summary.get("questionable_count", 0)),
         counts.get("missing", summary.get("missing_count", 0)),
         counts.get("invalid_input", summary.get("invalid_input_count", 0)),
+        counts.get("selection_issue", summary.get("selection_issue_count", 0)),
         summary.get("included_count", 0),
         summary.get("excluded_count", 0),
         summary.get("overridden_count", 0),

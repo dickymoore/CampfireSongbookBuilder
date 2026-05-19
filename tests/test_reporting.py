@@ -175,6 +175,50 @@ class TestReporting(unittest.TestCase):
         self.assertEqual(report["songs"][1]["source_attempts"], [])
         self.assertEqual(report["songs"][2]["review_decision"]["decision"], "override")
 
+    def test_build_traceable_quality_report_includes_selection_issues(self):
+        generation_results = [
+            {
+                "artist": "The Campfire Trio",
+                "title": "Trail Song",
+                "song_key": "The Campfire Trio - Trail Song",
+                "content_type": "lyrics",
+                "content_hash": None,
+                "quality": "missing",
+                "included": False,
+                "decision_source": "quality_missing",
+                "reason": "Missing content is excluded by default.",
+                "signals": [],
+                "quality_status": {
+                    "content_type": "lyrics",
+                    "quality": "missing",
+                },
+                "review_decision": None,
+            }
+        ]
+        selection_issues = [
+            {
+                "selection_name": "trip-night",
+                "issue_type": "missing_content",
+                "artist": "The Campfire Trio",
+                "title": "Trail Song",
+                "song_key": "The Campfire Trio - Trail Song",
+                "content_type": "lyrics",
+                "reason": "Missing content is excluded by default.",
+            }
+        ]
+
+        report = build_traceable_quality_report(
+            generation_results,
+            source="generate_from_selection",
+            generated_at="2026-05-19T15:14:19+01:00",
+            selection_issues=selection_issues,
+        )
+
+        self.assertEqual(report["summary"]["selection_issue_count"], 1)
+        self.assertEqual(report["summary"]["counts"]["selection_issue"], 1)
+        self.assertEqual(report["summary"]["selection_issues"][0]["selection_name"], "trip-night")
+        self.assertEqual(report["selection_issues"], selection_issues)
+
     def test_build_traceable_quality_report_preserves_source_attempt_errors(self):
         generation_results = [
             {

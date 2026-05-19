@@ -117,6 +117,7 @@ def create_document_from_cache(
 
     songs_to_process = selection_records if selection_records is not None else sort_songs(song_list)
     report_entries = []
+    selection_issues = []
 
     for song in songs_to_process:
         artist = _song_artist(song)
@@ -176,6 +177,18 @@ def create_document_from_cache(
                     reason=report_reason,
                 )
             )
+            if selection_records is not None and generation_result["quality"] == "missing":
+                selection_issues.append(
+                    {
+                        "selection_name": None,
+                        "issue_type": "missing_content",
+                        "artist": artist,
+                        "title": title,
+                        "song_key": cache_key,
+                        "content_type": "lyrics",
+                        "reason": report_reason,
+                    }
+                )
 
         if chords_output:
             chords = chords_cache.get(cache_key) if isinstance(chords_cache, dict) else None
@@ -188,6 +201,18 @@ def create_document_from_cache(
                 review_decision_record=chords_review_decision,
             )
             report_entries.append(_build_report_entry(song, "chords", generation_result))
+            if selection_records is not None and generation_result["quality"] == "missing":
+                selection_issues.append(
+                    {
+                        "selection_name": None,
+                        "issue_type": "missing_content",
+                        "artist": artist,
+                        "title": title,
+                        "song_key": cache_key,
+                        "content_type": "chords",
+                        "reason": generation_result["reason"],
+                    }
+                )
 
             if generation_result["included"] and isinstance(chords, str) and chords != "":
                 chords = clean_chords(chords)
@@ -224,4 +249,5 @@ def create_document_from_cache(
         "report_type": "quality_run",
         "source": report_source or DEFAULT_REPORT_SOURCE,
         "entries": report_entries,
+        "selection_issues": selection_issues,
     }
