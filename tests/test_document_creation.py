@@ -49,11 +49,15 @@ class TestDocumentCreation(unittest.TestCase):
             )
 
             text = self._read_document_text(output_path)
+            markdown_text = output_path.with_suffix(".md").read_text(encoding="utf-8")
             report_entries = {entry["title"]: entry for entry in report_data["entries"]}
 
             self.assertIn("Trail Song by The Campfire Trio", text)
             self.assertNotIn("Missing Song by The Campfire Trio", text)
             self.assertNotIn("Long Song by The Campfire Trio", text)
+            self.assertIn("Trail Song by The Campfire Trio", markdown_text)
+            self.assertNotIn("Missing Song by The Campfire Trio", markdown_text)
+            self.assertNotIn("Long Song by The Campfire Trio", markdown_text)
             self.assertTrue(report_entries["Trail Song"]["included"])
             self.assertFalse(report_entries["Missing Song"]["included"])
             self.assertFalse(report_entries["Long Song"]["included"])

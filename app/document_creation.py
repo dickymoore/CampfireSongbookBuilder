@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 
 from docx import Document
 
@@ -72,6 +73,24 @@ def _build_report_entry(song, content_type, generation_result, included=None, re
     }
 
 
+def _markdown_song_block(artist, title, content):
+    return [
+        "# {} by {}".format(title, artist),
+        "",
+        "```text",
+        content,
+        "```",
+        "",
+    ]
+
+
+def _write_markdown_document(output_path, lines):
+    target_path = Path(output_path)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    target_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    logger.info("Markdown document saved as %s.", target_path)
+
+
 def create_document_from_cache(
     song_list,
     lyrics_cache,
@@ -107,6 +126,7 @@ def create_document_from_cache(
         set_document_margins(lyrics_document, 0.5)
         create_two_column_section(lyrics_document)
         add_header_footer(lyrics_document)
+        lyrics_markdown_lines = []
 
     if chords_output:
         logger.debug("Initializing chords document")
@@ -114,6 +134,7 @@ def create_document_from_cache(
         set_document_margins(chords_document, 0.5)
         create_two_column_section(chords_document)
         add_header_footer(chords_document)
+        chords_markdown_lines = []
 
     songs_to_process = selection_records if selection_records is not None else sort_songs(song_list)
     report_entries = []
@@ -156,6 +177,7 @@ def create_document_from_cache(
                             paragraph.add_run().add_break()
                         paragraph.add_run(line)
                     set_paragraph_font(paragraph, 12)
+                    lyrics_markdown_lines.extend(_markdown_song_block(artist, title, lyrics))
                 else:
                     report_included = False
                     report_reason = "Lyrics are too long and were excluded from the document."
@@ -226,6 +248,7 @@ def create_document_from_cache(
                         paragraph.add_run().add_break()
                     paragraph.add_run(line)
                 set_paragraph_font(paragraph, 12)
+                chords_markdown_lines.extend(_markdown_song_block(artist, title, chords))
             else:
                 logger.debug(
                     "Skipping chords for %s by %s: %s",
@@ -235,11 +258,15 @@ def create_document_from_cache(
                 )
 
     if lyrics_output:
+        lyrics_markdown_path = Path(lyrics_output).with_suffix(".md")
+        _write_markdown_document(lyrics_markdown_path, lyrics_markdown_lines)
         os.makedirs(os.path.dirname(lyrics_output), exist_ok=True)
         lyrics_document.save(lyrics_output)
         logger.info("Lyrics document saved as %s.", lyrics_output)
 
     if chords_output:
+        chords_markdown_path = Path(chords_output).with_suffix(".md")
+        _write_markdown_document(chords_markdown_path, chords_markdown_lines)
         os.makedirs(os.path.dirname(chords_output), exist_ok=True)
         chords_document.save(chords_output)
         logger.info("Chords document saved as %s.", chords_output)
