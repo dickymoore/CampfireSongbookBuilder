@@ -6,6 +6,12 @@ from app.load_songs import load_songs
 from app.document_generation import cache_lyrics, cache_chords
 from app.fetch_data import get_genius_client
 from app.song_info import get_song_lyrics_info
+from app.reporting import (
+    build_traceable_quality_report,
+    summarize_traceable_quality_report,
+    write_traceable_quality_report,
+)
+from app.source_attempts import load_source_attempts
 # from app.cache import load_cache  # Remove this import, not needed with JSONL
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -16,6 +22,26 @@ LYRICS_CACHE_PATH = 'data/cache/lyrics_cache.jsonl'
 CHORDS_CACHE_PATH = 'data/cache/chords_cache.jsonl'
 LYRICS_DOC_PATH = 'data/output/Lyrics_Document.docx'
 CHORDS_DOC_PATH = 'data/output/Chords_Document.docx'
+
+
+def _write_generation_report(report_data):
+    source_attempt_records, source_attempt_errors = load_source_attempts()
+    if source_attempt_errors:
+        logging.warning(
+            "Source attempt load reported %d recoverable issue(s).",
+            len(source_attempt_errors),
+        )
+
+    report = build_traceable_quality_report(
+        report_data.get("entries", []),
+        source=report_data.get("source", "generate_from_cache"),
+        report_type=report_data.get("report_type", "quality_run"),
+        source_attempts=source_attempt_records,
+        generated_at=report_data.get("generated_at"),
+    )
+    report_path = write_traceable_quality_report(report)
+    print(summarize_traceable_quality_report(report, report_path))
+    return report_path
 
 def test_genius_api(genius_client):
     """Test the Genius API key by searching for a well-known song."""
@@ -90,7 +116,15 @@ def main():
         lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
         chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
         from app.document_creation import create_document_from_cache
-        create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output, chords_output)
+        report_data = create_document_from_cache(
+            songs,
+            lyrics_cache,
+            chords_cache,
+            lyrics_output,
+            chords_output,
+        )
+        report_data["source"] = "generate_from_cache"
+        _write_generation_report(report_data)
         return
 
     if args.lyrics_only:
@@ -98,7 +132,14 @@ def main():
         from app.cache import jsonl_load_all
         lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
         from app.document_creation import create_document_from_cache
-        create_document_from_cache(songs, lyrics_cache, {}, lyrics_output=LYRICS_DOC_PATH)
+        report_data = create_document_from_cache(
+            songs,
+            lyrics_cache,
+            {},
+            lyrics_output=LYRICS_DOC_PATH,
+        )
+        report_data["source"] = "lyrics_only"
+        _write_generation_report(report_data)
         return
 
     if args.chords_only:
@@ -106,7 +147,14 @@ def main():
         from app.cache import jsonl_load_all
         chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
         from app.document_creation import create_document_from_cache
-        create_document_from_cache(songs, {}, chords_cache, chords_output=CHORDS_DOC_PATH)
+        report_data = create_document_from_cache(
+            songs,
+            {},
+            chords_cache,
+            chords_output=CHORDS_DOC_PATH,
+        )
+        report_data["source"] = "chords_only"
+        _write_generation_report(report_data)
         return
 
     # Default: cache both and generate both docs
@@ -116,7 +164,15 @@ def main():
     lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
     chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
     from app.document_creation import create_document_from_cache
-    create_document_from_cache(songs, lyrics_cache, chords_cache, lyrics_output=LYRICS_DOC_PATH, chords_output=CHORDS_DOC_PATH)
+    report_data = create_document_from_cache(
+        songs,
+        lyrics_cache,
+        chords_cache,
+        lyrics_output=LYRICS_DOC_PATH,
+        chords_output=CHORDS_DOC_PATH,
+    )
+    report_data["source"] = "full_generation"
+    _write_generation_report(report_data)
 
 if __name__ == "__main__":
     main()

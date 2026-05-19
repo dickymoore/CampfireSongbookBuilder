@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Validation Report - CampfireSongbookBuilder Quality Upgrade</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.5; margin: 2rem; color: #222; }
+    h1, h2, h3 { line-height: 1.2; }
+    code { background: #f3f3f3; padding: 0.1rem 0.25rem; border-radius: 3px; }
+    .grade-good { display: inline-block; padding: 0.25rem 0.5rem; background: #e6f4ea; color: #137333; font-weight: 700; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+    .card { border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem; }
+    .verdict { font-weight: 700; }
+    .strong { color: #137333; }
+    .adequate { color: #0b57d0; }
+    .finding { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Validation Report - CampfireSongbookBuilder Quality Upgrade</h1>
+  <p><strong>PRD:</strong> <code>_bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-19/prd.md</code></p>
+  <p><strong>Rubric:</strong> <code>.agents/skills/bmad-prd/assets/prd-validation-checklist.md</code></p>
+  <p><strong>Run at:</strong> 2026-05-19T10:43:49+01:00</p>
+  <p><strong>Grade:</strong> <span class="grade-good">Good</span></p>
+
+  <h2>Overall Verdict</h2>
+  <p>The PRD is decision-ready for a hobby/public brownfield quality upgrade. It has a clear thesis: keep the existing CLI/file workflow, but make generated songbooks trustworthy by assessing content quality, retrying bad sources, filtering questionable songs, and preserving offline generation.</p>
+  <p>The main residual risk is not product direction; it is implementation readiness. Architecture still needs to decide where review state lives, how thresholds are configured, and how manual overrides behave across refetching and named selections.</p>
+
+  <h2>Dimension Summary</h2>
+  <div class="cards">
+    <div class="card">Decision-readiness<br><span class="verdict adequate">adequate</span></div>
+    <div class="card">Substance over theater<br><span class="verdict strong">strong</span></div>
+    <div class="card">Strategic coherence<br><span class="verdict strong">strong</span></div>
+    <div class="card">Done-ness clarity<br><span class="verdict adequate">adequate</span></div>
+    <div class="card">Scope honesty<br><span class="verdict strong">strong</span></div>
+    <div class="card">Downstream usability<br><span class="verdict adequate">adequate</span></div>
+    <div class="card">Shape fit<br><span class="verdict strong">strong</span></div>
+  </div>
+
+  <h2>Findings</h2>
+  <h3>Medium</h3>
+  <div class="finding"><strong>Decision-readiness - Persistence choices remain open (§12).</strong> Favourites, Selections, Questionable status, and Review Decisions are intentionally unresolved. <em>Fix:</em> Resolve §12 questions 1, 2, and 4 during architecture.</div>
+  <div class="finding"><strong>Done-ness clarity - Quality thresholds are not yet concrete (§4.1, §12).</strong> FR-3 and FR-4 are directionally clear but cannot be fully tested until initial thresholds and heuristics are chosen. <em>Fix:</em> Define initial configurable defaults and regression examples.</div>
+
+  <h3>Low</h3>
+  <div class="finding"><strong>Downstream usability - User journeys name "Dicky" rather than the exact section label "Primary Persona" (§2.5).</strong> The linkage is understandable, but downstream extractors may prefer exact persona labels. <em>Fix:</em> Optionally revise each UJ opener to "Primary Persona Dicky..."</div>
+
+  <h2>Mechanical Notes</h2>
+  <ul>
+    <li>FR, NFR, AC, and UJ IDs are contiguous.</li>
+    <li>The single inline <code>[ASSUMPTION]</code> in FR-7 is present in the Assumptions Index.</li>
+    <li>No broken cross-references were found.</li>
+  </ul>
+</body>
+</html>

@@ -7,9 +7,14 @@ import re
 import html
 import time
 import os
+from datetime import datetime
 
 # Configure logging
 logger = logging.getLogger(__name__)
+from app.source_attempts import DEFAULT_SOURCE_ATTEMPTS_PATH, record_source_attempt
+from app.quality_assessment import assess_candidate_quality
+
+SOURCE_ATTEMPTS_PATH = DEFAULT_SOURCE_ATTEMPTS_PATH
 
 # Helper: Remove 'The' from artist
 def strip_the(artist):
@@ -133,9 +138,12 @@ def get_lyrics_from_lyrics_ovh(song_title, artist_name):
 def get_lyrics_from_sources(song_title, artist_name, genius_client=None):
     """
     Try all sources and flexible queries for lyrics. Log which sources/queries were tried.
-    Returns: (lyrics, source_name, tried_log)
+    Returns: (lyrics, source_name, tried_log, quality_result)
     """
     tried_log = []
+    merged_quality_result = None
+    final_lyrics = "Lyrics not found."
+    final_source_name = None
     queries = [
         (artist_name, song_title),
         (strip_the(artist_name), song_title),
@@ -153,13 +161,86 @@ def get_lyrics_from_sources(song_title, artist_name, genius_client=None):
             try:
                 lyrics = fetch_func(title, artist)
                 tried_log.append(f"{source_name} ({artist} – {title})")
-                if lyrics and lyrics.lower() not in ["lyrics not found.", "", None]:
+                has_real_content = (
+                    isinstance(lyrics, str)
+                    and lyrics.strip() != ""
+                    and lyrics != "Lyrics not found."
+                )
+                candidate_quality = assess_candidate_quality(
+                    {
+                        "artist": artist_name,
+                        "title": song_title,
+                        "content_type": "lyrics",
+                        "content": lyrics,
+                        "source_artist": artist,
+                        "source_title": title,
+                    }
+                )
+                if merged_quality_result is None:
+                    merged_quality_result = candidate_quality
+                else:
+                    merged_quality_result = {
+                        "quality": "questionable"
+                        if (merged_quality_result["signals"] + candidate_quality["signals"])
+                        else "clean",
+                        "signals": merged_quality_result["signals"] + candidate_quality["signals"],
+                        "summary": {
+                            **merged_quality_result["summary"],
+                            **candidate_quality["summary"],
+                        },
+                    }
+                if candidate_quality["quality"] == "clean":
+                    record_source_attempt(
+                        artist_name,
+                        song_title,
+                        "lyrics",
+                        source_name,
+                        "candidate",
+                        retrieved_at=datetime.now().astimezone().isoformat(timespec="seconds"),
+                        file_path=SOURCE_ATTEMPTS_PATH,
+                    )
                     logger.info(f"Lyrics found for {artist} – {title} from {source_name}")
-                    return lyrics, source_name, tried_log
+                    return lyrics, source_name, tried_log, candidate_quality
+                final_lyrics = lyrics
+                final_source_name = source_name
+                record_source_attempt(
+                    artist_name,
+                    song_title,
+                    "lyrics",
+                    source_name,
+                    "candidate" if has_real_content else "not_found",
+                    retrieved_at=datetime.now().astimezone().isoformat(timespec="seconds"),
+                    file_path=SOURCE_ATTEMPTS_PATH,
+                )
             except Exception as e:
                 logger.error(f"Error with {source_name} for {artist} – {title}: {e}")
+                record_source_attempt(
+                    artist_name,
+                    song_title,
+                    "lyrics",
+                    source_name,
+                    "error",
+                    error=str(e),
+                    retrieved_at=datetime.now().astimezone().isoformat(timespec="seconds"),
+                    file_path=SOURCE_ATTEMPTS_PATH,
+                    )
     logger.info(f"Lyrics not found for {artist_name} – {song_title} after trying all sources/queries.")
-    return "Lyrics not found.", None, tried_log
+    if merged_quality_result is None:
+        merged_quality_result = assess_candidate_quality(
+            {
+                "artist": artist_name,
+                "title": song_title,
+                "content_type": "lyrics",
+                "content": "Lyrics not found.",
+            }
+        )
+    elif merged_quality_result["signals"]:
+        merged_quality_result = {
+            "quality": "questionable",
+            "signals": merged_quality_result["signals"],
+            "summary": merged_quality_result["summary"],
+        }
+    return final_lyrics, final_source_name, tried_log, merged_quality_result
 
 # E-Chords scraper
 E_CHORDS_BASE = "https://www.e-chords.com/chords"
@@ -399,9 +480,12 @@ def get_chords_from_yousician(song_title, artist_name):
 def get_chords_from_sources(song_title, artist_name):
     """
     Try all sources and flexible queries for chords. Log which sources/queries were tried.
-    Returns: (chords, source_name, tried_log)
+    Returns: (chords, source_name, tried_log, quality_result)
     """
     tried_log = []
+    merged_quality_result = None
+    final_chords = "Chords not found."
+    final_source_name = None
     queries = [
         (artist_name, song_title),
         (strip_the(artist_name), song_title),
@@ -421,10 +505,83 @@ def get_chords_from_sources(song_title, artist_name):
             try:
                 chords = fetch_func(title, artist)
                 tried_log.append(f"{source_name} ({artist} – {title})")
-                if chords and chords.lower() not in ["chords not found.", "", None]:
+                has_real_content = (
+                    isinstance(chords, str)
+                    and chords.strip() != ""
+                    and chords != "Chords not found."
+                )
+                candidate_quality = assess_candidate_quality(
+                    {
+                        "artist": artist_name,
+                        "title": song_title,
+                        "content_type": "chords",
+                        "content": chords,
+                        "source_artist": artist,
+                        "source_title": title,
+                    }
+                )
+                if merged_quality_result is None:
+                    merged_quality_result = candidate_quality
+                else:
+                    merged_quality_result = {
+                        "quality": "questionable"
+                        if (merged_quality_result["signals"] + candidate_quality["signals"])
+                        else "clean",
+                        "signals": merged_quality_result["signals"] + candidate_quality["signals"],
+                        "summary": {
+                            **merged_quality_result["summary"],
+                            **candidate_quality["summary"],
+                        },
+                    }
+                if candidate_quality["quality"] == "clean":
+                    record_source_attempt(
+                        artist_name,
+                        song_title,
+                        "chords",
+                        source_name,
+                        "candidate",
+                        retrieved_at=datetime.now().astimezone().isoformat(timespec="seconds"),
+                        file_path=SOURCE_ATTEMPTS_PATH,
+                    )
                     logger.info(f"Chords found for {artist} – {title} from {source_name}")
-                    return chords, source_name, tried_log
+                    return chords, source_name, tried_log, candidate_quality
+                final_chords = chords
+                final_source_name = source_name
+                record_source_attempt(
+                    artist_name,
+                    song_title,
+                    "chords",
+                    source_name,
+                    "candidate" if has_real_content else "not_found",
+                    retrieved_at=datetime.now().astimezone().isoformat(timespec="seconds"),
+                    file_path=SOURCE_ATTEMPTS_PATH,
+                )
             except Exception as e:
                 logger.error(f"Error with {source_name} for {artist} – {title}: {e}")
+                record_source_attempt(
+                    artist_name,
+                    song_title,
+                    "chords",
+                    source_name,
+                    "error",
+                    error=str(e),
+                    retrieved_at=datetime.now().astimezone().isoformat(timespec="seconds"),
+                    file_path=SOURCE_ATTEMPTS_PATH,
+                    )
     logger.info(f"Chords not found for {artist_name} – {song_title} after trying all sources/queries.")
-    return "Chords not found.", None, tried_log
+    if merged_quality_result is None:
+        merged_quality_result = assess_candidate_quality(
+            {
+                "artist": artist_name,
+                "title": song_title,
+                "content_type": "chords",
+                "content": "Chords not found.",
+            }
+        )
+    elif merged_quality_result["signals"]:
+        merged_quality_result = {
+            "quality": "questionable",
+            "signals": merged_quality_result["signals"],
+            "summary": merged_quality_result["summary"],
+        }
+    return final_chords, final_source_name, tried_log, merged_quality_result

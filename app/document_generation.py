@@ -1,11 +1,75 @@
 import logging
+from datetime import datetime
+
+from app.content_models import build_quality_status, compute_content_hash, derive_song_key
 from app.fetch_data import get_lyrics_from_sources, get_chords_from_sources
 from app.cache import jsonl_save_entry, jsonl_load_entry, jsonl_load_all
-from app.text_cleaning import clean_lyrics
 from app.document_formatting import sort_songs
+from app.quality_assessment import assess_candidate_quality
+from app.review_state import DEFAULT_QUALITY_STATUS_PATH, load_quality_status, save_quality_status
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+QUALITY_STATUS_PATH = DEFAULT_QUALITY_STATUS_PATH
+
+
+def _flatten_quality_status_records(state):
+    records = []
+    for song_entries in state.get("entries", {}).values():
+        records.extend(song_entries.values())
+    return records
+
+
+def _load_quality_status_record(artist, title, content_type):
+    state, errors = load_quality_status(QUALITY_STATUS_PATH)
+    if errors:
+        logger.warning("Quality status load reported %d recoverable issue(s).", len(errors))
+    song_key = derive_song_key(artist, title)
+    return state.get("entries", {}).get(song_key, {}).get(content_type)
+
+
+def _save_quality_status_record(artist, title, content_type, content, quality_result):
+    if not isinstance(content, str) or content == "":
+        return
+
+    state, errors = load_quality_status(QUALITY_STATUS_PATH)
+    if errors:
+        logger.warning("Quality status load reported %d recoverable issue(s).", len(errors))
+
+    records = _flatten_quality_status_records(state)
+    record = build_quality_status(
+        artist,
+        title,
+        content_type,
+        compute_content_hash(content),
+        "clean" if quality_result["quality"] == "clean" else "questionable",
+        signals=quality_result["signals"],
+        assessed_at=datetime.now().astimezone().isoformat(timespec="seconds"),
+    )
+
+    filtered_records = [
+        existing
+        for existing in records
+        if not (
+            existing.get("song_key") == record["song_key"]
+            and existing.get("content_type") == record["content_type"]
+        )
+    ]
+    filtered_records.append(record)
+    save_quality_status(QUALITY_STATUS_PATH, filtered_records)
+
+
+def _assess_cached_content(artist, title, content_type, content):
+    return assess_candidate_quality(
+        {
+            "artist": artist,
+            "title": title,
+            "content_type": content_type,
+            "content": content,
+        }
+    )
+
 
 def cache_lyrics(song_list, genius_client):
     logger.info("Caching lyrics...")
@@ -17,19 +81,30 @@ def cache_lyrics(song_list, genius_client):
         title = song['Title']
         found = False
         cached = jsonl_load_entry('data/cache/lyrics_cache.jsonl', artist, title, 'lyrics')
+        cached_quality_status = _load_quality_status_record(artist, title, "lyrics")
         if cached and cached != "Lyrics not found.":
-            found = True
-        else:
-            lyrics, source, tried_log = get_lyrics_from_sources(title, artist, genius_client)
-            cleaned_lyrics = clean_lyrics(lyrics)
-            num_characters = len(cleaned_lyrics)
-            if bool(lyrics) and lyrics != "Lyrics not found." and num_characters <= 5000:
-                jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist, title, lyrics, 'lyrics')
-                logger.debug(f"Lyrics fetched and cached from {source}.")
+            if cached_quality_status and cached_quality_status["quality"] == "clean":
                 found = True
             else:
-                jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist, title, "Lyrics not found.", 'lyrics')
-                logger.debug("Lyrics not found or too long.")
+                cached_quality = _assess_cached_content(artist, title, "lyrics", cached)
+                if cached_quality["quality"] == "clean":
+                    _save_quality_status_record(artist, title, "lyrics", cached, cached_quality)
+                    found = True
+                else:
+                    lyrics, source, tried_log, quality_result = get_lyrics_from_sources(title, artist, genius_client)
+                    jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist, title, lyrics, 'lyrics')
+                    _save_quality_status_record(artist, title, "lyrics", lyrics, quality_result)
+                    logger.debug("Lyrics fetched with Questionable quality." if quality_result["quality"] != "clean" else f"Lyrics fetched and cached from {source}.")
+                    found = quality_result["quality"] == "clean" or lyrics != "Lyrics not found."
+        else:
+            lyrics, source, tried_log, quality_result = get_lyrics_from_sources(title, artist, genius_client)
+            jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist, title, lyrics, 'lyrics')
+            _save_quality_status_record(artist, title, "lyrics", lyrics, quality_result)
+            if quality_result["quality"] == "clean":
+                logger.debug(f"Lyrics fetched and cached from {source}.")
+            else:
+                logger.debug("Lyrics fetched with Questionable quality.")
+            found = quality_result["quality"] == "clean" or lyrics != "Lyrics not found."
         if not found:
             missing_lyrics.append(f"{artist} – {title}")
             missing_lyrics_log.append((artist, title, tried_log if not found else []))
@@ -56,17 +131,30 @@ def cache_chords(song_list):
         title = song['Title']
         found = False
         cached = jsonl_load_entry('data/cache/chords_cache.jsonl', artist, title, 'chords')
+        cached_quality_status = _load_quality_status_record(artist, title, "chords")
         if cached and cached != "Chords not found.":
-            found = True
-        else:
-            chords, source, tried_log = get_chords_from_sources(title, artist)
-            if bool(chords) and chords != "Chords not found.":
-                jsonl_save_entry('data/cache/chords_cache.jsonl', artist, title, chords, 'chords')
-                logger.debug(f"Chords fetched and cached from {source}.")
+            if cached_quality_status and cached_quality_status["quality"] == "clean":
                 found = True
             else:
-                jsonl_save_entry('data/cache/chords_cache.jsonl', artist, title, "Chords not found.", 'chords')
-                logger.debug(f"Chords not found for {title} by {artist}.")
+                cached_quality = _assess_cached_content(artist, title, "chords", cached)
+                if cached_quality["quality"] == "clean":
+                    _save_quality_status_record(artist, title, "chords", cached, cached_quality)
+                    found = True
+                else:
+                    chords, source, tried_log, quality_result = get_chords_from_sources(title, artist)
+                    jsonl_save_entry('data/cache/chords_cache.jsonl', artist, title, chords, 'chords')
+                    _save_quality_status_record(artist, title, "chords", chords, quality_result)
+                    logger.debug("Chords fetched with Questionable quality." if quality_result["quality"] != "clean" else f"Chords fetched and cached from {source}.")
+                    found = quality_result["quality"] == "clean" or chords != "Chords not found."
+        else:
+            chords, source, tried_log, quality_result = get_chords_from_sources(title, artist)
+            jsonl_save_entry('data/cache/chords_cache.jsonl', artist, title, chords, 'chords')
+            _save_quality_status_record(artist, title, "chords", chords, quality_result)
+            if quality_result["quality"] == "clean":
+                logger.debug(f"Chords fetched and cached from {source}.")
+            else:
+                logger.debug(f"Chords fetched with Questionable quality for {title} by {artist}.")
+            found = quality_result["quality"] == "clean" or chords != "Chords not found."
         if not found:
             missing_chords.append(f"{artist} – {title}")
             missing_chords_log.append((artist, title, tried_log if not found else []))

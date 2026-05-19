@@ -140,3 +140,4 @@ data/output/*
 data/config/config.json
 venv/*
 app/__pycache__
+.agents/.story-automator-active

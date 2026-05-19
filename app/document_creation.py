@@ -1,14 +1,75 @@
-from docx import Document
 import logging
 import os
-from app.document_formatting import set_document_margins, set_paragraph_font, create_two_column_section, add_header_footer, sort_songs
-from app.text_cleaning import clean_lyrics, clean_chords
+from datetime import datetime
+
+from docx import Document
+
+from app.content_models import derive_song_key
+from app.document_formatting import (
+    add_header_footer,
+    create_two_column_section,
+    set_document_margins,
+    set_paragraph_font,
+    sort_songs,
+)
+from app.generation_filtering import build_current_content_hashes, evaluate_cached_content
+from app.review_state import (
+    DEFAULT_QUALITY_STATUS_PATH,
+    DEFAULT_REVIEW_DECISIONS_PATH,
+    load_quality_status,
+    load_review_decisions,
+)
+from app.text_cleaning import clean_chords, clean_lyrics
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
+QUALITY_STATUS_PATH = DEFAULT_QUALITY_STATUS_PATH
+REVIEW_DECISIONS_PATH = DEFAULT_REVIEW_DECISIONS_PATH
+DEFAULT_REPORT_SOURCE = "generate_from_cache"
+
+
+def _build_report_entry(song, content_type, generation_result, included=None, reason=None):
+    included_value = generation_result["included"] if included is None else included
+    reason_value = generation_result["reason"] if reason is None else reason
+
+    return {
+        "artist": song["Artist"],
+        "title": song["Title"],
+        "song_key": derive_song_key(song["Artist"], song["Title"]),
+        "content_type": content_type,
+        "content_hash": generation_result["content_hash"],
+        "quality": generation_result["quality"],
+        "included": included_value,
+        "decision_source": generation_result["decision_source"],
+        "reason": reason_value,
+        "signals": generation_result["signals"],
+        "quality_status": generation_result["quality_status"],
+        "review_decision": generation_result["review_decision"],
+    }
+
+
 def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_output=None, chords_output=None):
     logger.debug("Running create_document_from_cache function")
+
+    current_content_hashes = build_current_content_hashes(lyrics_cache, chords_cache)
+    quality_status_state, quality_status_errors = load_quality_status(QUALITY_STATUS_PATH)
+    if quality_status_errors:
+        logger.warning(
+            "Quality status load reported %d recoverable issue(s).",
+            len(quality_status_errors),
+        )
+
+    review_decision_state, review_decision_errors = load_review_decisions(
+        REVIEW_DECISIONS_PATH,
+        current_content_hashes=current_content_hashes,
+    )
+    if review_decision_errors:
+        logger.warning(
+            "Review decisions load reported %d recoverable issue(s).",
+            len(review_decision_errors),
+        )
 
     if lyrics_output:
         logger.debug("Initializing lyrics document")
@@ -25,49 +86,112 @@ def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_out
         add_header_footer(chords_document)
 
     sorted_songs = sort_songs(song_list)
+    report_entries = []
 
     for song in sorted_songs:
-        artist = song['Artist']
-        title = song['Title']
-        cache_key = f"{artist} - {title}"
+        artist = song["Artist"]
+        title = song["Title"]
+        cache_key = "{} - {}".format(artist, title)
+        lyrics_quality_status = quality_status_state.get("entries", {}).get(cache_key, {}).get("lyrics")
+        lyrics_review_decision = review_decision_state.get("entries", {}).get(cache_key, {}).get("lyrics")
+        chords_quality_status = quality_status_state.get("entries", {}).get(cache_key, {}).get("chords")
+        chords_review_decision = review_decision_state.get("entries", {}).get(cache_key, {}).get("chords")
 
-        if lyrics_output and cache_key in lyrics_cache and bool(lyrics_cache[cache_key]):
-            lyrics = clean_lyrics(lyrics_cache[cache_key])
-            num_characters = len(lyrics)
-            logger.debug(f"Adding lyrics for {title} by {artist}")
+        if lyrics_output:
+            lyrics = lyrics_cache.get(cache_key) if isinstance(lyrics_cache, dict) else None
+            generation_result = evaluate_cached_content(
+                artist,
+                title,
+                "lyrics",
+                lyrics,
+                quality_status_record=lyrics_quality_status,
+                review_decision_record=lyrics_review_decision,
+            )
 
-            if num_characters <= 5000:
-                heading = lyrics_document.add_heading(f"{title} by {artist}", level=1)
+            report_included = generation_result["included"]
+            report_reason = generation_result["reason"]
+            if generation_result["included"] and isinstance(lyrics, str) and lyrics != "":
+                lyrics = clean_lyrics(lyrics)
+                num_characters = len(lyrics)
+                logger.debug("Adding lyrics for %s by %s", title, artist)
+
+                if num_characters <= 5000:
+                    heading = lyrics_document.add_heading("{} by {}".format(title, artist), level=1)
+                    set_paragraph_font(heading, 14)
+                    paragraph = lyrics_document.add_paragraph()
+                    lines = lyrics.split("\n")
+                    for i, line in enumerate(lines):
+                        if i > 0:
+                            paragraph.add_run().add_break()
+                        paragraph.add_run(line)
+                    set_paragraph_font(paragraph, 12)
+                else:
+                    report_included = False
+                    report_reason = "Lyrics are too long and were excluded from the document."
+                    logger.debug("Lyrics for %s are too long and have been excluded.", title)
+            else:
+                logger.debug(
+                    "Skipping lyrics for %s by %s: %s",
+                    title,
+                    artist,
+                    report_reason,
+                )
+
+            report_entries.append(
+                _build_report_entry(
+                    song,
+                    "lyrics",
+                    generation_result,
+                    included=report_included,
+                    reason=report_reason,
+                )
+            )
+
+        if chords_output:
+            chords = chords_cache.get(cache_key) if isinstance(chords_cache, dict) else None
+            generation_result = evaluate_cached_content(
+                artist,
+                title,
+                "chords",
+                chords,
+                quality_status_record=chords_quality_status,
+                review_decision_record=chords_review_decision,
+            )
+            report_entries.append(_build_report_entry(song, "chords", generation_result))
+
+            if generation_result["included"] and isinstance(chords, str) and chords != "":
+                chords = clean_chords(chords)
+                logger.debug("Adding chords for %s by %s", title, artist)
+                heading = chords_document.add_heading("{} by {}".format(title, artist), level=1)
                 set_paragraph_font(heading, 14)
-                paragraph = lyrics_document.add_paragraph()
-                lines = lyrics.split('\n')
+                paragraph = chords_document.add_paragraph()
+                lines = chords.split("\n")
                 for i, line in enumerate(lines):
                     if i > 0:
                         paragraph.add_run().add_break()
                     paragraph.add_run(line)
                 set_paragraph_font(paragraph, 12)
             else:
-                logger.debug(f"Lyrics for {title} are too long and have been excluded.")
-
-        if chords_output and cache_key in chords_cache and bool(chords_cache[cache_key]):
-            chords = clean_chords(chords_cache[cache_key])
-            logger.debug(f"Adding chords for {title} by {artist}")
-            heading = chords_document.add_heading(f"{title} by {artist}", level=1)
-            set_paragraph_font(heading, 14)
-            paragraph = chords_document.add_paragraph()
-            lines = chords.split('\n')
-            for i, line in enumerate(lines):
-                if i > 0:
-                    paragraph.add_run().add_break()
-                paragraph.add_run(line)
-            set_paragraph_font(paragraph, 12)
+                logger.debug(
+                    "Skipping chords for %s by %s: %s",
+                    title,
+                    artist,
+                    generation_result["reason"],
+                )
 
     if lyrics_output:
         os.makedirs(os.path.dirname(lyrics_output), exist_ok=True)
         lyrics_document.save(lyrics_output)
-        logger.info(f"Lyrics document saved as {lyrics_output}.")
+        logger.info("Lyrics document saved as %s.", lyrics_output)
 
     if chords_output:
         os.makedirs(os.path.dirname(chords_output), exist_ok=True)
         chords_document.save(chords_output)
-        logger.info(f"Chords document saved as {chords_output}.")
+        logger.info("Chords document saved as %s.", chords_output)
+
+    return {
+        "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "report_type": "quality_run",
+        "source": DEFAULT_REPORT_SOURCE,
+        "entries": report_entries,
+    }
