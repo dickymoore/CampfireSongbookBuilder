@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-19T12:56:48+01:00
-last_updated: 2026-05-19T22:35:00+01:00
+last_updated: 2026-05-19T22:34:00+01:00
 project: CampfireSongbookBuilder
 project_key: NOKEY
 tracking_system: file-system
@@ -64,7 +64,7 @@ development_status:
   epic-4: in-progress
   4-1-load-and-validate-favourite-songs: done
   4-2-load-and-validate-named-selections: done
-  4-3-generate-quality-filtered-favourite-and-selection-books: ready-for-dev
+  4-3-generate-quality-filtered-favourite-and-selection-books: done
   4-4-report-selection-completeness-before-output: backlog
   epic-4-retrospective: optional
   epic-5: backlog

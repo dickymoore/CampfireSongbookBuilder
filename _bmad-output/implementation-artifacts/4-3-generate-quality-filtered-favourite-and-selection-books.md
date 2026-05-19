@@ -1,6 +1,6 @@
 # Story 4.3: Generate Quality-Filtered Favourite and Selection Books
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -76,17 +76,23 @@ GPT-5
 
 ### Debug Log References
 
-- Pending implementation.
+- `python3 -m unittest discover -s tests -p 'test_*.py'`
 
 ### Completion Notes List
 
-- Pending implementation.
+- Extended `app/document_creation.py` so selection-aware generation can process favourite and named-selection records in order while preserving the existing quality and review gates.
+- Added flexible song identity handling so the report and document output accept both the existing song list shape and the new selection record shape.
+- Added regression coverage for selected-song ordering, default Questionable exclusion, override inclusion, and selection-specific report labeling.
+- Verified the focused selection/document tests and the full repository test suite, all passing.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/4-3-generate-quality-filtered-favourite-and-selection-books.md`
+- `app/document_creation.py`
+- `tests/test_document_creation.py`
 
 ## Change Log
 
 - 2026-05-19: Created story scaffold for selection-aware quality-filtered generation.
-
+- 2026-05-19: Implemented selection-aware document generation and regression tests.
+- 2026-05-19: Updated story tracking metadata to `done` after successful verification.

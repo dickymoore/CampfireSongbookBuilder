@@ -30,14 +30,36 @@ REVIEW_DECISIONS_PATH = DEFAULT_REVIEW_DECISIONS_PATH
 DEFAULT_REPORT_SOURCE = "generate_from_cache"
 
 
+def _song_value(song, preferred_key, fallback_key):
+    if isinstance(song, dict):
+        if preferred_key in song:
+            return song.get(preferred_key)
+        return song.get(fallback_key)
+    return None
+
+
+def _song_artist(song):
+    return _song_value(song, "Artist", "artist")
+
+
+def _song_title(song):
+    return _song_value(song, "Title", "title")
+
+
+def _song_key(song):
+    return _song_value(song, "song_key", "song_key")
+
+
 def _build_report_entry(song, content_type, generation_result, included=None, reason=None):
     included_value = generation_result["included"] if included is None else included
     reason_value = generation_result["reason"] if reason is None else reason
+    artist = _song_artist(song)
+    title = _song_title(song)
 
     return {
-        "artist": song["Artist"],
-        "title": song["Title"],
-        "song_key": derive_song_key(song["Artist"], song["Title"]),
+        "artist": artist,
+        "title": title,
+        "song_key": _song_key(song) or derive_song_key(artist, title),
         "content_type": content_type,
         "content_hash": generation_result["content_hash"],
         "quality": generation_result["quality"],
@@ -50,7 +72,15 @@ def _build_report_entry(song, content_type, generation_result, included=None, re
     }
 
 
-def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_output=None, chords_output=None):
+def create_document_from_cache(
+    song_list,
+    lyrics_cache,
+    chords_cache,
+    lyrics_output=None,
+    chords_output=None,
+    selection_records=None,
+    report_source=None,
+):
     logger.debug("Running create_document_from_cache function")
 
     current_content_hashes = build_current_content_hashes(lyrics_cache, chords_cache)
@@ -85,13 +115,13 @@ def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_out
         create_two_column_section(chords_document)
         add_header_footer(chords_document)
 
-    sorted_songs = sort_songs(song_list)
+    songs_to_process = selection_records if selection_records is not None else sort_songs(song_list)
     report_entries = []
 
-    for song in sorted_songs:
-        artist = song["Artist"]
-        title = song["Title"]
-        cache_key = "{} - {}".format(artist, title)
+    for song in songs_to_process:
+        artist = _song_artist(song)
+        title = _song_title(song)
+        cache_key = _song_key(song) or derive_song_key(artist, title)
         lyrics_quality_status = quality_status_state.get("entries", {}).get(cache_key, {}).get("lyrics")
         lyrics_review_decision = review_decision_state.get("entries", {}).get(cache_key, {}).get("lyrics")
         chords_quality_status = quality_status_state.get("entries", {}).get(cache_key, {}).get("chords")
@@ -192,6 +222,6 @@ def create_document_from_cache(song_list, lyrics_cache, chords_cache, lyrics_out
     return {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "report_type": "quality_run",
-        "source": DEFAULT_REPORT_SOURCE,
+        "source": report_source or DEFAULT_REPORT_SOURCE,
         "entries": report_entries,
     }
