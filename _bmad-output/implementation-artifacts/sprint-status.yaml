@@ -1,5 +1,5 @@
 # generated: 2026-05-19T12:56:48+01:00
-# last_updated: 2026-05-19T18:21:19+01:00
+# last_updated: 2026-05-19T18:35:08+01:00
 # project: CampfireSongbookBuilder
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-19T12:56:48+01:00
-last_updated: 2026-05-19T18:21:19+01:00
+last_updated: 2026-05-19T18:35:08+01:00
 project: CampfireSongbookBuilder
 project_key: NOKEY
 tracking_system: file-system
@@ -56,8 +56,8 @@ development_status:
   2-4-apply-questionable-exclusion-and-override-rules: done
   2-5-produce-traceable-quality-reports: done
   epic-2-retrospective: optional
-  epic-3: backlog
-  3-1-validate-source-list-rows-before-fetching: backlog
+  epic-3: in-progress
+  3-1-validate-source-list-rows-before-fetching: done
   3-2-summarize-newly-added-song-outcomes: backlog
   3-3-keep-file-and-cli-workflows-agent-friendly: backlog
   epic-3-retrospective: optional

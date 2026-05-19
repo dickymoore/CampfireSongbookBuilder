@@ -85,7 +85,12 @@ def main():
 
     # Load songs
     try:
-        songs = load_songs(SONGS_CSV_PATH)
+        songs, invalid_song_rows = load_songs(SONGS_CSV_PATH)
+        if invalid_song_rows:
+            logging.warning(
+                "Source list validation reported %d invalid row(s).",
+                len(invalid_song_rows),
+            )
     except Exception as e:
         logging.error(f"Failed to load songs: {e}")
         sys.exit(1)

@@ -215,7 +215,7 @@ class TestReporting(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             report_path = Path(tmp_dir) / "quality-report.json"
             with patch.object(main, "load_config", return_value={"genius": {"client_access_token": "secret-token"}}), patch.object(
-                main, "load_songs", return_value=[{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
+                main, "load_songs", return_value=([{"Artist": "The Campfire Trio", "Title": "Trail Song"}], [])
             ), patch.object(main, "get_genius_client", return_value=object()), patch(
                 "app.cache.jsonl_load_all", side_effect=[{"The Campfire Trio - Trail Song": "First line"}, {}]
             ), patch("app.document_creation.create_document_from_cache", return_value=report_data), patch.object(
@@ -256,7 +256,7 @@ class TestReporting(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             report_path = Path(tmp_dir) / "lyrics-only-report.json"
             with patch.object(main, "load_config", return_value={"genius": {"client_access_token": "secret-token"}}), patch.object(
-                main, "load_songs", return_value=[{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
+                main, "load_songs", return_value=([{"Artist": "The Campfire Trio", "Title": "Trail Song"}], [])
             ), patch.object(main, "get_genius_client", return_value=object()), patch.object(
                 main, "cache_lyrics", return_value=None
             ), patch(
