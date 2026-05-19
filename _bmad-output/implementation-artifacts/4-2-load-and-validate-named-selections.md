@@ -1,6 +1,6 @@
 # Story 4.2: Load and Validate Named Selections
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -87,17 +87,23 @@ GPT-5
 
 ### Debug Log References
 
-- Pending implementation.
+- `python3 -m unittest discover -s tests -p 'test_*.py'`
 
 ### Completion Notes List
 
-- Pending implementation.
+- Added named-selection load/save helpers to `app/selection_state.py` while keeping the favourites contract intact.
+- Preserved selection order through a list-based `entries` shape and reused the exact song identity helpers from `app.content_models`.
+- Added regression tests for order preservation, recoverable validation errors, missing files, top-level shape errors, duplicate songs across multiple files, and parent-directory creation.
+- Verified the focused selection tests and the full repository test suite, all passing.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/4-2-load-and-validate-named-selections.md`
+- `app/selection_state.py`
+- `tests/test_selection_state.py`
 
 ## Change Log
 
 - 2026-05-19: Created story scaffold for named selection loading and validation.
-
+- 2026-05-19: Implemented named-selection load/save helpers and regression tests.
+- 2026-05-19: Updated story tracking metadata to `done` after successful verification.
