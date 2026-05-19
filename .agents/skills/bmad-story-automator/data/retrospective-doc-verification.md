@@ -48,6 +48,7 @@ If discrepancies exist, apply the fix directly.
 - **Low confidence**: Skip update, log for manual review
 
 ---
+
 ## Output Parsing
 
 ### Parse Doc Proposals from Retrospective Output
@@ -90,3 +91,4 @@ Failure indicators:
 - No retro file created after 30+ minutes
 
 ---
+

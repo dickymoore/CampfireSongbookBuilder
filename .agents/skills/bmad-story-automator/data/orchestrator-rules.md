@@ -177,3 +177,4 @@ go test {project_root}/backend/internal/api/...
 ## Appendix
 
 See `orchestrator-rules-appendix.md` for session naming, workflow command arguments, monitoring, and output parsing details.
+

@@ -1,0 +1,121 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2026-05-17T16:28:06+01:00",
+    "last_updated": "2026-05-17T16:28:06+01:00",
+    "completed": "2026-05-17T16:28:06+01:00"
+  },
+  "mode": "initial_scan",
+  "scan_level": "deep",
+  "project_root": "/home/dicky/CampfireSongbookBuilder",
+  "project_knowledge": "/home/dicky/CampfireSongbookBuilder/docs",
+  "completed_steps": [
+    {
+      "step": "step_1",
+      "status": "completed",
+      "timestamp": "2026-05-17T16:28:06+01:00",
+      "summary": "Classified repository as a monolith with one Python CLI part."
+    },
+    {
+      "step": "step_2",
+      "status": "completed",
+      "timestamp": "2026-05-17T16:28:06+01:00",
+      "summary": "Found existing README and generated BMAD project context."
+    },
+    {
+      "step": "step_3",
+      "status": "completed",
+      "timestamp": "2026-05-17T16:28:06+01:00",
+      "summary": "Analyzed Python CLI stack and pinned requirements."
+    },
+    {
+      "step": "step_4",
+      "status": "completed",
+      "timestamp": "2026-05-17T16:28:06+01:00",
+      "summary": "Analyzed CLI workflows, cache-first scraper flow, JSONL persistence, and document generation."
+    },
+    {
+      "step": "step_5",
+      "status": "completed",
+      "timestamp": "2026-05-17T16:28:06+01:00",
+      "summary": "Generated annotated source tree analysis."
+    },
+    {
+      "step": "step_6",
+      "status": "completed",
+      "timestamp": "2026-05-17T16:28:06+01:00",
+      "summary": "Generated development setup and workflow guide."
+    },
+    {
+      "step": "step_8",
+      "status": "completed",
+      "timestamp": "2026-05-17T16:28:06+01:00",
+      "summary": "Generated architecture documentation for the single CLI part."
+    },
+    {
+      "step": "step_9",
+      "status": "completed",
+      "timestamp": "2026-05-17T16:28:06+01:00",
+      "summary": "Generated overview, module inventory, source tree, development guide, and architecture docs."
+    },
+    {
+      "step": "step_10",
+      "status": "completed",
+      "timestamp": "2026-05-17T16:28:06+01:00",
+      "summary": "Generated master documentation index."
+    }
+  ],
+  "current_step": "complete",
+  "project_types": [
+    {
+      "part_id": "cli",
+      "project_type_id": "cli",
+      "display_name": "Python CLI application"
+    }
+  ],
+  "findings": {
+    "project_classification": {
+      "repository_type": "monolith",
+      "parts_count": 1,
+      "primary_language": "Python",
+      "architecture_type": "Thin CLI orchestration with helper modules"
+    },
+    "technology_stack": [
+      {
+        "part_id": "cli",
+        "tech_summary": "Python CLI using pandas, requests, BeautifulSoup/lxml, lyricsgenius, python-docx, JSONL files, and unittest."
+      }
+    ],
+    "batches_completed": [
+      {
+        "path": "app/",
+        "files_scanned": 9,
+        "summary": "Application helpers for config, CSV loading, cache, fetching, cleaning, reporting, and document generation."
+      },
+      {
+        "path": "tests/",
+        "files_scanned": 1,
+        "summary": "Minimal unittest coverage for config loading."
+      },
+      {
+        "path": "root scripts",
+        "files_scanned": 5,
+        "summary": "CLI entrypoint and cache maintenance scripts."
+      }
+    ]
+  },
+  "outputs_generated": [
+    "project-scan-report.json",
+    "index.md",
+    "project-overview.md",
+    "architecture.md",
+    "source-tree-analysis.md",
+    "component-inventory.md",
+    "development-guide.md"
+  ],
+  "resume_instructions": "Initial scan complete. Start a fresh scan or deep dive for further documentation updates.",
+  "validation_status": {
+    "last_validated": "2026-05-17T16:28:06+01:00",
+    "validation_errors": []
+  }
+}
