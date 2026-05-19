@@ -25,6 +25,10 @@ CHORDS_DOC_PATH = 'data/output/Chords_Document.docx'
 
 
 def _write_generation_report(report_data):
+    if report_data is None:
+        raise ValueError("create_document_from_cache did not return report data.")
+    if not isinstance(report_data, dict):
+        report_data = dict(report_data)
     source_attempt_records, source_attempt_errors = load_source_attempts()
     if source_attempt_errors:
         logging.warning(
@@ -38,6 +42,7 @@ def _write_generation_report(report_data):
         report_type=report_data.get("report_type", "quality_run"),
         source_attempts=source_attempt_records,
         generated_at=report_data.get("generated_at"),
+        invalid_song_rows=report_data.get("invalid_song_rows", []),
     )
     report_path = write_traceable_quality_report(report)
     print(summarize_traceable_quality_report(report, report_path))
@@ -129,6 +134,7 @@ def main():
             chords_output,
         )
         report_data["source"] = "generate_from_cache"
+        report_data["invalid_song_rows"] = invalid_song_rows
         _write_generation_report(report_data)
         return
 
@@ -144,6 +150,7 @@ def main():
             lyrics_output=LYRICS_DOC_PATH,
         )
         report_data["source"] = "lyrics_only"
+        report_data["invalid_song_rows"] = invalid_song_rows
         _write_generation_report(report_data)
         return
 
@@ -159,6 +166,7 @@ def main():
             chords_output=CHORDS_DOC_PATH,
         )
         report_data["source"] = "chords_only"
+        report_data["invalid_song_rows"] = invalid_song_rows
         _write_generation_report(report_data)
         return
 
@@ -177,6 +185,7 @@ def main():
         chords_output=CHORDS_DOC_PATH,
     )
     report_data["source"] = "full_generation"
+    report_data["invalid_song_rows"] = invalid_song_rows
     _write_generation_report(report_data)
 
 if __name__ == "__main__":

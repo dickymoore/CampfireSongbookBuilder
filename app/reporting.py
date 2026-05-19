@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import math
 import re
 from datetime import datetime
 from pathlib import Path
@@ -29,6 +30,9 @@ def _sanitize_key(key):
 
 
 def _sanitize_value(value):
+    if isinstance(value, float) and math.isnan(value):
+        return None
+
     if isinstance(value, dict):
         sanitized = {}
         for key, nested_value in value.items():
@@ -45,6 +49,12 @@ def _sanitize_value(value):
         return [_sanitize_value(item) for item in value]
 
     return copy.deepcopy(value)
+
+
+def _normalize_missing_value(value):
+    if isinstance(value, float) and math.isnan(value):
+        return None
+    return value
 
 
 def _safe_filename_component(value):
@@ -103,16 +113,75 @@ def _build_song_entry(result, source_attempts_by_song):
     }
 
 
+def _build_summary_entry(result):
+    entry = {
+        "song_key": result.get("song_key"),
+        "content_type": result.get("content_type"),
+        "quality": result.get("quality"),
+        "included": result.get("included"),
+        "reason": result.get("reason"),
+    }
+
+    signals = result.get("signals") or []
+    if signals:
+        entry["top_signal"] = copy.deepcopy(signals[0])
+
+    return entry
+
+
+def _build_invalid_input_entry(record):
+    entry = {
+        "row_number": record.get("row_number"),
+        "raw_artist": _normalize_missing_value(record.get("raw_artist")),
+        "raw_title": _normalize_missing_value(record.get("raw_title")),
+        "reason": record.get("reason"),
+    }
+
+    if "skip" in record:
+        entry["skip"] = _normalize_missing_value(record.get("skip"))
+
+    return entry
+
+
 def build_traceable_quality_report(
     generation_results,
     source="generate_from_cache",
     report_type="quality_run",
     source_attempts=None,
     generated_at=None,
+    invalid_song_rows=None,
 ):
     generated_at_value = generated_at or _now_iso()
     source_attempts_by_song = _group_source_attempts(source_attempts)
-    songs = [_build_song_entry(result, source_attempts_by_song) for result in generation_results or []]
+    songs = [
+        _build_song_entry(result, source_attempts_by_song)
+        for result in generation_results or []
+    ]
+    invalid_input_rows = [
+        _build_invalid_input_entry(record)
+        for record in invalid_song_rows or []
+        if isinstance(record, dict)
+    ]
+    clean_songs = [
+        _build_summary_entry(song)
+        for song in songs
+        if song.get("quality") == "clean"
+    ]
+    excluded_clean_songs = [
+        _build_summary_entry(song)
+        for song in songs
+        if song.get("quality") == "clean" and not song.get("included")
+    ]
+    questionable_songs = [
+        _build_summary_entry(song)
+        for song in songs
+        if song.get("quality") == "questionable"
+    ]
+    missing_songs = [
+        _build_summary_entry(song)
+        for song in songs
+        if song.get("quality") == "missing"
+    ]
 
     summary = {
         "included_count": sum(1 for song in songs if song.get("included")),
@@ -129,6 +198,21 @@ def build_traceable_quality_report(
             if isinstance(song.get("review_decision"), dict)
             and song["review_decision"].get("decision") == "override"
         ),
+        "clean_count": len(clean_songs),
+        "excluded_clean_count": len(excluded_clean_songs),
+        "invalid_input_count": len(invalid_input_rows),
+        "counts": {
+            "clean": len(clean_songs),
+            "excluded_clean": len(excluded_clean_songs),
+            "questionable": len(questionable_songs),
+            "missing": len(missing_songs),
+            "invalid_input": len(invalid_input_rows),
+        },
+        "clean_songs": clean_songs,
+        "excluded_clean_songs": excluded_clean_songs,
+        "questionable_songs": questionable_songs,
+        "missing_songs": missing_songs,
+        "invalid_input_rows": invalid_input_rows,
     }
 
     report = {
@@ -166,14 +250,18 @@ def write_traceable_quality_report(report, output_dir=DEFAULT_REPORTS_PATH):
 
 def summarize_traceable_quality_report(report, report_path):
     summary = report.get("summary", {})
+    counts = summary.get("counts", {})
     return (
         "Quality report written to {} "
-        "(included {}, excluded {}, missing {}, questionable {}, overridden {})."
+        "(clean {}, questionable {}, missing {}, invalid input {}; "
+        "included {}, excluded {}, overridden {})."
     ).format(
         report_path,
+        counts.get("clean", summary.get("clean_count", 0)),
+        counts.get("questionable", summary.get("questionable_count", 0)),
+        counts.get("missing", summary.get("missing_count", 0)),
+        counts.get("invalid_input", summary.get("invalid_input_count", 0)),
         summary.get("included_count", 0),
         summary.get("excluded_count", 0),
-        summary.get("missing_count", 0),
-        summary.get("questionable_count", 0),
         summary.get("overridden_count", 0),
     )

@@ -1,4 +1,5 @@
 import io
+import json
 import sys
 import tempfile
 import types
@@ -122,7 +123,24 @@ class TestReporting(unittest.TestCase):
                     "reason": "Approved for this print run.",
                     "decided_at": "2026-05-19T15:14:19+01:00",
                 },
+                "signals": [
+                    {
+                        "code": "print_hostile_content",
+                        "severity": "warning",
+                        "message": "Content is likely too long for comfortable printing.",
+                        "content_type": "lyrics",
+                    }
+                ],
             },
+        ]
+        invalid_song_rows = [
+            {
+                "row_number": 7,
+                "raw_artist": None,
+                "raw_title": "Untitled Song",
+                "skip": "skip",
+                "reason": "missing artist",
+            }
         ]
         source_attempts = [
             {
@@ -141,6 +159,7 @@ class TestReporting(unittest.TestCase):
             source="generate_from_cache",
             source_attempts=source_attempts,
             generated_at="2026-05-19T15:14:19+01:00",
+            invalid_song_rows=invalid_song_rows,
         )
 
         self.assertEqual(report["summary"]["included_count"], 2)
@@ -148,9 +167,99 @@ class TestReporting(unittest.TestCase):
         self.assertEqual(report["summary"]["missing_count"], 1)
         self.assertEqual(report["summary"]["questionable_count"], 1)
         self.assertEqual(report["summary"]["overridden_count"], 1)
+        self.assertEqual(report["summary"]["clean_count"], 1)
+        self.assertEqual(report["summary"]["invalid_input_count"], 1)
+        self.assertEqual(report["summary"]["counts"]["clean"], 1)
+        self.assertEqual(report["summary"]["counts"]["questionable"], 1)
+        self.assertEqual(report["summary"]["counts"]["missing"], 1)
+        self.assertEqual(report["summary"]["counts"]["invalid_input"], 1)
+        self.assertEqual(
+            report["summary"]["clean_songs"][0]["song_key"],
+            "The Campfire Trio - Trail Song",
+        )
+        self.assertEqual(
+            report["summary"]["questionable_songs"][0]["top_signal"]["code"],
+            "print_hostile_content",
+        )
+        self.assertEqual(
+            report["summary"]["missing_songs"][0]["reason"],
+            "Missing content is excluded by default.",
+        )
+        self.assertEqual(report["summary"]["invalid_input_rows"][0]["row_number"], 7)
+        self.assertIsNone(report["summary"]["invalid_input_rows"][0]["raw_artist"])
+        self.assertEqual(report["summary"]["invalid_input_rows"][0]["raw_title"], "Untitled Song")
         self.assertEqual(report["songs"][0]["source_attempts"], source_attempts)
         self.assertEqual(report["songs"][1]["source_attempts"], [])
         self.assertEqual(report["songs"][2]["review_decision"]["decision"], "override")
+
+    def test_build_traceable_quality_report_handles_excluded_clean_and_invalid_rows(self):
+        generation_results = [
+            {
+                "artist": "The Campfire Trio",
+                "title": "Trail Song",
+                "song_key": "The Campfire Trio - Trail Song",
+                "content_type": "lyrics",
+                "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "quality": "clean",
+                "included": True,
+                "decision_source": "quality_clean",
+                "reason": "Content passed quality checks.",
+                "signals": [],
+                "quality_status": {
+                    "content_type": "lyrics",
+                    "quality": "clean",
+                },
+                "review_decision": None,
+            },
+            {
+                "artist": "The Campfire Trio",
+                "title": "Long Song",
+                "song_key": "The Campfire Trio - Long Song",
+                "content_type": "lyrics",
+                "content_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+                "quality": "clean",
+                "included": False,
+                "decision_source": "quality_clean",
+                "reason": "Lyrics are too long and were excluded from the document.",
+                "signals": [],
+                "quality_status": {
+                    "content_type": "lyrics",
+                    "quality": "clean",
+                },
+                "review_decision": None,
+            },
+        ]
+        invalid_song_rows = [
+            {
+                "row_number": 8,
+                "raw_artist": float("nan"),
+                "raw_title": float("nan"),
+                "reason": "missing artist and missing title",
+            }
+        ]
+
+        report = build_traceable_quality_report(
+            generation_results,
+            source="generate_from_cache",
+            generated_at="2026-05-19T15:14:19+01:00",
+            invalid_song_rows=invalid_song_rows,
+        )
+
+        self.assertEqual(report["summary"]["clean_count"], 2)
+        self.assertEqual(report["summary"]["excluded_clean_count"], 1)
+        self.assertEqual(report["summary"]["counts"]["clean"], 2)
+        self.assertEqual(report["summary"]["counts"]["excluded_clean"], 1)
+        self.assertEqual(
+            [song["song_key"] for song in report["summary"]["clean_songs"]],
+            ["The Campfire Trio - Trail Song", "The Campfire Trio - Long Song"],
+        )
+        self.assertEqual(
+            report["summary"]["excluded_clean_songs"][0]["song_key"],
+            "The Campfire Trio - Long Song",
+        )
+        self.assertIsNone(report["summary"]["invalid_input_rows"][0]["raw_artist"])
+        self.assertIsNone(report["summary"]["invalid_input_rows"][0]["raw_title"])
+        json.dumps(report, allow_nan=False)
 
     def test_write_traceable_quality_report_redacts_sensitive_values(self):
         report = {
@@ -214,20 +323,44 @@ class TestReporting(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             report_path = Path(tmp_dir) / "quality-report.json"
-            with patch.object(main, "load_config", return_value={"genius": {"client_access_token": "secret-token"}}), patch.object(
-                main, "load_songs", return_value=([{"Artist": "The Campfire Trio", "Title": "Trail Song"}], [])
+            with patch.object(
+                main,
+                "load_config",
+                return_value={"genius": {"client_access_token": "secret-token"}},
+            ), patch.object(
+                main,
+                "load_songs",
+                return_value=(
+                    [{"Artist": "The Campfire Trio", "Title": "Trail Song"}],
+                    [
+                        {
+                            "row_number": 7,
+                            "raw_artist": None,
+                            "raw_title": "Untitled Song",
+                            "reason": "missing artist",
+                        }
+                    ],
+                ),
             ), patch.object(main, "get_genius_client", return_value=object()), patch(
-                "app.cache.jsonl_load_all", side_effect=[{"The Campfire Trio - Trail Song": "First line"}, {}]
-            ), patch("app.document_creation.create_document_from_cache", return_value=report_data), patch.object(
-                main, "load_source_attempts", return_value=([], [])
-            ), patch.object(main, "write_traceable_quality_report", return_value=report_path), patch.object(
-                sys, "argv", ["main.py", "--generate-from-cache"]
-            ), patch("sys.stdout", new_callable=io.StringIO) as stdout:
+                "app.cache.jsonl_load_all",
+                side_effect=[{"The Campfire Trio - Trail Song": "First line"}, {}],
+            ), patch(
+                "app.document_creation.create_document_from_cache",
+                return_value=report_data,
+            ), patch.object(main, "load_source_attempts", return_value=([], [])), patch.object(
+                main,
+                "write_traceable_quality_report",
+                return_value=report_path,
+            ), patch.object(sys, "argv", ["main.py", "--generate-from-cache"]), patch(
+                "sys.stdout",
+                new_callable=io.StringIO,
+            ) as stdout:
                 main.main()
 
         output = stdout.getvalue()
         self.assertIn(str(report_path), output)
-        self.assertIn("included 1", output)
+        self.assertIn("clean 1", output)
+        self.assertIn("invalid input 1", output)
         self.assertNotIn("secret-token", output)
 
     def test_cli_summary_mentions_report_path_for_lyrics_only(self):
@@ -255,22 +388,35 @@ class TestReporting(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             report_path = Path(tmp_dir) / "lyrics-only-report.json"
-            with patch.object(main, "load_config", return_value={"genius": {"client_access_token": "secret-token"}}), patch.object(
-                main, "load_songs", return_value=([{"Artist": "The Campfire Trio", "Title": "Trail Song"}], [])
+            with patch.object(
+                main,
+                "load_config",
+                return_value={"genius": {"client_access_token": "secret-token"}},
+            ), patch.object(
+                main,
+                "load_songs",
+                return_value=([{"Artist": "The Campfire Trio", "Title": "Trail Song"}], []),
             ), patch.object(main, "get_genius_client", return_value=object()), patch.object(
                 main, "cache_lyrics", return_value=None
             ), patch(
-                "app.cache.jsonl_load_all", return_value={"The Campfire Trio - Trail Song": "First line"}
-            ), patch("app.document_creation.create_document_from_cache", return_value=report_data), patch.object(
-                main, "load_source_attempts", return_value=([], [])
-            ), patch.object(main, "write_traceable_quality_report", return_value=report_path), patch.object(
-                sys, "argv", ["main.py", "--lyrics-only"]
-            ), patch("sys.stdout", new_callable=io.StringIO) as stdout:
+                "app.cache.jsonl_load_all",
+                return_value={"The Campfire Trio - Trail Song": "First line"},
+            ), patch(
+                "app.document_creation.create_document_from_cache",
+                return_value=report_data,
+            ), patch.object(main, "load_source_attempts", return_value=([], [])), patch.object(
+                main,
+                "write_traceable_quality_report",
+                return_value=report_path,
+            ), patch.object(sys, "argv", ["main.py", "--lyrics-only"]), patch(
+                "sys.stdout",
+                new_callable=io.StringIO,
+            ) as stdout:
                 main.main()
 
         output = stdout.getvalue()
         self.assertIn(str(report_path), output)
-        self.assertIn("included 1", output)
+        self.assertIn("clean 1", output)
         self.assertNotIn("secret-token", output)
 
 
