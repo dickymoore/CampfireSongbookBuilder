@@ -1,5 +1,5 @@
-# generated: 2026-05-19T12:56:48+01:00
-# last_updated: 2026-05-19T19:07:37+01:00
+# generated: 2026-05-21T12:41:36+01:00
+# last_updated: 2026-05-22T13:45:00+01:00
 # project: CampfireSongbookBuilder
 # project_key: NOKEY
 # tracking_system: file-system
@@ -34,44 +34,28 @@
 # - Developer typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-05-19T12:56:48+01:00
-last_updated: 2026-05-19T22:43:00+01:00
+generated: 2026-05-21T12:41:36+01:00
+last_updated: 2026-05-22T13:45:00+01:00
 project: CampfireSongbookBuilder
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
-  epic-1: done
-  1-1-define-quality-data-contracts: done
-  1-2-detect-missing-or-unusable-lyrics-and-chords: done
-  1-3-detect-junk-markup-and-duplicate-content: done
-  1-4-detect-print-hostile-and-low-confidence-content: done
-  1-5-persist-current-quality-status-for-cached-content: done
-  epic-1-retrospective: done
-  epic-2: done
-  2-1-record-source-attempts-during-fetching: done
-  2-2-retry-alternate-sources-before-final-questionable-status: done
-  2-3-persist-review-decisions-with-content-hashes: done
-  2-4-apply-questionable-exclusion-and-override-rules: done
-  2-5-produce-traceable-quality-reports: done
+  epic-1: in-progress
+  1-1-produce-inspectable-document-verification-records: done
+  1-2-evaluate-artifact-neatness-with-deterministic-heuristics: backlog
+  1-3-compute-review-ready-gate-decisions: backlog
+  1-4-gate-manual-review-and-reporting-on-verification-results: backlog
+  epic-1-retrospective: optional
+  epic-2: backlog
+  2-1-persist-deterministic-per-song-lyrics-and-chords-scores: backlog
+  2-2-compose-scores-from-existing-quality-signals: backlog
+  2-3-rank-songs-for-review-and-remediation-priority: backlog
   epic-2-retrospective: optional
-  epic-3: done
-  3-1-validate-source-list-rows-before-fetching: done
-  3-2-summarize-newly-added-song-outcomes: done
-  3-3-keep-file-and-cli-workflows-agent-friendly: done
+  epic-3: backlog
+  3-1-create-backup-first-remediation-state-and-provenance-records: backlog
+  3-2-run-bounded-agentic-cleanup-through-codex-exec: backlog
+  3-3-re-score-and-re-verify-after-agentic-cleanup: backlog
+  3-4-enforce-retry-limits-and-escalation-boundaries: backlog
   epic-3-retrospective: optional
-  epic-4: done
-  4-1-load-and-validate-favourite-songs: done
-  4-2-load-and-validate-named-selections: done
-  4-3-generate-quality-filtered-favourite-and-selection-books: done
-  4-4-report-selection-completeness-before-output: done
-  epic-4-retrospective: optional
-  epic-5: done
-  5-1-enforce-network-free-offline-generation: done
-  5-2-preserve-backward-compatible-cache-reads: done
-  5-3-render-accepted-content-to-markdown: done
-  5-4-generate-docx-from-accepted-content: done
-  5-5-add-recoverable-optional-pdf-conversion: done
-  5-6-apply-basic-printable-layout-quality-checks: done
-  epic-5-retrospective: optional
