@@ -5,9 +5,16 @@ from pathlib import Path
 
 from app.document_verification import (
     build_document_verification_record,
+    evaluate_document_artifact,
+    evaluate_markdown_artifact_neatness,
     load_document_verification,
     save_document_verification,
 )
+from tests.docx_stub import install_docx_stub
+
+install_docx_stub()
+
+from docx import Document
 
 
 class TestDocumentVerification(unittest.TestCase):
@@ -197,6 +204,99 @@ class TestDocumentVerification(unittest.TestCase):
             self.assertEqual(len(state["entries"]), 2)
             self.assertIn("data/output/Lyrics_Document.docx", state["entries"])
             self.assertIn("data/output/Lyrics_Document.md", state["entries"])
+
+    def test_evaluate_markdown_artifact_neatness_passes_clean_song_blocks(self):
+        evaluation = evaluate_markdown_artifact_neatness(
+            "\n".join(
+                [
+                    "# Trail Song by The Campfire Trio",
+                    "",
+                    "```text",
+                    "First line",
+                    "Second line",
+                    "```",
+                    "",
+                    "# River Song by The Campfire Trio",
+                    "",
+                    "```text",
+                    "Third line",
+                    "Fourth line",
+                    "```",
+                    "",
+                ]
+            )
+        )
+
+        self.assertEqual(evaluation["verification_status"], "passed")
+        self.assertEqual(
+            evaluation["verification_reasons"],
+            ["meets_neatness_thresholds"],
+        )
+
+    def test_evaluate_document_artifact_reports_failing_markdown_reasons(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            artifact_path = Path(tmp_dir) / "lyrics.md"
+            artifact_path.write_text(
+                "\n".join(
+                    [
+                        "# Trail Song by The Campfire Trio",
+                        "",
+                        "```text",
+                        "Only line",
+                        "```",
+                        "",
+                        "",
+                        "",
+                        "# River Song by The Campfire Trio",
+                        "",
+                        "```text",
+                        "Solo",
+                        "```",
+                        "",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            record = evaluate_document_artifact(artifact_path, artifact_type="markdown")
+
+            self.assertEqual(record["verification_status"], "failed")
+            self.assertIn("excessive_whitespace", record["verification_reasons"])
+            self.assertIn("sparse_layout", record["verification_reasons"])
+            self.assertIn("fragmented_song_blocks", record["verification_reasons"])
+
+    def test_evaluate_document_artifact_reports_failing_docx_reasons(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            artifact_path = Path(tmp_dir) / "lyrics.docx"
+            document = Document()
+            document.add_heading("Trail Song by The Campfire Trio", level=1)
+            document.add_paragraph("Only line")
+            document.add_heading("River Song by The Campfire Trio", level=1)
+            document.add_paragraph("Solo")
+            document.save(artifact_path)
+
+            record = evaluate_document_artifact(artifact_path, artifact_type="docx")
+
+            self.assertEqual(record["verification_status"], "failed")
+            self.assertIn("sparse_layout", record["verification_reasons"])
+            self.assertIn("fragmented_song_blocks", record["verification_reasons"])
+
+    def test_evaluate_document_artifact_does_not_treat_body_text_as_heading(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            artifact_path = Path(tmp_dir) / "lyrics.docx"
+            document = Document()
+            document.add_heading("Trail Song by The Campfire Trio", level=1)
+            document.add_paragraph("Sung by the firelight\nSecond line")
+            document.save(artifact_path)
+
+            record = evaluate_document_artifact(artifact_path, artifact_type="docx")
+
+            self.assertEqual(record["verification_status"], "passed")
+            self.assertEqual(
+                record["verification_reasons"],
+                ["meets_neatness_thresholds"],
+            )
 
 
 if __name__ == "__main__":

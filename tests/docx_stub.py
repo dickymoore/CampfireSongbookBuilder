@@ -20,6 +20,7 @@ class _FakeFont:
 class _FakeStyle:
     def __init__(self):
         self.font = _FakeFont()
+        self.name = "Normal"
 
 
 class _FakeRun:
@@ -99,11 +100,20 @@ class FakeDocument:
         except Exception:
             return
 
-        self.paragraphs = [
-            _FakeParagraph(text)
-            for text in payload.get("paragraphs", [])
-            if isinstance(text, str)
-        ]
+        loaded_paragraphs = []
+        for item in payload.get("paragraphs", []):
+            if isinstance(item, str):
+                paragraph = _FakeParagraph(item)
+            elif isinstance(item, dict) and isinstance(item.get("text"), str):
+                paragraph = _FakeParagraph(item["text"])
+                style_name = item.get("style_name")
+                if isinstance(style_name, str) and style_name:
+                    paragraph.style.name = style_name
+            else:
+                continue
+            loaded_paragraphs.append(paragraph)
+
+        self.paragraphs = loaded_paragraphs
 
     def add_section(self):
         section = _FakeSection()
@@ -112,6 +122,7 @@ class FakeDocument:
 
     def add_heading(self, text, level=1):  # noqa: ARG002
         paragraph = _FakeParagraph(text)
+        paragraph.style.name = "Heading 1"
         self.paragraphs.append(paragraph)
         return paragraph
 
@@ -123,7 +134,15 @@ class FakeDocument:
     def save(self, path):
         target_path = Path(path)
         target_path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"paragraphs": [paragraph.text for paragraph in self.paragraphs]}
+        payload = {
+            "paragraphs": [
+                {
+                    "text": paragraph.text,
+                    "style_name": getattr(paragraph.style, "name", "Normal"),
+                }
+                for paragraph in self.paragraphs
+            ]
+        }
         target_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 
 
@@ -148,4 +167,3 @@ def install_docx_stub():
     sys.modules["docx.shared"] = shared_stub
     sys.modules["docx.oxml"] = oxml_stub
     sys.modules["docx.oxml.ns"] = ns_stub
-

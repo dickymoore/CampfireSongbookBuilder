@@ -3,6 +3,14 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+try:
+    from docx import Document
+except ModuleNotFoundError:  # pragma: no cover - exercised in test environments without python-docx
+    from tests.docx_stub import install_docx_stub
+
+    install_docx_stub()
+    from docx import Document
+
 
 logger = logging.getLogger(__name__)
 
@@ -10,6 +18,17 @@ DOCUMENT_VERIFICATION_VERSION = 1
 DEFAULT_DOCUMENT_QUALITY_PATH = Path("data/review/document_quality.json")
 ARTIFACT_TYPES = ("markdown", "docx")
 VERIFICATION_STATUSES = ("passed", "failed")
+NEATNESS_REASON_PASSED = "meets_neatness_thresholds"
+NEATNESS_REASON_EXCESSIVE_WHITESPACE = "excessive_whitespace"
+NEATNESS_REASON_SPARSE_LAYOUT = "sparse_layout"
+NEATNESS_REASON_FRAGMENTED_SONG_BLOCKS = "fragmented_song_blocks"
+NEATNESS_REASON_PRINT_HOSTILE_STRUCTURE = "print_hostile_structure"
+MAX_CONSECUTIVE_BLANK_LINES = 2
+MAX_BLANK_LINE_RATIO = 0.35
+MIN_AVERAGE_BODY_LINES_PER_SONG = 2.0
+SHORT_SONG_BLOCK_MAX_LINES = 1
+MIN_FRAGMENTED_BLOCKS = 2
+MIN_FRAGMENTED_BLOCK_RATIO = 0.5
 
 
 def _validation_error(file_path, field, reason):
@@ -102,6 +121,158 @@ def build_document_verification_record(
         "verification_reasons": reason_values,
         "verified_at": verified_at_value,
     }
+
+
+def _count_max_consecutive_blank_lines(lines):
+    max_run = 0
+    current_run = 0
+    for line in lines:
+        if isinstance(line, str) and line.strip() == "":
+            current_run += 1
+            if current_run > max_run:
+                max_run = current_run
+        else:
+            current_run = 0
+    return max_run
+
+
+def _blank_line_ratio(lines):
+    if not lines:
+        return 0.0
+    blank_lines = sum(1 for line in lines if isinstance(line, str) and line.strip() == "")
+    return blank_lines / float(len(lines))
+
+
+def _song_block_body_lines(song_blocks):
+    return [len(block.get("body_lines", [])) for block in song_blocks]
+
+
+def _evaluate_neatness_reasons(all_lines, song_blocks):
+    reasons = []
+    body_line_counts = _song_block_body_lines(song_blocks)
+
+    if not song_blocks or sum(body_line_counts) == 0:
+        reasons.append(NEATNESS_REASON_PRINT_HOSTILE_STRUCTURE)
+
+    if (
+        _count_max_consecutive_blank_lines(all_lines) > MAX_CONSECUTIVE_BLANK_LINES
+        or _blank_line_ratio(all_lines) > MAX_BLANK_LINE_RATIO
+    ):
+        reasons.append(NEATNESS_REASON_EXCESSIVE_WHITESPACE)
+
+    if song_blocks:
+        average_body_lines = sum(body_line_counts) / float(len(song_blocks))
+        if average_body_lines < MIN_AVERAGE_BODY_LINES_PER_SONG:
+            reasons.append(NEATNESS_REASON_SPARSE_LAYOUT)
+
+        short_block_count = sum(
+            1 for count in body_line_counts if count <= SHORT_SONG_BLOCK_MAX_LINES
+        )
+        if (
+            short_block_count >= MIN_FRAGMENTED_BLOCKS
+            and short_block_count / float(len(song_blocks)) >= MIN_FRAGMENTED_BLOCK_RATIO
+        ):
+            reasons.append(NEATNESS_REASON_FRAGMENTED_SONG_BLOCKS)
+
+    if not reasons:
+        return [NEATNESS_REASON_PASSED]
+    return reasons
+
+
+def _markdown_song_blocks(markdown_text):
+    lines = markdown_text.splitlines()
+    song_blocks = []
+    current_block = None
+    in_code_block = False
+
+    for line in lines:
+        if line.startswith("# "):
+            current_block = {"heading": line, "body_lines": []}
+            song_blocks.append(current_block)
+            in_code_block = False
+            continue
+
+        if current_block is None:
+            continue
+
+        if line.startswith("```"):
+            in_code_block = not in_code_block
+            continue
+
+        if in_code_block:
+            if line.strip() != "":
+                current_block["body_lines"].append(line)
+            continue
+
+        if line.strip() != "":
+            current_block["body_lines"].append(line)
+
+    return lines, song_blocks
+
+
+def _docx_song_blocks(document):
+    paragraphs = [paragraph.text for paragraph in document.paragraphs]
+    song_blocks = []
+    current_block = None
+
+    for paragraph in document.paragraphs:
+        paragraph_text = paragraph.text
+        style_name = getattr(getattr(paragraph, "style", None), "name", "")
+        is_heading = isinstance(style_name, str) and style_name.startswith("Heading")
+
+        if is_heading and paragraph_text.strip() != "":
+            current_block = {"heading": paragraph_text, "body_lines": []}
+            song_blocks.append(current_block)
+            continue
+
+        if current_block is None:
+            continue
+
+        for line in paragraph_text.splitlines():
+            if line.strip() != "":
+                current_block["body_lines"].append(line)
+
+    return paragraphs, song_blocks
+
+
+def evaluate_markdown_artifact_neatness(markdown_text):
+    all_lines, song_blocks = _markdown_song_blocks(markdown_text)
+    reasons = _evaluate_neatness_reasons(all_lines, song_blocks)
+    return {
+        "verification_status": "passed" if reasons == [NEATNESS_REASON_PASSED] else "failed",
+        "verification_reasons": reasons,
+    }
+
+
+def evaluate_docx_artifact_neatness(document):
+    all_lines, song_blocks = _docx_song_blocks(document)
+    reasons = _evaluate_neatness_reasons(all_lines, song_blocks)
+    return {
+        "verification_status": "passed" if reasons == [NEATNESS_REASON_PASSED] else "failed",
+        "verification_reasons": reasons,
+    }
+
+
+def evaluate_document_artifact(artifact_path, artifact_type=None, verified_at=None):
+    artifact_path = Path(artifact_path)
+    artifact_type_value = validate_artifact_type(
+        artifact_type if artifact_type is not None else artifact_path.suffix.lstrip(".")
+    )
+
+    if artifact_type_value == "markdown":
+        evaluation = evaluate_markdown_artifact_neatness(
+            artifact_path.read_text(encoding="utf-8")
+        )
+    else:
+        evaluation = evaluate_docx_artifact_neatness(Document(artifact_path))
+
+    return build_document_verification_record(
+        artifact_path=str(artifact_path),
+        artifact_type=artifact_type_value,
+        verification_status=evaluation["verification_status"],
+        verification_reasons=evaluation["verification_reasons"],
+        verified_at=verified_at,
+    )
 
 
 def _load_json_document(file_path):

@@ -6,6 +6,12 @@ from pathlib import Path
 from docx import Document
 
 from app.content_models import derive_song_key
+from app.document_verification import (
+    DEFAULT_DOCUMENT_QUALITY_PATH,
+    evaluate_document_artifact,
+    load_document_verification,
+    save_document_verification,
+)
 from app.document_formatting import (
     add_header_footer,
     create_two_column_section,
@@ -29,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 QUALITY_STATUS_PATH = DEFAULT_QUALITY_STATUS_PATH
 REVIEW_DECISIONS_PATH = DEFAULT_REVIEW_DECISIONS_PATH
+DOCUMENT_QUALITY_PATH = DEFAULT_DOCUMENT_QUALITY_PATH
 DEFAULT_REPORT_SOURCE = "generate_from_cache"
 
 
@@ -92,6 +99,24 @@ def _write_markdown_document(output_path, lines):
     logger.info("Markdown document saved as %s.", target_path)
 
 
+def _save_document_verification_records(records):
+    state, errors = load_document_verification(DOCUMENT_QUALITY_PATH)
+    if errors:
+        logger.warning(
+            "Document verification load reported %d recoverable issue(s).",
+            len(errors),
+        )
+
+    merged_entries = dict(state.get("entries", {}))
+    for record in records:
+        merged_entries[record["artifact_path"]] = record
+
+    save_document_verification(
+        DOCUMENT_QUALITY_PATH,
+        list(merged_entries.values()),
+    )
+
+
 def create_document_from_cache(
     song_list,
     lyrics_cache,
@@ -143,6 +168,7 @@ def create_document_from_cache(
     selection_issues = []
     pdf_outputs = []
     pdf_errors = []
+    document_verification_records = []
 
     for song in songs_to_process:
         artist = _song_artist(song)
@@ -264,9 +290,15 @@ def create_document_from_cache(
     if lyrics_output:
         lyrics_markdown_path = Path(lyrics_output).with_suffix(".md")
         _write_markdown_document(lyrics_markdown_path, lyrics_markdown_lines)
+        document_verification_records.append(
+            evaluate_document_artifact(lyrics_markdown_path, artifact_type="markdown")
+        )
         os.makedirs(os.path.dirname(lyrics_output), exist_ok=True)
         lyrics_document.save(lyrics_output)
         logger.info("Lyrics document saved as %s.", lyrics_output)
+        document_verification_records.append(
+            evaluate_document_artifact(lyrics_output, artifact_type="docx")
+        )
         if pdf_output:
             lyrics_pdf_path, lyrics_pdf_error = convert_document_to_pdf(lyrics_output)
             if lyrics_pdf_path is not None:
@@ -283,9 +315,15 @@ def create_document_from_cache(
     if chords_output:
         chords_markdown_path = Path(chords_output).with_suffix(".md")
         _write_markdown_document(chords_markdown_path, chords_markdown_lines)
+        document_verification_records.append(
+            evaluate_document_artifact(chords_markdown_path, artifact_type="markdown")
+        )
         os.makedirs(os.path.dirname(chords_output), exist_ok=True)
         chords_document.save(chords_output)
         logger.info("Chords document saved as %s.", chords_output)
+        document_verification_records.append(
+            evaluate_document_artifact(chords_output, artifact_type="docx")
+        )
         if pdf_output:
             chords_pdf_path, chords_pdf_error = convert_document_to_pdf(chords_output)
             if chords_pdf_path is not None:
@@ -299,6 +337,9 @@ def create_document_from_cache(
                     }
                 )
 
+    if document_verification_records:
+        _save_document_verification_records(document_verification_records)
+
     return {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "report_type": "quality_run",
@@ -307,4 +348,5 @@ def create_document_from_cache(
         "selection_issues": selection_issues,
         "pdf_outputs": pdf_outputs,
         "pdf_errors": pdf_errors,
+        "document_verification": document_verification_records,
     }

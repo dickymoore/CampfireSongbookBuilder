@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from app.content_models import build_favourite_record, build_review_decision, compute_content_hash
+from app.document_verification import load_document_verification
 from app.review_state import save_review_decisions
 from tests.docx_stub import install_docx_stub
 
@@ -25,6 +26,18 @@ class TestDocumentCreation(unittest.TestCase):
         document = Document(path)
         return "\n".join(paragraph.text for paragraph in document.paragraphs if paragraph.text)
 
+    def _run_create_document(self, tmp_path, *args, **kwargs):
+        import app.document_creation as document_creation
+
+        original_document_quality_path = document_creation.DOCUMENT_QUALITY_PATH
+        document_creation.DOCUMENT_QUALITY_PATH = (
+            tmp_path / "data" / "review" / "document_quality.json"
+        )
+        try:
+            return create_document_from_cache(*args, **kwargs)
+        finally:
+            document_creation.DOCUMENT_QUALITY_PATH = original_document_quality_path
+
     def test_create_document_from_cache_excludes_questionable_and_overlong_content_by_default(self):
         song_list = [
             {"Artist": "The Campfire Trio", "Title": "Trail Song"},
@@ -40,9 +53,11 @@ class TestDocumentCreation(unittest.TestCase):
         }
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            output_path = Path(tmp_dir) / "lyrics.docx"
+            tmp_path = Path(tmp_dir)
+            output_path = tmp_path / "lyrics.docx"
 
-            report_data = create_document_from_cache(
+            report_data = self._run_create_document(
+                tmp_path,
                 song_list,
                 lyrics_cache,
                 {},
@@ -103,7 +118,8 @@ class TestDocumentCreation(unittest.TestCase):
             document_creation.QUALITY_STATUS_PATH = tmp_path / "missing_quality_status.json"
             document_creation.REVIEW_DECISIONS_PATH = review_decisions_path
             try:
-                create_document_from_cache(
+                self._run_create_document(
+                    tmp_path,
                     song_list,
                     lyrics_cache,
                     {},
@@ -152,7 +168,8 @@ class TestDocumentCreation(unittest.TestCase):
             document_creation.QUALITY_STATUS_PATH = tmp_path / "missing_quality_status.json"
             document_creation.REVIEW_DECISIONS_PATH = review_decisions_path
             try:
-                report_data = create_document_from_cache(
+                report_data = self._run_create_document(
+                    tmp_path,
                     [],
                     lyrics_cache,
                     {},
@@ -197,7 +214,8 @@ class TestDocumentCreation(unittest.TestCase):
             tmp_path = Path(tmp_dir)
             output_path = tmp_path / "lyrics.docx"
 
-            report_data = create_document_from_cache(
+            report_data = self._run_create_document(
+                tmp_path,
                 [],
                 lyrics_cache,
                 {},
@@ -227,7 +245,8 @@ class TestDocumentCreation(unittest.TestCase):
         lyrics_cache = {"The Campfire Trio - Trail Song": "First line\nSecond line"}
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            output_path = Path(tmp_dir) / "lyrics.docx"
+            tmp_path = Path(tmp_dir)
+            output_path = tmp_path / "lyrics.docx"
 
             def fake_convert(docx_path, pdf_path=None, runner=None, which=None):  # noqa: ARG001
                 target_path = Path(docx_path).with_suffix(".pdf")
@@ -235,7 +254,8 @@ class TestDocumentCreation(unittest.TestCase):
                 return target_path, None
 
             with patch("app.document_creation.convert_document_to_pdf", side_effect=fake_convert):
-                report_data = create_document_from_cache(
+                report_data = self._run_create_document(
+                    tmp_path,
                     song_list,
                     lyrics_cache,
                     {},
@@ -254,13 +274,15 @@ class TestDocumentCreation(unittest.TestCase):
         lyrics_cache = {"The Campfire Trio - Trail Song": "First line\nSecond line"}
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            output_path = Path(tmp_dir) / "lyrics.docx"
+            tmp_path = Path(tmp_dir)
+            output_path = tmp_path / "lyrics.docx"
 
             with patch(
                 "app.document_creation.convert_document_to_pdf",
                 return_value=(None, "converter missing"),
             ):
-                report_data = create_document_from_cache(
+                report_data = self._run_create_document(
+                    tmp_path,
                     song_list,
                     lyrics_cache,
                     {},
@@ -274,6 +296,77 @@ class TestDocumentCreation(unittest.TestCase):
             self.assertEqual(report_data["pdf_outputs"], [])
             self.assertEqual(len(report_data["pdf_errors"]), 1)
             self.assertEqual(report_data["pdf_errors"][0]["reason"], "converter missing")
+
+    def test_create_document_from_cache_persists_document_verification_for_generated_artifacts(self):
+        song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
+        lyrics_cache = {"The Campfire Trio - Trail Song": "First line\nSecond line"}
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            output_path = tmp_path / "lyrics.docx"
+            document_quality_path = tmp_path / "data" / "review" / "document_quality.json"
+
+            report_data = self._run_create_document(
+                tmp_path,
+                song_list,
+                lyrics_cache,
+                {},
+                lyrics_output=output_path,
+            )
+
+            state, errors = load_document_verification(document_quality_path)
+
+            self.assertEqual(errors, [])
+            self.assertEqual(len(report_data["document_verification"]), 2)
+            self.assertIn(str(output_path), state["entries"])
+            self.assertIn(str(output_path.with_suffix(".md")), state["entries"])
+            self.assertEqual(
+                state["entries"][str(output_path)]["verification_status"],
+                "passed",
+            )
+            self.assertEqual(
+                state["entries"][str(output_path.with_suffix(".md"))]["verification_reasons"],
+                ["meets_neatness_thresholds"],
+            )
+
+    def test_create_document_from_cache_flags_sparse_generated_artifacts(self):
+        song_list = [
+            {"Artist": "The Campfire Trio", "Title": "Trail Song"},
+            {"Artist": "The Campfire Trio", "Title": "River Song"},
+        ]
+        lyrics_cache = {
+            "The Campfire Trio - Trail Song": "Only line",
+            "The Campfire Trio - River Song": "Solo",
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            output_path = tmp_path / "lyrics.docx"
+            document_quality_path = tmp_path / "data" / "review" / "document_quality.json"
+
+            self._run_create_document(
+                tmp_path,
+                song_list,
+                lyrics_cache,
+                {},
+                lyrics_output=output_path,
+            )
+
+            state, errors = load_document_verification(document_quality_path)
+
+            self.assertEqual(errors, [])
+            self.assertEqual(
+                state["entries"][str(output_path)]["verification_status"],
+                "failed",
+            )
+            self.assertIn(
+                "fragmented_song_blocks",
+                state["entries"][str(output_path)]["verification_reasons"],
+            )
+            self.assertIn(
+                "sparse_layout",
+                state["entries"][str(output_path.with_suffix(".md"))]["verification_reasons"],
+            )
 
 
 if __name__ == "__main__":
