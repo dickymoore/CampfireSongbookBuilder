@@ -19,6 +19,7 @@ from app.remediation_state import (
     build_remediated_content_record,
     create_backup_record,
     load_remediated_content,
+    load_remediation_audit_records,
     record_remediation_audit,
     save_remediated_content,
 )
@@ -37,6 +38,7 @@ from app.review_state import (
 
 DEFAULT_REMEDIATION_THRESHOLD = 40
 DEFAULT_REMEDIATION_RESOLUTION_THRESHOLD = 60
+DEFAULT_REMEDIATION_RETRY_LIMIT = 2
 ALLOWED_REMEDIATION_OPERATIONS = (
     "whitespace normalization",
     "section restructuring without semantic rewrite",
@@ -222,6 +224,16 @@ def _post_change_reference(remediated_content_path, song_key, content_type):
     return "{}#{}:{}".format(remediated_content_path, song_key, content_type)
 
 
+def _escalation_details(category, reason, extra_details=None):
+    details = {
+        "escalation_category": category,
+        "escalation_reason": reason,
+    }
+    if isinstance(extra_details, dict):
+        details.update(extra_details)
+    return details
+
+
 def _merge_remediated_record(existing_state, remediated_record):
     records = []
     seen_key = (remediated_record["song_key"], remediated_record["content_type"])
@@ -287,6 +299,25 @@ def _document_verification_summary(records):
             }
         )
     return summary
+
+
+def count_remediation_attempts(
+    artist,
+    title,
+    content_type,
+    audit_path=DEFAULT_REMEDIATION_AUDIT_PATH,
+):
+    song_key = derive_song_key(artist, title)
+    content_type_value = validate_content_type(content_type)
+    records, _ = load_remediation_audit_records(audit_path)
+
+    return sum(
+        1
+        for record in records
+        if record.get("song_key") == song_key
+        and record.get("content_type") == content_type_value
+        and record.get("outcome") == "attempted"
+    )
 
 
 def reevaluate_remediated_content(
@@ -423,6 +454,15 @@ def reevaluate_remediated_content(
         unresolved_reasons.append("still_below_threshold")
     if not verification_passed:
         unresolved_reasons.append("verification_failed")
+    escalation_category = None
+    escalation_reason = None
+    if evaluation_outcome == "unresolved":
+        if "still_below_threshold" in unresolved_reasons:
+            escalation_category = "still_below_threshold"
+            escalation_reason = "post-remediation quality score remains below the resolution threshold"
+        elif "verification_failed" in unresolved_reasons:
+            escalation_category = "verification_failed"
+            escalation_reason = "artifact verification still fails after remediation"
 
     post_change_reference = _post_change_reference(
         remediated_content_path,
@@ -446,6 +486,9 @@ def reevaluate_remediated_content(
         "review_gate_decisions": review_gate_decisions,
         "unresolved_reasons": unresolved_reasons,
     }
+    if escalation_category is not None:
+        details["escalation_category"] = escalation_category
+        details["escalation_reason"] = escalation_reason
     record_remediation_audit(
         artist_value,
         title_value,
@@ -464,6 +507,8 @@ def reevaluate_remediated_content(
         "content_score": content_score_record,
         "score_improved": score_improved,
         "unresolved_reasons": unresolved_reasons,
+        "escalation_category": escalation_category,
+        "escalation_reason": escalation_reason,
         "review_result": current_review_result,
         "document_verification": refreshed_verification_records,
         "review_gate_decisions": review_gate_decisions,
@@ -480,6 +525,7 @@ def run_bounded_remediation(
     content_score,
     threshold=DEFAULT_REMEDIATION_THRESHOLD,
     resolution_threshold=DEFAULT_REMEDIATION_RESOLUTION_THRESHOLD,
+    retry_limit=DEFAULT_REMEDIATION_RETRY_LIMIT,
     workspace_root=".",
     remediated_content_path=DEFAULT_REMEDIATED_CONTENT_PATH,
     backups_dir=DEFAULT_BACKUPS_DIR,
@@ -495,6 +541,50 @@ def run_bounded_remediation(
     title_value = _require_text("title", title)
     content_type_value = validate_content_type(content_type)
     content_value = _require_text("content", content)
+    song_key = derive_song_key(artist_value, title_value)
+    existing_attempt_count = count_remediation_attempts(
+        artist_value,
+        title_value,
+        content_type_value,
+        audit_path=audit_path,
+    )
+    if existing_attempt_count >= retry_limit:
+        escalation_reason = "automatic remediation retry limit reached"
+        pre_change_reference = _post_change_reference(
+            remediated_content_path,
+            song_key,
+            content_type_value,
+        )
+        record_remediation_audit(
+            artist_value,
+            title_value,
+            content_type_value,
+            pre_change_reference,
+            "retry_limit_reached",
+            "refused",
+            file_path=audit_path,
+            details=_escalation_details(
+                "retry_limit_reached",
+                escalation_reason,
+                {
+                    "retry_limit": retry_limit,
+                    "attempt_count": existing_attempt_count,
+                },
+            ),
+        )
+        return {
+            "status": "refused",
+            "allowed": False,
+            "manual_review_required": True,
+            "reason_code": "retry_limit_reached",
+            "reason": escalation_reason,
+            "signal_codes": [],
+            "escalation_category": "retry_limit_reached",
+            "escalation_reason": escalation_reason,
+            "attempt_count": existing_attempt_count,
+            "retry_limit": retry_limit,
+            "backup_reference": None,
+        }
     evaluation = evaluate_remediation_candidate(content_score, threshold=threshold)
     backup_record = create_backup_record(
         artist_value,
@@ -506,6 +596,7 @@ def run_bounded_remediation(
     backup_reference = backup_record["backup_path"]
 
     if not evaluation["allowed"]:
+        escalation_reason = evaluation["reason"]
         record_remediation_audit(
             artist_value,
             title_value,
@@ -514,6 +605,13 @@ def run_bounded_remediation(
             evaluation["reason_code"],
             "refused",
             file_path=audit_path,
+            details=_escalation_details(
+                "not_allowed_to_fix",
+                escalation_reason,
+                {
+                    "signal_codes": evaluation["signal_codes"],
+                },
+            ),
         )
         return {
             "status": "refused",
@@ -522,6 +620,8 @@ def run_bounded_remediation(
             "reason_code": evaluation["reason_code"],
             "reason": evaluation["reason"],
             "signal_codes": evaluation["signal_codes"],
+            "escalation_category": "not_allowed_to_fix",
+            "escalation_reason": escalation_reason,
             "backup_reference": backup_reference,
         }
 
@@ -559,6 +659,7 @@ def run_bounded_remediation(
         try:
             runner(command, input=prompt, check=True, capture_output=True, text=True)
         except Exception as exc:
+            escalation_reason = str(exc)
             record_remediation_audit(
                 artist_value,
                 title_value,
@@ -567,6 +668,10 @@ def run_bounded_remediation(
                 "codex_exec_failed: {}".format(exc),
                 "failed",
                 file_path=audit_path,
+                details=_escalation_details(
+                    "remediation_failed",
+                    escalation_reason,
+                ),
             )
             return {
                 "status": "failed",
@@ -576,12 +681,15 @@ def run_bounded_remediation(
                 "reason": str(exc),
                 "signal_codes": evaluation["signal_codes"],
                 "approved_operations": evaluation["approved_operations"],
+                "escalation_category": "remediation_failed",
+                "escalation_reason": escalation_reason,
                 "backup_reference": backup_reference,
                 "command": command,
                 "prompt": prompt,
             }
 
         if not output_path.exists():
+            escalation_reason = "codex exec did not write a remediation result"
             record_remediation_audit(
                 artist_value,
                 title_value,
@@ -590,15 +698,21 @@ def run_bounded_remediation(
                 "codex_exec_failed: missing_output",
                 "failed",
                 file_path=audit_path,
+                details=_escalation_details(
+                    "remediation_failed",
+                    escalation_reason,
+                ),
             )
             return {
                 "status": "failed",
                 "allowed": True,
                 "manual_review_required": True,
                 "reason_code": "missing_output",
-                "reason": "codex exec did not write a remediation result",
+                "reason": escalation_reason,
                 "signal_codes": evaluation["signal_codes"],
                 "approved_operations": evaluation["approved_operations"],
+                "escalation_category": "remediation_failed",
+                "escalation_reason": escalation_reason,
                 "backup_reference": backup_reference,
                 "command": command,
                 "prompt": prompt,
@@ -606,6 +720,7 @@ def run_bounded_remediation(
 
         remediated_content = output_path.read_text(encoding="utf-8").strip()
         if remediated_content == "":
+            escalation_reason = "codex exec produced an empty remediation result"
             record_remediation_audit(
                 artist_value,
                 title_value,
@@ -614,15 +729,21 @@ def run_bounded_remediation(
                 "codex_exec_failed: empty_output",
                 "failed",
                 file_path=audit_path,
+                details=_escalation_details(
+                    "remediation_failed",
+                    escalation_reason,
+                ),
             )
             return {
                 "status": "failed",
                 "allowed": True,
                 "manual_review_required": True,
                 "reason_code": "empty_output",
-                "reason": "codex exec produced an empty remediation result",
+                "reason": escalation_reason,
                 "signal_codes": evaluation["signal_codes"],
                 "approved_operations": evaluation["approved_operations"],
+                "escalation_category": "remediation_failed",
+                "escalation_reason": escalation_reason,
                 "backup_reference": backup_reference,
                 "command": command,
                 "prompt": prompt,
@@ -685,6 +806,8 @@ def run_bounded_remediation(
         "remediated_content": remediated_content,
         "saved_state": saved_state,
         "post_remediation_evaluation": post_remediation_evaluation,
+        "escalation_category": post_remediation_evaluation["escalation_category"],
+        "escalation_reason": post_remediation_evaluation["escalation_reason"],
         "command": command,
         "prompt": prompt,
     }
