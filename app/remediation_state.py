@@ -14,7 +14,7 @@ from app.content_models import (
 logger = logging.getLogger(__name__)
 
 REMEDIATED_CONTENT_VERSION = 1
-REMEDIATION_OUTCOMES = ("success", "failed")
+REMEDIATION_OUTCOMES = ("allowed", "attempted", "refused", "success", "failed")
 DEFAULT_REMEDIATED_CONTENT_PATH = Path("data/review/remediated_content.json")
 DEFAULT_BACKUPS_DIR = Path("data/review/backups")
 DEFAULT_REMEDIATION_AUDIT_PATH = Path("data/review/audit/remediation_attempts.jsonl")
