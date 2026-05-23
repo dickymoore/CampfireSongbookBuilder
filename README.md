@@ -55,7 +55,8 @@ Campfire Songbook Builder is a Python-based application designed to generate son
    }
    ```
 
-6. Place your song list in `data/src/CampfireSongs.csv`. The CSV file should have the following columns: `Artist`, `Title`, and optionally `Skip`.
+6. Place your song list in `data/src/CampfireSongs.csv`. The CSV file should have the following columns: `Artist`, `Title`, and optionally `Skip` and `Favourite`.
+   Use `Favourite` for simple per-song membership in favourite-only workflows. Truthy values such as `yes`, `true`, or `1` are treated as favourite rows.
 
 ## Usage
 
@@ -79,6 +80,16 @@ Run the application from the command line with various options:
 - To generate documents from the cache:
   ```sh
   python main.py --generate-from-cache
+  ```
+
+- To restrict any run to songs marked as favourites in the source CSV:
+  ```sh
+  python main.py --favourites-only --generate-from-cache
+  ```
+
+- To restrict any run to a named selection from `data/selections/<name>.json`:
+  ```sh
+  python main.py --selection trip-night --generate-from-cache
   ```
 
 ## Running Tests & Linting

@@ -3,13 +3,13 @@ import unittest
 from math import isnan
 from pathlib import Path
 
-from app.load_songs import load_songs
+from app.load_songs import filter_favourite_songs, load_songs
 
 
 class TestLoadSongs(unittest.TestCase):
     def test_load_songs_reports_invalid_rows_and_preserves_valid_rows(self):
-        csv_text = """Artist,Title,Skip
-"The Campfire Trio ","Trail Song",
+        csv_text = """Artist,Title,Skip,Favourite
+"The Campfire Trio ","Trail Song",,yes
 ,Missing Artist Song,
 The Campfire Trio,"   ",
 Hidden Band,Skipped Song,sKiP
@@ -26,6 +26,7 @@ Broken Band,,skip
         self.assertEqual(len(songs), 1)
         self.assertEqual(songs[0]["Artist"], "The Campfire Trio ")
         self.assertEqual(songs[0]["Title"], "Trail Song")
+        self.assertTrue(songs[0]["Favourite"])
         self.assertEqual(len(invalid_rows), 3)
 
         first_invalid = invalid_rows[0]
@@ -64,6 +65,33 @@ Broken Band,,skip
         self.assertIn("'skip': 'skip'", log_output)
         self.assertIn("'reason': 'missing artist'", log_output)
         self.assertIn("'reason': 'missing title'", log_output)
+
+    def test_load_songs_normalizes_optional_favourite_column_and_filters_rows(self):
+        csv_text = """Artist,Title,Skip,Favourite
+The Campfire Trio,Trail Song,,yes
+The Campfire Trio,Firelight Waltz,,1
+The Campfire Trio,Night Run,,false
+The Campfire Trio,Dawn Chorus,,
+"""
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            csv_path = Path(tmp_dir) / "songs.csv"
+            csv_path.write_text(csv_text, encoding="utf-8")
+
+            songs, invalid_rows = load_songs(csv_path)
+
+        self.assertEqual(invalid_rows, [])
+        self.assertEqual(
+            [song["Favourite"] for song in songs],
+            [True, True, False, False],
+        )
+        self.assertEqual(
+            [(song["Artist"], song["Title"]) for song in filter_favourite_songs(songs)],
+            [
+                ("The Campfire Trio", "Trail Song"),
+                ("The Campfire Trio", "Firelight Waltz"),
+            ],
+        )
 
 
 if __name__ == "__main__":

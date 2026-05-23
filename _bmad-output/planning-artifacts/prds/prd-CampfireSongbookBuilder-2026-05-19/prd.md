@@ -191,7 +191,7 @@ The system remains operable through files and CLI commands so AI agents can help
 The user can mark Songs as Favourite.
 
 **Consequences:**
-- Favourite status is persisted in an inspectable format.
+- Favourite status is persisted in an inspectable format, with the source CSV as the default canonical store through an optional `Favourite` column.
 - The builder can generate output using only Favourite Songs.
 - Favourite status is independent from quality status; a Favourite Song may still be excluded when Questionable unless explicitly included.
 

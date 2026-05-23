@@ -24,6 +24,7 @@ from story_automator.core.tmux_runtime import (
 from story_automator.core.utils import (
     get_project_root,
     print_json,
+    project_hash,
     project_slug,
     read_text,
 )
@@ -187,32 +188,6 @@ def _build_cmd(args: list[str]) -> int:
         cli = agent_cli(agent)
     else:
         cli = "codex exec"
-    if step == "create":
-        bounded_create_instruction = (
-            "AUTONOMOUS CREATE-STORY MODE. "
-            "Do not browse the web if the required local planning artifacts exist. "
-            "Do not spawn subprocesses or subagents for extra research. "
-            "Read the current sprint status entry, current epics.md, current architecture.md, "
-            "the newest relevant PRD/addendum under the planning artifacts, project-context facts, "
-            "and the immediately previous story only if needed. "
-            "Create the target story file from the template as soon as story scope is resolved, "
-            "then fill and refine it in place. "
-            "Completion requires both: the canonical story file exists at the target path and "
-            "sprint-status.yaml is updated from backlog to ready-for-dev for the canonical story key."
-        )
-        prompt = f"{prompt.rstrip()}\n\n{bounded_create_instruction}\n"
-    if step == "dev":
-        bounded_dev_instruction = (
-            "AUTONOMOUS DEV-STORY MODE. "
-            "Do not browse the web or drift into broad planning discovery when the local story and code surfaces exist. "
-            "Read the canonical story file, sprint status, project-context facts, and only the implementation/test files named by the story. "
-            "As soon as that context is loaded, update sprint-status to in-progress if needed, write a focused failing test or edit the targeted test first, run it, "
-            "then implement the minimal code change to pass. "
-            "If no code or test file has changed after the initial context read, stop reading and cross the write boundary immediately. "
-            "Completion requires concrete implementation/test edits, passing targeted tests, and story/sprint status progression."
-        )
-        prompt = f"{prompt.rstrip()}\n\n{bounded_dev_instruction}\n"
-
     quoted_prompt = shlex.quote(prompt)
     if agent == "codex" and not ai_command:
         codex_home = Path(root) / ".codex"

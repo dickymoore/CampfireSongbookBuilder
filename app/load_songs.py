@@ -18,6 +18,21 @@ def _is_skipped(value):
     return isinstance(value, str) and value.lower() == "skip"
 
 
+def _is_favourite(value):
+    if pd.isna(value):
+        return False
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value == 1
+    if isinstance(value, str):
+        normalized_value = value.strip().lower()
+        if normalized_value in ("", "0", "false", "f", "no", "n"):
+            return False
+        return normalized_value in ("1", "true", "t", "yes", "y", "favorite", "favourite", "fav")
+    return False
+
+
 def _build_invalid_row_record(row_number, row):
     artist = row.get("Artist")
     title = row.get("Title")
@@ -39,9 +54,14 @@ def _build_invalid_row_record(row_number, row):
     }
 
 
+def filter_favourite_songs(songs):
+    return [song for song in songs if _is_favourite(song.get("Favourite"))]
+
+
 def load_songs(csv_file):
     """
     Load songs from a CSV file, optionally filtering out rows where 'Skip' is set to 'skip'.
+    If present, the 'Favourite' column is normalized to a boolean on each song record.
 
     Parameters:
     csv_file (str): Path to the CSV file containing songs.
@@ -67,7 +87,11 @@ def load_songs(csv_file):
             if 'Skip' in songs_df.columns and _is_skipped(row.get("Skip")):
                 continue
 
-            songs.append(row.to_dict())
+            song_record = row.to_dict()
+            if 'Favourite' in songs_df.columns:
+                song_record["Favourite"] = _is_favourite(row.get("Favourite"))
+
+            songs.append(song_record)
 
         if 'Skip' not in songs_df.columns:
             logger.warning("'Skip' column not found in CSV. Proceeding without skipping any songs.")

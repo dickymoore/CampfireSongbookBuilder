@@ -1,0 +1,30 @@
+installation:
+  version: 6.7.1-next.0
+  installDate: 2026-05-17T11:34:00.679Z
+  lastUpdated: 2026-05-19T08:04:08.138Z
+modules:
+  - name: core
+    version: 6.7.1-next.0
+    installDate: 2026-05-17T11:34:00.305Z
+    lastUpdated: 2026-05-19T08:04:08.130Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+  - name: bmm
+    version: 6.7.1-next.0
+    installDate: 2026-05-17T11:34:00.239Z
+    lastUpdated: 2026-05-19T08:04:08.133Z
+    source: built-in
+    npmPackage: null
+    repoUrl: null
+  - name: automator
+    version: main
+    installDate: 2026-05-19T08:02:12.959Z
+    lastUpdated: 2026-05-19T08:04:08.138Z
+    source: external
+    npmPackage: bmad-story-automator
+    repoUrl: https://github.com/bmad-code-org/bmad-automator
+    channel: next
+    sha: 09324459c3b8671fc588fd859510aaa852fc1af6
+ides:
+  - codex

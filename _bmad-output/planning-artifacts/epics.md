@@ -1,569 +1,330 @@
 ---
 stepsCompleted: [1, 2, 3, 4]
+inputDocuments:
+  - _bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-20/prd.md
+  - _bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-20/addendum.md
+  - _bmad-output/planning-artifacts/architecture.md
 workflowType: 'epics-and-stories'
 status: 'complete'
-completedAt: '2026-05-19'
-inputDocuments:
-  - _bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-19/prd.md
-  - _bmad-output/planning-artifacts/architecture.md
-  - _bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-19/addendum.md
-  - _bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-19/validation-report.md
-  - _bmad-output/planning-artifacts/research/technical-campfiresongbookbuilder-quality-review-architecture-and-content-quality-research-2026-05-19.md
+completedAt: '2026-05-21'
 ---
 
 # CampfireSongbookBuilder - Epic Breakdown
 
 ## Overview
 
-This document provides the complete epic and story breakdown for CampfireSongbookBuilder, decomposing the requirements from the PRD, supporting PRD addendum and validation report, technical research, and Architecture requirements into implementable stories.
+This document provides the complete epic and story breakdown for CampfireSongbookBuilder, decomposing the requirements from the PRD, UX Design if it exists, and Architecture requirements into implementable stories.
 
 ## Requirements Inventory
 
 ### Functional Requirements
 
-FR1: Detect Songs whose Chords/Tab are missing, empty, sentinel-only, non-string, or otherwise unusable, and mark them with a Quality Signal rather than silently allowing them into default generated books.
-
-FR2: Detect weird markup, email/header artifacts, duplicate junk, scraper residue, and unreadable formatting in Lyrics or Chords/Tab, distinguishing between safely removed artifacts and retained warning signals.
-
-FR3: Detect Lyrics or Chords/Tab likely to create excessive pages or unreadable print output, using configurable or isolated thresholds for length/page heuristics.
-
-FR4: Mark content as low-confidence when source, title/artist matching, or fetched content suggests it may be the wrong song, starting with deterministic heuristics.
-
-FR5: Continue through configured lyric/chord sources when a candidate fails quality assessment, record/report source attempts, and avoid refetching already acceptable cached content unless explicitly requested.
-
-FR6: Persist a Questionable status with quality reasons when all available sources fail to produce acceptable content, and make that status available to later cache-based generation.
-
-FR7: Exclude Questionable Songs from default generated books unless the user explicitly includes them for a one-off generation or through a persisted Review Decision.
-
-FR8: Validate Source List rows before fetching, reporting missing artist/title rows while preserving `Skip` filtering behavior.
-
-FR9: Provide add-song feedback summarizing found, clean, Questionable, and missing statuses and pointing the user to Songs needing review.
-
-FR10: Preserve agent-friendly operation through files and CLI commands, with machine-readable review/report output available for automation.
-
-FR11: Persist Favourite Song status in an inspectable format and support generation from Favourite Songs while still applying quality filtering.
-
-FR12: Support named Selections containing chosen Songs, allow a Song to appear in multiple Selections, and report missing or malformed Selection entries before generation.
-
-FR13: Apply quality filtering when generating from Favourites or named Selections, excluding Questionable Songs by default and reporting reasons.
-
-FR14: Generate selected output from cached content without making external network requests, reporting missing or Questionable cached content.
-
-FR15: Preserve existing JSONL cache data and exact `artist`/`title` cache-key behavior, or provide intentional backward-compatible migration if cache shape changes.
-
-FR16: Produce a Markdown representation of generated books before `.docx` generation, reflecting quality filtering decisions and supporting human/agent inspection.
-
-FR17: Continue producing `.docx` output for accepted content, excluding Questionable Songs by default.
-
-FR18: Support or enable PDF output after `.docx`, with documented local dependency requirements and recoverable failure that does not delete Markdown or `.docx` artifacts.
-
-FR19: Improve basic printable layout quality by avoiding obvious print-hostile output such as bad tab pages, unreadable wrapping, or excessive song length.
+FR1: The system can assess generated Markdown and `.docx` outputs for readability and wasted whitespace, and produce a machine-readable document-level quality result for each requested artifact.
+FR2: The system can mark generated artifacts as review-ready or not review-ready using configurable neatness thresholds and clear failure reasons.
+FR3: The system can gate manual review behind automated document-quality verification and expose those results to agents without scraping human-facing text.
+FR4: The system can persist verification outcomes in an inspectable local format that includes pass/fail state, reasons, and artifact identity.
+FR5: The system can assign a deterministic, rule-based Lyrics Quality Score to each Song using quality signals such as missing content, junk markup, confidence, readability, and successful cleanup.
+FR6: The system can assign a deterministic Chords/Tab Quality Score to each Song using signals specific to playable chord/tab content.
+FR7: The system can rank Songs by remediation priority, including worst-score-first reporting and separate prioritization for Lyrics and Chords/Tab when needed.
+FR8: Agents can directly improve low-quality Lyrics or Chords/Tab content within bounded, structure-preserving safety rules such as whitespace cleanup, structure normalization, and removal of obvious scraper residue.
+FR9: The system can create a backup artifact or reversible record before any direct agent remediation and preserve exact pre-remediation content identity.
+FR10: The system can recompute quality scores and rerun relevant verification after remediation, and make before/after state available for auditability.
+FR11: The system can record remediation provenance including Song identity, content type, pre-change reference, post-change reference, and remediation reason in inspectable local files.
+FR12: The system can enforce escalation boundaries for unresolved quality issues, including bounded remediation attempts, explicit escalation reasons, and clear stop conditions.
 
 ### NonFunctional Requirements
 
-NFR1: Preserve the existing repo-root CLI contract, including `python3 main.py`, `--cache-only`, `--generate-from-cache`, `--lyrics-only`, `--chords-only`, `--get-song-info`, and `--test-api`.
-
-NFR2: Preserve cache-first and offline behavior; generation from cache must not perform live network requests, and source retry must not increase external requests when cached acceptable content already exists.
-
-NFR3: Keep source failures isolated so one lyric or chord source failure does not crash the full run when another configured source or cached value can still be used.
-
-NFR4: Keep review state inspectable by storing Quality Status, Review Decisions, Favourites, Selections, and reports in simple local file formats humans and AI agents can inspect and edit.
-
-NFR5: Keep tests independent from external services, Genius credentials, local private config, local cache contents, and generated `.docx` binary comparison.
-
-NFR6: Maintain implementation simplicity by preserving the single-process CLI shape and flat helper-module style unless a future architecture decision justifies changing it.
+NFR1: Existing command flows must remain compatible with `python3 main.py` from the repository root.
+NFR2: Quality scoring, backups, remediation, and reporting must preserve exact `artist`, `title`, and `song_key` identity behavior.
+NFR3: All new outputs, verification records, scores, backups, and audit files must remain local-file based and human/agent readable.
+NFR4: Automated verification and scoring should remain deterministic where practical for the same content snapshot and thresholds.
+NFR5: Agentic verification must be runnable without requiring Dicky to manually inspect outputs first.
+NFR6: Direct content edits by agents must never happen without a recoverable pre-edit state.
 
 ### Additional Requirements
 
-- Preserve the existing brownfield Python CLI scaffold; do not introduce a new starter template, GUI framework, web server, database, or service layer for MVP.
-- Treat Python 3.12 as the verified development runtime for the upgrade, and reconcile existing Python 3.8+ documentation because Python 3.8 is end-of-life.
-- Keep `main.py` as thin CLI orchestration; scraper logic, cache mechanics, quality assessment, review state, filtering, reporting, and document rendering belong in helper modules under `app/`.
-- Preserve absolute `app.*` imports and repo-root execution.
-- Add shared local data contracts for Candidate, Quality Signal, Quality Status, Review Decision, Source Attempt, Favourite, and Selection.
-- Normalize source outputs into Candidate records before quality assessment.
-- Store raw fetched content in existing JSONL caches; store current quality status and review decisions separately in JSON files under `data/review/`.
-- Store source attempts as append-only JSONL under `data/review/source_attempts.jsonl`.
-- Store favourites and named selections as JSON files under `data/selections/`.
-- Use exact existing `artist` and `title` fields for cache identity; derived `song_key` values use `Artist - Title`.
-- Do not globally normalize song titles/artists for cache lookup; normalized variants may only be computed for matching.
-- Bind Quality Status and Review Decisions to content hashes using `sha256:<hex>` format to prevent stale approvals after refetch.
-- Use data field names in `snake_case`; content type values are `lyrics` and `chords`; quality values are `clean`, `questionable`, and `missing`; review decisions are `accept`, `reject`, and `override`.
-- Treat fetched content as untrusted text; clean or escape source content before Markdown or `.docx` rendering and never write API tokens to generated artifacts or reports.
-- Keep external metadata enrichment, including MusicBrainz and RapidFuzz-assisted matching, optional and deferred unless deterministic matching proves insufficient.
-- If MusicBrainz is added later, use a meaningful User-Agent and respect its documented rate-limit expectations; it must not run during offline generation.
-- Generate human-readable and machine-readable reports for included, excluded, missing, Questionable, and explicitly overridden songs.
-- Keep Markdown and `.docx` artifacts when optional PDF conversion fails.
-- Keep tests under `tests/test_*.py` using `unittest`, `tempfile`, and `unittest.mock`.
-- Add focused regression tests for cache compatibility, quality assessment, review-state loading, selection loading, source fallback decisions, filtering, Markdown output, and offline generation.
-- Avoid new dependencies for MVP unless a story-specific decision proves they remove more risk than they add.
-- Optional future work includes CI, RapidFuzz, jsonschema, packaging modernization, and concrete PDF tooling after the core quality pipeline is stable.
+- Preserve the existing brownfield Python CLI scaffold; no new starter, service layer, hosted workflow, database, or GUI is needed for this slice.
+- Continue implementation from the existing repository root and keep `main.py` as a thin orchestrator.
+- Preserve flat helper modules under `app/`, with new focused modules for content scoring, document verification, remediation, remediation state, and review gating.
+- Preserve raw JSONL caches as immutable fetched-content records.
+- Introduce a separate remediated current-state layer above raw caches rather than overwriting canonical fetched content directly.
+- Keep current-state review data and append-only history separate.
+- Use local machine-readable reports as the primary communication contract for agents and tests.
+- Compose score computation with existing `app/quality_assessment.py` signals rather than bypassing current quality logic.
+- Store current-state review files under `data/review/`, including `content_scores.json`, `remediated_content.json`, `document_quality.json`, `backups/`, and `audit/remediation_attempts.jsonl`.
+- Use a deterministic `0-100` integer quality scoring scale with threshold bands: `85-100 clean`, `60-84 reviewable`, `40-59 questionable`, and `0-39 poor`.
+- Treat document neatness as a heuristic but deterministic artifact-level v1 review gate for readability, whitespace efficiency, sparse pages, song fragmentation, or similar print-hostile structure, informed by per-song-block heuristics.
+- Define review-ready as a computed machine-readable gate state, not just a summary string.
+- Restrict `codex exec` remediation to bounded, structure-preserving operations in v1: whitespace normalization, section restructuring without semantic rewrite, removal of obvious scraper residue, and normalization or removal of repeated junk blocks.
+- Persist explicit retry counts and escalation categories so agents do not silently loop on the same content.
+- Use an automatic remediation retry limit of `2` attempts per content item before escalation.
+- Re-score content and rerun relevant verification after every remediation attempt.
+- Preserve exact naming and data contracts: `snake_case` fields, `lyrics` and `chords` content types, explicit score and verification fields, and `sha256:<hex>` content hashes.
+- Keep verification, remediation, and reporting compatible with the existing single-process CLI and `unittest` workflow.
 
 ### UX Design Requirements
 
-No UX Design Specification was found or required for v1. The PRD and Architecture explicitly exclude a GUI for MVP. User-facing inspection requirements are covered through CLI summaries, local reports, and Markdown output.
+No UX Design Specification was found or required for this slice. The PRD and architecture both explicitly exclude a GUI for MVP.
 
 ### FR Coverage Map
 
-FR1: Epic 1 - detect missing or unusable Chords/Tab
-FR2: Epic 1 - detect junk, markup, duplicate, and unreadable content
-FR3: Epic 1 - detect overlong or print-hostile content
-FR4: Epic 1 - detect low-confidence candidates
-FR5: Epic 2 - retry alternate sources before finalizing bad content
-FR6: Epic 2 - persist Questionable status and reasons
-FR7: Epic 2 - exclude Questionable songs by default with override path
-FR8: Epic 3 - validate source-list rows
-FR9: Epic 3 - provide add-song feedback
-FR10: Epic 3 - preserve agent-friendly file/CLI operation
-FR11: Epic 4 - mark songs as favourites
-FR12: Epic 4 - create named selections
-FR13: Epic 4 - combine quality filtering with selections
-FR14: Epic 5 - generate from cache without network
-FR15: Epic 5 - preserve local cache compatibility
-FR16: Epic 5 - produce Markdown songbook output
-FR17: Epic 5 - produce `.docx` from accepted content
-FR18: Epic 5 - support PDF output after `.docx`
-FR19: Epic 5 - improve basic printable layout quality
+FR1: Epic 1 - evaluate generated artifacts for neatness
+FR2: Epic 1 - decide review readiness from thresholds
+FR3: Epic 1 - gate manual review behind automated checks
+FR4: Epic 1 - persist inspectable verification artifacts
+FR5: Epic 2 - score Lyrics quality per song
+FR6: Epic 2 - score Chords/Tab quality per song
+FR7: Epic 2 - rank songs by remediation priority
+FR8: Epic 3 - permit bounded agent remediation
+FR9: Epic 3 - preserve backups before edits
+FR10: Epic 3 - re-score and re-verify after remediation
+FR11: Epic 3 - record remediation provenance
+FR12: Epic 3 - enforce escalation boundaries and retry limits
 
 ## Epic List
 
-### Epic 1: Trustworthy Content Assessment Foundation
-Users can run the tool and get structured quality signals for cached/fetched lyrics and chords, so bad or missing content becomes visible before printing.
+### Epic 1: Review-Ready Document Quality Gates
+The user can generate Markdown and `.docx` artifacts, have them automatically evaluated for neatness and review readiness, and get machine-readable verification results before manual inspection.
 **FRs covered:** FR1, FR2, FR3, FR4
 
-### Epic 2: Source Retry, Review State, and Traceability
-Users can trust that the tool tries better sources before marking content Questionable, persists review status, and explains source/quality decisions.
+### Epic 2: Per-Song Quality Scoring and Prioritization
+The user can see deterministic quality scores for Lyrics and Chords/Tab, understand why a song is weak, and prioritize review or remediation work by worst items first.
 **FRs covered:** FR5, FR6, FR7
 
-### Epic 3: Better Song Addition Feedback
-Users can add songs through the existing file/CLI workflow and get clear feedback about malformed rows, fetched content quality, missing items, and review needs.
-**FRs covered:** FR8, FR9, FR10
+### Epic 3: Safe Agent Remediation Workflow
+Agents can improve low-quality content within bounded rules, create backups first, re-score and re-verify afterward, and keep full provenance for every attempted change.
+**FRs covered:** FR8, FR9, FR10, FR11, FR12
 
-### Epic 4: Favourites, Selections, and Quality-Aware Book Building
-Users can build books from favourites or named selections while still excluding Questionable songs by default.
-**FRs covered:** FR11, FR12, FR13
+<!-- Repeat for each epic in epics_list (N = 1, 2, 3...) -->
 
-### Epic 5: Offline, Inspectable Output Pipeline
-Users can generate a print-ready book from local reviewed cache content, inspect Markdown before `.docx`, preserve `.docx`, and optionally produce PDF without losing earlier artifacts.
-**FRs covered:** FR14, FR15, FR16, FR17, FR18, FR19
+## Epic 1: Review-Ready Document Quality Gates
 
-## Epic 1: Trustworthy Content Assessment Foundation
+The user can generate Markdown and `.docx` artifacts, have them automatically evaluated for neatness and review readiness, and get machine-readable verification results before manual inspection.
 
-Users can run the tool and get structured quality signals for cached/fetched lyrics and chords, so bad or missing content becomes visible before printing.
+### Story 1.1: Produce Inspectable Document Verification Records
 
-### Story 1.1: Define Quality Data Contracts
+As a songbook operator,
+I want each generated artifact to produce a machine-readable verification record,
+So that agents and reports can inspect document-quality results without scraping console output.
 
-As a songbook builder user,
-I want the tool to represent songs, candidates, quality signals, and content hashes consistently,
-So that future quality checks and reports describe the same song content without ambiguity.
+**Traceability:** FR4
 
 **Acceptance Criteria:**
 
-**Given** a song with artist, title, content type, source metadata, and content text
-**When** the application creates candidate and quality-status records
-**Then** the records use `snake_case` fields, preserve exact `artist` and `title`, derive `song_key` as `Artist - Title`, and include a `sha256:<hex>` content hash
-**And** invalid content types, quality values, or review decision values are rejected or reported by focused validation helpers.
+**Given** a generation run produces Markdown or `.docx` output
+**When** document verification runs
+**Then** a local verification record is written with artifact identity, verification status, reasons, and timestamp
+**And** the record format is stable and human/agent readable.
 
-**Given** existing cache records with exact `artist` and `title` fields
-**When** quality data contracts derive matching keys
-**Then** existing cache identity remains backward-compatible and no global title/artist normalization is applied.
+**Given** multiple output artifacts are generated in one run
+**When** verification records are created
+**Then** each artifact receives its own result entry
+**And** the entries remain distinguishable by artifact identity and type.
 
-### Story 1.2: Detect Missing or Unusable Lyrics and Chords
+### Story 1.2: Evaluate Artifact Neatness with Deterministic Heuristics
 
-As a musician preparing a songbook,
-I want missing or unusable lyrics/chords to be flagged automatically,
-So that empty pages or "not found" content do not silently reach a print-ready book.
+As a songbook operator,
+I want generated artifacts checked for whitespace waste and print-hostile layout,
+So that poor-quality outputs are detected before review.
 
-**Acceptance Criteria:**
-
-**Given** lyrics or chords content that is empty, `None`, non-string, `"Lyrics not found."`, or `"Chords not found."`
-**When** quality assessment runs
-**Then** the result is marked `missing` or `questionable` with a structured Quality Signal
-**And** the signal includes the affected `content_type`, a stable code, a severity, and a human-readable message.
-
-**Given** valid non-empty lyrics or chords content
-**When** the missing-content checks run
-**Then** no missing-content signal is emitted.
-
-### Story 1.3: Detect Junk, Markup, and Duplicate Content
-
-As a songbook builder user,
-I want obvious scraper residue, duplicate junk, and unreadable markup flagged,
-So that bad source material is reviewable before it pollutes the songbook.
+**Traceability:** FR1
 
 **Acceptance Criteria:**
 
-**Given** lyrics or chords containing known junk patterns such as HTML residue, email/header artifacts, repeated identical blocks, or excessive bracket noise
-**When** quality assessment runs
-**Then** the result contains one or more warning or error Quality Signals explaining the issue
-**And** safe cleanup remains distinguishable from retained warning signals in the output status.
+**Given** a generated Markdown or `.docx` artifact
+**When** neatness evaluation runs
+**Then** the system checks deterministic heuristics such as excessive whitespace, sparse layout, song fragmentation, or other obvious print-hostile structure at the artifact level using per-song-block heuristics as contributing signals
+**And** the resulting reasons are recorded in the verification output.
 
-**Given** ordinary lyrics or chord text without detected junk patterns
-**When** the junk and duplication checks run
-**Then** no junk-related signal is emitted.
+**Given** threshold or heuristic settings need tuning
+**When** verification logic is maintained
+**Then** threshold values are isolated from unrelated generation code
+**And** tuning does not require changing scraper or cache behavior.
 
-### Story 1.4: Detect Print-Hostile and Low-Confidence Content
+### Story 1.3: Compute Review-Ready Gate Decisions
 
-As a camper printing a songbook,
-I want overlong, unreadable, or likely-wrong song content flagged,
-So that I can avoid printing pages that are impractical or unrelated to the requested song.
+As a reviewer,
+I want the system to decide whether an artifact is ready for manual inspection,
+So that I only open outputs that already meet the minimum presentation standard.
 
-**Acceptance Criteria:**
-
-**Given** lyrics or chords exceeding initial configured or isolated line/character thresholds
-**When** quality assessment runs
-**Then** the content receives a print-hostile Quality Signal
-**And** the threshold values are centralized so they can be tuned without editing scraper logic.
-
-**Given** a candidate whose source title or artist differs materially from the requested title or artist
-**When** deterministic confidence checks run
-**Then** the content receives a low-confidence Quality Signal
-**And** optional fuzzy matching or MusicBrainz enrichment is not required for this story.
-
-### Story 1.5: Persist Current Quality Status for Cached Content
-
-As a songbook builder user,
-I want quality results saved in a local status file,
-So that later generation runs can reuse quality decisions without re-fetching or re-assessing everything manually.
+**Traceability:** FR2
 
 **Acceptance Criteria:**
 
-**Given** assessed cached lyrics or chords
-**When** quality status is saved
-**Then** `data/review/quality_status.json` is created if needed and stores current status by song/content identity
-**And** parent directories are created automatically.
+**Given** an artifact passes configured neatness thresholds
+**When** review readiness is computed
+**Then** the artifact is marked review-ready
+**And** the decision is persisted in machine-readable form.
 
-**Given** malformed or missing quality status files
-**When** the application loads quality status
-**Then** it reports recoverable validation errors with file path, field, and reason
-**And** absent files are treated as empty state where appropriate.
+**Given** an artifact fails one or more neatness checks
+**When** review readiness is computed
+**Then** the artifact is marked not review-ready
+**And** the persisted result includes explicit failure reasons.
 
-## Epic 2: Source Retry, Review State, and Traceability
+### Story 1.4: Gate Manual Review and Reporting on Verification Results
 
-Users can trust that the tool tries better sources before marking content Questionable, persists review status, and explains source/quality decisions.
+As a reviewer,
+I want automated verification results to drive reporting and review gating,
+So that failed artifacts are surfaced before any manual inspection step.
 
-### Story 2.1: Record Source Attempts During Fetching
-
-As a songbook builder user,
-I want each source lookup attempt recorded,
-So that I can understand where lyrics or chords came from and why a source failed.
+**Traceability:** FR3
 
 **Acceptance Criteria:**
 
-**Given** an online fetch/cache workflow attempts lyrics or chord sources
-**When** a source returns a candidate, not-found result, or error
-**Then** a source attempt record is appended to `data/review/source_attempts.jsonl`
-**And** the record includes song identity, content type, source name, status, optional error, and retrieval timestamp.
+**Given** a run includes artifacts that failed verification
+**When** reporting or review gating runs
+**Then** those artifacts are clearly identified as blocked from manual review
+**And** the output distinguishes document-verification failure from song-content quality issues.
 
-**Given** a source failure occurs while later fallback sources remain
-**When** fetching continues
-**Then** the failure is logged/reported as recoverable and does not crash the full run.
+**Given** an agent or automated test consumes verification output
+**When** it reads the local verification artifacts
+**Then** it can determine pass/fail state and reasons without parsing human-facing summary text
+**And** the flow remains compatible with the existing CLI workflow.
 
-### Story 2.2: Retry Alternate Sources Before Final Questionable Status
+## Epic 2: Per-Song Quality Scoring and Prioritization
 
-As a musician adding songs,
-I want the tool to try alternate sources when one source returns bad content,
-So that I get better lyrics or chords without manually chasing websites.
+The user can see deterministic quality scores for Lyrics and Chords/Tab, understand why a song is weak, and prioritize review or remediation work by worst items first.
 
-**Acceptance Criteria:**
+### Story 2.1: Persist Deterministic Per-Song Lyrics and Chords Scores
 
-**Given** a configured source returns content that fails quality assessment
-**When** additional configured sources remain available
-**Then** the workflow attempts the next source before finalizing the content as Questionable
-**And** all failed and successful attempts are reportable.
+As a songbook operator,
+I want each Song to receive persisted Lyrics and Chords quality scores,
+So that content quality can be measured consistently across runs.
 
-**Given** acceptable cached content already exists
-**When** the fetch workflow runs without an explicit refresh request
-**Then** the workflow does not perform unnecessary live source requests for that content.
-
-### Story 2.3: Persist Review Decisions with Content Hashes
-
-As a songbook builder user,
-I want my accept/reject/override decisions saved against the exact reviewed content,
-So that a stale approval is not silently reused after content changes.
+**Traceability:** FR5, FR6
 
 **Acceptance Criteria:**
 
-**Given** a user or agent records a review decision for a song/content type
-**When** the decision is saved
-**Then** `data/review/review_decisions.json` stores `song_key`, `content_type`, `content_hash`, `decision`, optional reason, and `decided_at`
-**And** valid decisions are limited to `accept`, `reject`, and `override`.
+**Given** a Song with current lyrics or chords content
+**When** scoring runs
+**Then** the system writes a deterministic score record for each relevant `content_type`
+**And** each record preserves exact `artist`, `title`, `song_key`, `content_hash`, `quality_score`, `quality_band`, `score_version`, and `score_reasons`.
 
-**Given** cached content changes after a decision was saved
-**When** review decisions are applied
-**Then** decisions whose content hash no longer matches are ignored or reported as stale
-**And** stale decisions do not allow Questionable content into default output.
+**Given** the same content snapshot and threshold configuration
+**When** scoring is rerun
+**Then** the same score outcome is produced
+**And** the score uses the deterministic `0-100` v1 scale with threshold bands `85-100 clean`, `60-84 reviewable`, `40-59 questionable`, and `0-39 poor`.
 
-### Story 2.4: Apply Questionable Exclusion and Override Rules
+### Story 2.2: Compose Scores from Existing Quality Signals
 
-As a camper preparing a print-ready book,
-I want Questionable songs excluded by default with an explicit override path,
-So that known bad content does not reach the printed book unless I deliberately accept it.
+As a maintainer of the review pipeline,
+I want score computation to reuse existing quality-assessment signals,
+So that the new scoring layer builds on current behavior instead of duplicating or bypassing it.
 
-**Acceptance Criteria:**
-
-**Given** a song has error-severity quality signals and no matching accept/override decision
-**When** generation filtering evaluates the song
-**Then** the song is excluded by default
-**And** the exclusion reason is available to reports.
-
-**Given** a song has a matching current `accept` or `override` decision
-**When** generation filtering evaluates the song
-**Then** the song can be included according to the decision
-**And** the report identifies that inclusion came from an explicit review decision.
-
-### Story 2.5: Produce Traceable Quality Reports
-
-As a songbook builder user,
-I want a report explaining included, excluded, missing, and overridden songs,
-So that I can quickly review what needs attention before printing.
+**Traceability:** FR5, FR6
 
 **Acceptance Criteria:**
 
-**Given** a generation or quality run evaluates songs
-**When** reporting runs
-**Then** a machine-readable report is written under `data/review/reports/`
-**And** the report includes included songs, excluded songs, missing content, Questionable signals, source-attempt references where available, and explicit review decisions.
+**Given** existing quality signals for missing content, junk markup, confidence, readability, or cleanup outcomes
+**When** score computation runs
+**Then** the score result is derived from those signals plus any new deterministic rules required for this slice
+**And** the scoring module remains separate from backup creation, document verification, and escalation policy.
 
-**Given** report output is generated
-**When** the CLI completes
-**Then** the user sees a concise summary pointing to the report file
-**And** no API tokens or private config values are included.
+**Given** Lyrics and Chords/Tab have different failure modes
+**When** score computation runs
+**Then** Lyrics and Chords/Tab can produce different scores and reason sets
+**And** both remain inspectable in the same local-file state model.
 
-## Epic 3: Better Song Addition Feedback
+### Story 2.3: Rank Songs for Review and Remediation Priority
 
-Users can add songs through the existing file/CLI workflow and get clear feedback about malformed rows, fetched content quality, missing items, and review needs.
+As a reviewer,
+I want reports to highlight the worst Songs first,
+So that I can focus attention on the content most likely to need cleanup or escalation.
 
-### Story 3.1: Validate Source List Rows Before Fetching
-
-As a user editing the song CSV,
-I want malformed song rows reported before fetching,
-So that missing artist/title data does not become confusing cache or quality output.
+**Traceability:** FR7
 
 **Acceptance Criteria:**
 
-**Given** `data/src/CampfireSongs.csv` contains rows with missing artist or title values
-**When** the source list is loaded for fetch or generation workflows
-**Then** the invalid rows are reported with row context
-**And** valid rows still proceed where safe.
+**Given** a set of scored Songs
+**When** prioritization output is generated
+**Then** Songs can be sorted or grouped by worst score first
+**And** the output can distinguish Lyrics and Chords/Tab priority when they differ for the same Song.
 
-**Given** rows are marked with `Skip`
-**When** the source list is loaded
-**Then** existing skip-filtering behavior is preserved.
+**Given** high-scoring clean Songs and low-scoring weak Songs
+**When** the priority report is viewed by a human or agent
+**Then** weak Songs are surfaced as primary remediation targets
+**And** clean Songs are not emphasized unless explicitly requested.
 
-### Story 3.2: Summarize Newly Added Song Outcomes
+## Epic 3: Safe Agent Remediation Workflow
 
-As a musician adding a batch of songs,
-I want a clear summary of which songs are clean, missing, or Questionable,
-So that I only spend time reviewing songs that need attention.
+Agents can improve low-quality content within bounded rules, create backups first, re-score and re-verify afterward, and keep full provenance for every attempted change.
 
-**Acceptance Criteria:**
+### Story 3.1: Create Backup-First Remediation State and Provenance Records
 
-**Given** a fetch/cache workflow processes songs
-**When** the run completes
-**Then** the CLI or report summarizes each processed song as found/clean, Questionable, missing, or invalid input
-**And** the summary points to review reports for details.
+As a songbook operator,
+I want every remediation attempt to preserve the pre-edit state and provenance,
+So that agentic cleanup remains reversible and auditable.
 
-**Given** newly added songs produce missing or Questionable content
-**When** feedback is generated
-**Then** those songs are grouped separately from clean songs
-**And** each item includes the reason or top quality signal.
-
-### Story 3.3: Keep File and CLI Workflows Agent-Friendly
-
-As a CLI-oriented user,
-I want all review and feedback artifacts to be inspectable files,
-So that I or an AI agent can review, edit, and regenerate without a GUI.
+**Traceability:** FR9, FR11
 
 **Acceptance Criteria:**
 
-**Given** quality, review, selection, or report state is produced
-**When** the state is written
-**Then** it uses JSON or JSONL in the architecture-approved locations
-**And** no workflow requires a GUI or hosted service.
+**Given** a Song content item is selected for remediation
+**When** a remediation attempt begins
+**Then** the system creates a backup artifact or reversible record before any edit becomes current
+**And** the backup preserves exact Song identity, content type, and pre-remediation content reference under `data/review/backups/`.
 
-**Given** an AI agent needs to inspect song status
-**When** it reads local artifacts
-**Then** machine-readable report and review files contain enough structured data to identify next review actions.
+**Given** a remediation attempt completes or fails
+**When** provenance is recorded
+**Then** the audit record includes Song identity, content_type, pre-change reference, post-change reference when present, remediation reason, outcome, and timestamp
+**And** current-state records remain separate from append-only remediation history stored under `data/review/audit/`.
 
-## Epic 4: Favourites, Selections, and Quality-Aware Book Building
+### Story 3.2: Run Bounded Agentic Cleanup Through Codex Exec
 
-Users can build books from favourites or named selections while still excluding Questionable songs by default.
+As an operator delegating cleanup to agents,
+I want low-quality content to be remediated through a bounded `codex exec` path,
+So that agentic cleanup can improve content automatically without unconstrained rewriting.
 
-### Story 4.1: Load and Validate Favourite Songs
-
-As a camper building a repeat-use songbook,
-I want to mark favourite songs in an inspectable local file,
-So that I can generate a focused book without editing the master CSV each time.
-
-**Acceptance Criteria:**
-
-**Given** `data/selections/favourites.json` contains favourite song entries
-**When** favourites are loaded
-**Then** valid entries are matched by exact artist/title identity or derived `song_key`
-**And** malformed entries are reported with file path, field, and reason.
-
-**Given** a favourite song is Questionable
-**When** favourite-only generation is evaluated
-**Then** the song is still subject to default quality exclusion unless explicitly accepted or overridden.
-
-### Story 4.2: Load and Validate Named Selections
-
-As a musician preparing for a specific trip,
-I want named selections of songs stored locally,
-So that I can generate trip-specific books from the same song library.
+**Traceability:** FR8
 
 **Acceptance Criteria:**
 
-**Given** `data/selections/*.json` contains named selection files
-**When** a named selection is loaded
-**Then** valid song entries are returned in selection order
-**And** missing songs or malformed entries are reported before generation proceeds.
+**Given** a Song content item falls below the configured remediation threshold and the issue type is allowed for v1 cleanup
+**When** remediation is invoked
+**Then** the system can launch a `codex exec` remediation step against the backed-up current-state content
+**And** the allowed transformation scope is limited to whitespace normalization, section restructuring without semantic rewrite, removal of obvious scraper residue, and normalization or removal of repeated junk blocks.
 
-**Given** a song appears in multiple selections
-**When** each selection is loaded
-**Then** the song is valid in each selection without duplicating raw cache records.
+**Given** a remediation candidate would require semantic rewriting, musical reinterpretation, or changes outside the allowed bounded scope
+**When** the `codex exec` path evaluates the candidate
+**Then** the system refuses automatic cleanup for that item
+**And** the item is marked for escalation or manual review instead of being silently modified.
 
-### Story 4.3: Generate Quality-Filtered Favourite and Selection Books
+### Story 3.3: Re-Score and Re-Verify After Agentic Cleanup
 
-As a camper printing a selected book,
-I want favourites and named selections to use the same quality rules as default generation,
-So that focused books remain trustworthy.
+As a reviewer,
+I want remediated content to be re-evaluated automatically,
+So that post-cleanup quality gains or failures are measurable before further action is taken.
 
-**Acceptance Criteria:**
-
-**Given** a favourite-only or named-selection generation request includes clean and Questionable songs
-**When** generation filtering runs
-**Then** clean accepted songs are included and Questionable songs are excluded by default
-**And** the report lists excluded selected songs and reasons.
-
-**Given** selected songs have matching current review overrides
-**When** generation filtering runs
-**Then** overridden songs can be included
-**And** the report identifies the override.
-
-### Story 4.4: Report Selection Completeness Before Output
-
-As a songbook builder user,
-I want selection problems reported before files are generated,
-So that I can fix missing or malformed selection entries without inspecting a broken book.
+**Traceability:** FR10
 
 **Acceptance Criteria:**
 
-**Given** a selection references missing songs, malformed entries, or unavailable content
-**When** the selection is prepared for output
-**Then** the workflow reports those issues before rendering Markdown or `.docx`
-**And** recoverable issues are included in the machine-readable report.
+**Given** a remediation attempt changes the current-state content
+**When** the attempt completes
+**Then** the system recomputes the content hash, re-scores the affected Lyrics or Chords item, and reruns any relevant document or review verification
+**And** before-and-after state is preserved for auditability.
 
-**Given** all selected songs are valid and accepted
-**When** generation begins
-**Then** no selection-error report blocks output.
+**Given** a remediation attempt does not improve the relevant score or verification outcome
+**When** post-remediation evaluation is recorded
+**Then** the result clearly indicates that the item remains below threshold
+**And** downstream gating can treat the item as unresolved.
 
-## Epic 5: Offline, Inspectable Output Pipeline
+### Story 3.4: Enforce Retry Limits and Escalation Boundaries
 
-Users can generate a print-ready book from local reviewed cache content, inspect Markdown before `.docx`, preserve `.docx`, and optionally produce PDF without losing earlier artifacts.
+As a reviewer,
+I want automatic remediation attempts to stop after bounded retries,
+So that agents do not loop indefinitely on low-quality content and unresolved items are escalated clearly.
 
-### Story 5.1: Enforce Network-Free Offline Generation
-
-As a camper generating a book away from internet access,
-I want cache-based generation to avoid all network calls,
-So that the tool works reliably from reviewed local data.
-
-**Acceptance Criteria:**
-
-**Given** the user runs `--generate-from-cache` or an offline generation path
-**When** generation executes
-**Then** no source adapter or external metadata lookup is called
-**And** missing or Questionable cached content is reported from local state.
-
-**Given** required local cache or review files are absent
-**When** offline generation runs
-**Then** the workflow reports missing local state clearly
-**And** it does not attempt live fetches as a fallback.
-
-### Story 5.2: Preserve Backward-Compatible Cache Reads
-
-As an existing project user,
-I want my current JSONL caches to remain usable,
-So that upgrading the tool does not discard already fetched songs.
+**Traceability:** FR12
 
 **Acceptance Criteria:**
 
-**Given** existing lyrics and chords JSONL cache records with current fields
-**When** upgraded generation or quality workflows read the caches
-**Then** records remain readable without migration
-**And** exact `artist`/`title` lookup behavior is preserved.
+**Given** an item has a persisted remediation-attempt count
+**When** another `codex exec` cleanup is considered
+**Then** the system checks the configured retry limit of `2` before running a new attempt
+**And** items at or beyond the retry limit are escalated without another automatic edit.
 
-**Given** future cache fields are added
-**When** older records are read
-**Then** missing new fields are handled by backward-compatible defaults or separate state files.
-
-### Story 5.3: Render Accepted Content to Markdown
-
-As a songbook builder user,
-I want a Markdown songbook generated before `.docx`,
-So that I or an AI agent can inspect the exact accepted content before document conversion.
-
-**Acceptance Criteria:**
-
-**Given** generation filtering produces accepted songs
-**When** Markdown rendering runs
-**Then** a `.md` songbook is written under `data/output/`
-**And** it includes only accepted content according to quality and review decisions.
-
-**Given** songs were excluded from the output
-**When** Markdown output is produced
-**Then** excluded content is not included in the book body
-**And** exclusions remain available in the report.
-
-### Story 5.4: Generate `.docx` from Accepted Content
-
-As a camper preparing a printable book,
-I want `.docx` generation to use the accepted content set,
-So that the Word document does not contain known bad songs by default.
-
-**Acceptance Criteria:**
-
-**Given** accepted songs and Markdown/report artifacts exist for a generation run
-**When** `.docx` generation runs
-**Then** the Word document is generated from accepted content only
-**And** existing document formatting responsibilities remain inside document-generation helpers.
-
-**Given** `python-docx` is unavailable in the local environment
-**When** `.docx` generation is requested
-**Then** the workflow reports the missing dependency clearly
-**And** existing Markdown/report artifacts are preserved.
-
-### Story 5.5: Add Recoverable Optional PDF Conversion
-
-As a songbook builder user,
-I want an optional PDF output path after Markdown and `.docx`,
-So that I can print or share a final artifact when local tooling supports it.
-
-**Acceptance Criteria:**
-
-**Given** Markdown and `.docx` artifacts have been produced
-**When** optional PDF conversion is requested and the converter is available
-**Then** a PDF is written under `data/output/`
-**And** the report records the PDF artifact path.
-
-**Given** PDF conversion is requested but the converter is missing or fails
-**When** the failure occurs
-**Then** the workflow reports the failure as recoverable
-**And** Markdown and `.docx` artifacts are not deleted or modified.
-
-### Story 5.6: Apply Basic Printable Layout Quality Checks
-
-As a musician printing a campfire songbook,
-I want obvious layout problems flagged before final output,
-So that the book avoids unreadable tab wrapping and excessive low-value pages.
-
-**Acceptance Criteria:**
-
-**Given** accepted content includes very long chord/tab blocks, excessive whitespace, or likely wrapping problems
-**When** printable layout checks run
-**Then** the workflow emits print-quality signals or report warnings
-**And** severe print-hostile content can be excluded by default through the same quality filtering path.
-
-**Given** content passes basic print-quality checks
-**When** output artifacts are generated
-**Then** no print-quality warning is added for that content.
+**Given** an item is escalated because cleanup is not allowed, not successful, or retry-exhausted
+**When** escalation state is recorded
+**Then** the output includes an explicit machine-readable escalation category and reason
+**And** reports and agents can distinguish `not_allowed_to_fix`, `retry_limit_reached`, and `still_below_threshold` outcomes.

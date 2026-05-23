@@ -1,21 +1,18 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 inputDocuments:
-  - _bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-19/prd.md
-  - _bmad-output/planning-artifacts/research/technical-campfiresongbookbuilder-quality-review-architecture-and-content-quality-research-2026-05-19.md
-  - docs/project-overview.md
-  - docs/architecture.md
-  - docs/development-guide.md
-  - docs/source-tree-analysis.md
-  - docs/component-inventory.md
+  - _bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-20/prd.md
+  - _bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-20/addendum.md
+  - _bmad-output/implementation-artifacts/all-epics-retro-2026-05-20.md
   - _bmad-output/project-context.md
+  - docs/index.md
 workflowType: 'architecture'
 project_name: 'CampfireSongbookBuilder'
 user_name: 'Dicky'
-date: '2026-05-19'
+date: '2026-05-20'
 lastStep: 8
 status: 'complete'
-completedAt: '2026-05-19'
+completedAt: '2026-05-20'
 ---
 
 # Architecture Decision Document
@@ -28,110 +25,92 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 **Functional Requirements:**
 
-The PRD defines 19 functional requirements across six product areas:
+The new roadmap slice defines 12 functional requirements across five product areas:
 
-- Song quality assessment: detect missing/unusable chords or lyrics, junk markup, duplicate or unreadable content, overlong print-hostile material, and low-confidence song matches.
-- Source retry and review workflow: try alternate configured sources before declaring content bad, persist Questionable status with reasons, and exclude Questionable songs from default generated books unless explicitly overridden.
-- Easier song addition: validate source-list rows, report what happened for newly added songs, and keep the workflow file/CLI friendly for human and AI-agent assistance.
-- Favourites and selections: persist favourite songs and named selections, then apply quality filtering consistently to those subsets.
-- Offline generation: generate from local cached/reviewed content without live network access and preserve existing cache compatibility.
-- Output pipeline and printable quality: produce inspectable Markdown before `.docx`, preserve `.docx` generation, support an optional PDF path, and prevent obviously bad printable output.
+- document neatness evaluation for Markdown and `.docx` outputs
+- agentic verification before manual review
+- per-song Lyrics and Chords/Tab quality scoring
+- backup-first direct agent remediation
+- remediation provenance and escalation controls
 
-Architecturally, these requirements point to a quality-gated local pipeline rather than a new UI or platform. The key implementation surfaces are source candidate normalization, deterministic quality assessment, persisted quality/review state, selection/favourite filtering, reporting, Markdown rendering, and continued `.docx` output.
+Architecturally, these requirements move the project from passive quality filtering into an active verification-and-remediation pipeline. The system must now evaluate content, evaluate generated artifacts, decide whether automation is allowed to act, preserve pre-edit state, and expose the whole chain in local inspectable artifacts.
 
 **Non-Functional Requirements:**
 
-The driving NFRs are compatibility, offline reliability, inspectability, testability, and implementation simplicity:
+The main architectural drivers are:
 
-- Existing repo-root CLI commands must remain behavior-compatible.
-- Cache-first behavior must be preserved, especially for offline generation.
-- Existing JSONL caches and exact artist/title cache-key behavior must remain readable.
-- External source failures should be isolated and recoverable.
-- Review state, quality status, favourites, selections, and reports must use simple local files that are easy for humans and AI agents to inspect.
-- Tests must use `unittest` and avoid live websites, Genius credentials, local private config, or brittle `.docx` binary comparisons.
-- The project should remain a single-process Python CLI with flat `app/` helper modules unless a specific architectural decision justifies changing that shape.
+- preserve repo-root CLI behavior
+- preserve exact content identity
+- keep verification deterministic where practical
+- keep outputs, backups, and audit files inspectable
+- keep tests agent-operable
+- preserve backup safety before direct edits
+
+These requirements strongly constrain the solution toward local deterministic workflows rather than hosted or opaque automation.
 
 **Scale & Complexity:**
 
-- Primary domain: local-first Python CLI for content fetching, quality review, and printable document generation.
-- Complexity level: medium. The runtime remains small, but quality scoring, source fallback, review-state correctness, and output filtering create meaningful cross-cutting behavior.
-- Estimated architectural components: 9 to 11 logical components, mostly implemented as flat helper modules rather than services.
+- Primary domain: brownfield Python CLI / local content-processing and verification pipeline
+- Complexity level: medium
+- Estimated architectural components: 11 to 14
 
-The project has no real-time features, multi-tenancy, hosted deployment, database requirement, collaborative editing, or formal regulatory compliance burden. The main complexity comes from brittle external sources, local file compatibility, quality threshold tuning, stale review decisions after refetching, and ensuring that generation cannot silently include known bad content.
+The complexity comes less from scale and more from state correctness: scores, backups, provenance, remediation attempts, escalation boundaries, and output verification all need to stay aligned with exact content identity.
 
 ### Technical Constraints & Dependencies
 
-- Python CLI application targeting Python 3.8+.
-- Current runtime dependencies include `pandas`, `requests`, `beautifulsoup4`, `lxml`, `lyricsgenius`, and `python-docx`.
-- Supported invocation is `python3 main.py ...` from the repository root, with absolute `app.*` imports.
-- `main.py` should remain a thin orchestrator; scraper, cache, quality, and document-layout logic belong in helper modules.
-- Runtime paths are currently rooted under `data/`: config, source CSV, JSONL caches, and generated outputs.
-- Existing sentinel values `"Lyrics not found."` and `"Chords not found."` are compatibility contracts.
-- JSONL cache semantics must remain append-safe and tolerant of missing files.
-- Generated outputs and private config must stay out of version control.
-- There is no active CI workflow on this branch, so local `unittest` verification is the baseline.
-- Optional future dependencies such as RapidFuzz, PyYAML, jsonschema, requests-cache, MusicBrainz access, Pandoc, or PDF tools require explicit architecture decisions before adoption.
+- The existing runtime is a single-process Python CLI invoked as `python3 main.py` from the repository root.
+- Existing JSONL cache semantics and exact `artist` / `title` identity are compatibility constraints.
+- The project should remain flat-module and local-file based.
+- Existing document generation already produces Markdown, `.docx`, and optional PDF.
+- The next slice should prefer deterministic local rules and existing infrastructure over new paid or hosted services.
+- Agent remediation is allowed only with backup-first safety.
+- The slice resolves the state-management fork in favor of a remediated current-state layer above raw caches; canonical raw caches remain immutable fetched snapshots.
 
 ### Cross-Cutting Concerns Identified
 
-- Cache compatibility: new quality/review behavior must not break existing raw lyrics/chords cache records.
-- Content identity and versioning: review decisions should be bound to the content version, likely through content hashes, so stale approvals do not apply silently after refetching.
-- Quality signals and thresholds: missing content, junk markup, duplication, length, low-confidence matches, and chord plausibility need deterministic, testable rules.
-- Source isolation: source-specific scraping/API logic must stay isolated behind fallback orchestration and normalized candidate records.
-- Offline safety: cache-only and generate-from-cache flows must not call network sources.
-- Reporting and traceability: generated books should explain included, excluded, missing, and explicitly overridden songs.
-- Selection semantics: favourites and named selections must compose cleanly with quality filtering.
-- Output pipeline resilience: Markdown and `.docx` artifacts should survive optional PDF conversion failure.
-- Testability: quality assessment, state loading, review application, filtering, and CLI branching need focused unit tests with temp files and mocks.
-- Agent consistency: architectural decisions must be precise enough that future BMAD story and dev agents preserve the CLI shape, local-file contracts, and quality-first product goal.
+- content identity and content-hash versioning
+- deterministic score computation
+- artifact-level neatness verification
+- backup and rollback safety
+- remediation provenance
+- bounded retry / escalation control
+- integration of scoring with existing Quality Signals
+- compatibility with offline generation and current reporting flows
+- automated testability of agentic verification and remediation behavior
 
 ## Starter Template Evaluation
 
 ### Primary Technology Domain
 
-The primary technology domain is an existing Python CLI application, not a new web, mobile, full-stack, desktop, or service-backed product.
-
-This is a brownfield architecture workflow. The repository already has a working scaffold: `main.py` as the CLI entrypoint, flat helper modules under `app/`, runtime files under `data/`, generated docs under `docs/`, and `unittest` tests under `tests/`. The architecture goal is to preserve that foundation while adding quality-gated songbook behavior.
+Brownfield Python CLI / local content-processing and verification pipeline based on project requirements analysis.
 
 ### Starter Options Considered
 
-**Existing brownfield scaffold**
+**Existing brownfield Python CLI scaffold**
 
-- Provides the current `argparse` CLI, fixed repo-root execution, flat `app/` module organization, JSONL caches, CSV source list, and `python-docx` output path.
-- Best matches project context rules and PRD constraints.
-- Avoids replatforming risk and keeps implementation stories small.
-- Leaves the product focus on song quality, review state, selections, reports, Markdown, and printable output rather than project bootstrapping.
+- Matches the current repo-root execution model: `python3 main.py`
+- Preserves flat `app/*.py` helper boundaries
+- Preserves JSONL cache semantics, local file state, and current output pipeline
+- Best fits the new PRD because the work is an extension of the current quality/review pipeline, not a platform rewrite
 
-**Cookiecutter-style Python starters**
+**Typer-based CLI modernization**
 
-- Current Cookiecutter documentation and template directories confirm Cookiecutter remains a general project generator for new projects.
-- Rejected for this workflow because generating a fresh scaffold would not preserve this repo's existing CLI contracts, runtime data paths, cache semantics, or helper-module boundaries.
+- Current PyPI release verified: `typer 0.24.1`
+- Would provide a more modern typed CLI experience
+- Rejected as the starter foundation for this slice because it changes CLI ergonomics without directly solving scoring, verification, backup, or remediation architecture
 
-**Typer-based CLI starter**
+**Hatch / modern packaging scaffold**
 
-- Typer remains actively maintained; PyPI listed `typer` 0.24.1 on 2026-02-21 during this review.
-- Typer could produce a more modern type-hint-driven CLI, but adopting it now would be a CLI migration rather than a starter decision.
-- Rejected for MVP architecture because the current `argparse` CLI is sufficient, and the PRD prioritizes low-intervention quality improvements over CLI ergonomics.
-
-**Click-based CLI starter**
-
-- Click remains actively maintained; PyPI listed `click` 8.3.3 on 2026-04-22 during this review.
-- Current Click packaging metadata requires Python >=3.10, while this project targets Python 3.8+.
-- Rejected for MVP architecture because it would introduce a dependency and potential Python-version conflict without directly improving songbook quality.
-
-**Modern packaging/project-manager scaffold**
-
-- Python packaging guidance continues to center `pyproject.toml` for build metadata, and Hatch remains a modern Python project manager with project generation, environment, testing, and build features.
-- These are useful future packaging options, but packaging is not the first architectural problem.
-- Rejected as a starter foundation for MVP because converting the repo to a new package manager/toolchain would broaden the change surface.
+- Current PyPI release verified: `hatch 1.16.5`
+- Current packaging guidance continues to center `pyproject.toml`
+- Useful for future packaging/project-management modernization
+- Rejected as the starter foundation for this slice because it broadens the change surface without addressing the core runtime architecture problem
 
 ### Selected Starter: Existing Brownfield Python CLI Scaffold
 
 **Rationale for Selection:**
 
-The best starter is the repository that already exists. This preserves the working CLI, existing cache files, current source CSV, `python-docx` document generation, and AI-agent rules. It also aligns with the product-owner preference for a high-quality but easy-to-build tool with minimal further intervention.
-
-Using an external starter now would optimize the wrong thing. It would spend architectural energy on scaffolding and migration while the PRD's real risk is content trust: bad chords, bad lyrics, stale review decisions, missing quality gates, and unclear output reports.
+The current repository is the right architectural foundation. This roadmap slice extends an already working local-first CLI system with new verification, scoring, remediation, and audit capabilities. Replacing the starter would optimize packaging or CLI aesthetics instead of the actual product risk.
 
 **Initialization Command:**
 
@@ -144,40 +123,27 @@ python3 main.py --generate-from-cache
 **Architectural Decisions Provided by Starter:**
 
 **Language & Runtime:**
-
-Python CLI targeting Python 3.8+ with repo-root execution through `python3 main.py ...`.
+Python CLI with repo-root execution via `python3 main.py`.
 
 **Styling Solution:**
-
-No UI styling system. Output quality is document/report formatting, not web or app styling.
+No UI styling system. Presentation concerns remain document-format and output-layout concerns, not web styling concerns.
 
 **Build Tooling:**
-
-No new build tool. The existing workflow uses direct Python execution and pinned `requirements.txt` dependencies.
+No new build foundation required for this slice. Existing `requirements.txt` and direct Python execution remain sufficient.
 
 **Testing Framework:**
-
-Continue with standard-library `unittest` and run tests from the repository root with:
-
-```bash
-python3 -m unittest discover -s tests -p 'test_*.py'
-```
+Continue with `unittest` and repo-root test execution:
+`python3 -m unittest discover -s tests -p 'test_*.py'`
 
 **Code Organization:**
-
-Preserve flat helper modules under `app/`. Add new small, single-purpose helpers for quality assessment, state files, selection handling, reports, Markdown rendering, and optional conversion rather than introducing nested packages or a framework.
+Preserve flat helper modules under `app/`. New work should likely land as focused modules for:
+- document verification
+- score computation
+- remediation backup/provenance
+- remediation orchestration
 
 **Development Experience:**
-
-Prioritize small safe increments, focused regression tests, and inspectable local files. Future packaging modernization can be considered after the quality pipeline is stable, but it is not a prerequisite for the MVP architecture.
-
-**Current-Version Verification Sources:**
-
-- Python Packaging User Guide, `pyproject.toml` specification and guide: https://packaging.python.org/
-- Hatch documentation: https://hatch.pypa.io/latest/
-- Cookiecutter documentation/template directory: https://www.cookiecutter.io/
-- Typer PyPI release history: https://pypi.org/project/typer/
-- Click PyPI release metadata: https://pypi.org/project/click/
+The current scaffold already supports incremental, test-first brownfield extension. Future packaging modernization remains possible, but is not required for this architecture slice.
 
 ## Core Architectural Decisions
 
@@ -185,422 +151,337 @@ Prioritize small safe increments, focused regression tests, and inspectable loca
 
 **Critical Decisions (Block Implementation):**
 
-- Preserve the existing Python CLI brownfield scaffold.
-- Add quality-gated local state beside existing caches instead of replacing cache records.
-- Store raw fetched content, quality status, review decisions, source attempts, favourites/selections, reports, Markdown, and `.docx` as separate local artifacts.
-- Treat Questionable content as excluded from default generated books unless explicitly accepted or overridden.
-- Keep online fetch/cache behavior separate from offline generation behavior.
-- Bind review decisions to content hashes so stale approvals do not silently apply after refetch.
+- Preserve raw JSONL caches as immutable fetched-content records
+- Add a separate remediated current-state layer instead of overwriting raw caches directly
+- Add separate current-state score storage for per-song Lyrics and Chords/Tab quality
+- Add separate document-verification result storage for generated artifacts
+- Add append-only remediation-attempt history plus explicit backup references
+- Enforce bounded remediation attempts before human escalation
 
 **Important Decisions (Shape Architecture):**
 
-- Use deterministic quality rules first; optional fuzzy matching or metadata enrichment can be added after baseline quality gates exist.
-- Generate Markdown as an inspectable intermediate before `.docx`.
-- Keep PDF conversion optional and non-destructive.
-- Use small flat helper modules under `app/` rather than introducing a framework, nested package tree, database, or service layer.
-- Treat Python 3.12 as the verified development runtime for the upgrade; do not spend effort preserving Python 3.8 behavior because Python 3.8 is end-of-life per the Python Developer's Guide.
+- Treat document neatness as heuristic and deterministic in v1
+- Compose scores from existing Quality Signals plus new verification/remediation signals
+- Keep verification and remediation local-file based, not service-based
+- Keep remediation orchestration inside the CLI/helper pipeline rather than introducing a queue or daemon
+- Treat review-ready as a machine-readable gate state, not just a human summary line
+
+### Policy Defaults Resolved for V1
+
+- Use a deterministic `0-100` integer quality score scale for Lyrics and Chords/Tab.
+- Use threshold bands:
+  - `85-100` = `clean`
+  - `60-84` = `reviewable`
+  - `40-59` = `questionable`
+  - `0-39` = `poor`
+- Target automatic remediation for content scoring below `60`.
+- Treat document neatness as an artifact-level review gate informed by per-song-block heuristics.
+- Store backup artifacts under `data/review/backups/`.
+- Store remediation audit and provenance records under `data/review/audit/`.
+- Freeze the `codex exec` remediation allowlist to:
+  - whitespace normalization
+  - section restructuring without semantic rewrite
+  - removal of obvious scraper residue
+  - normalization or removal of repeated junk blocks
+- Set the automatic remediation retry limit to `2` attempts per content item before escalation.
 
 **Deferred Decisions (Post-MVP):**
 
-- Full package-manager migration to Hatch, Poetry, uv, or another project manager.
-- Typer/Click CLI migration.
-- YAML selections, unless JSON proves too awkward for human editing.
-- jsonschema validation, unless hand validation becomes brittle.
-- RapidFuzz or MusicBrainz enrichment, unless deterministic title/artist matching is insufficient.
-- requests-cache, unless external-source traffic becomes a real problem beyond existing content caches.
-- Pandoc/PDF pipeline selection, until Markdown and `.docx` output are stable.
-- Hosted service, GUI, user accounts, authentication, collaborative editing, and cloud deployment.
+- Semantic or model-driven rewrite strategies
+- GUI review/remediation tooling
+- Cloud or multi-user workflow
+- Packaging/toolchain modernization such as Hatch migration
+- Schema-framework adoption unless explicit validation burden justifies it
 
 ### Data Architecture
 
-**Decision: Use local files, not a database.**
+**Decision: Preserve raw caches as immutable fetched-content records.**
 
-The application remains a local-first CLI with file-based state. No SQLite, server database, document database, or hosted persistence is introduced for MVP.
+Rationale:
 
-**Rationale:**
+- Existing JSONL caches are compatibility contracts.
+- Raw fetched content is useful as the authoritative pre-remediation snapshot.
+- Overwriting raw caches would blur provenance and weaken rollback safety.
 
-The song library is human-scale, local, and agent-editable. A database would reduce inspectability and add migration/testing overhead without solving the main product risk: content quality.
+**Decision: Add a remediated current-state layer above raw caches.**
 
-**Decision: Preserve existing JSONL raw caches.**
+Rationale:
 
-Existing `data/cache/lyrics_cache.jsonl` and `data/cache/chords_cache.jsonl` remain the raw fetched-content stores. Existing artist/title fields, exact cache-key semantics, sentinel values, and append-safe JSONL behavior are compatibility contracts.
+- Backup-first safety is stronger if remediated content is not stored in the same files as fetched content.
+- A separate layer makes before/after comparison straightforward.
+- It reduces the risk of agents silently mutating canonical fetched data.
 
-**Decision: Add separate quality and review state files.**
+**Proposed current-state files:**
 
-Add current-state files beside, not inside, raw caches:
+- `data/review/content_scores.json`
+- `data/review/remediated_content.json`
+- `data/review/document_quality.json`
+- `data/review/backups/` for preserved pre-remediation artifacts or content snapshots
+- `data/review/audit/remediation_attempts.jsonl` for append-only remediation audit and provenance history
 
-- `data/review/quality_status.json`
-- `data/review/review_decisions.json`
-- `data/review/source_attempts.jsonl`
-- `data/review/reports/*.json`
-- `data/selections/favourites.json`
-- `data/selections/*.json`
+**Decision: Keep current-state and history separate.**
 
-`source_attempts.jsonl` is append-only audit/history. `quality_status.json` and `review_decisions.json` are current-state files optimized for generation reads.
+Rationale:
 
-**Decision: Use content hashes for version binding.**
-
-Quality status and review decisions must include a stable content hash, using `hashlib.sha256` or equivalent. If content changes after refetch, old review decisions no longer apply automatically.
-
-**Decision: Use JSON first for new state.**
-
-JSON is the default for review, status, reports, favourites, and selections because it is standard-library, machine-readable, and easy for AI agents to edit. YAML is deferred unless human-editing comfort becomes more important than dependency minimization.
-
-**Decision: Validate with small explicit loaders first.**
-
-Each new state file gets focused load/validate helpers. jsonschema is deferred until the schemas become large enough that hand validation is riskier than the dependency.
-
-**Verified versions/options:**
-
-- Python Developer's Guide lists Python 3.8 as end-of-life on 2024-10-07.
-- `python-docx` remains available on PyPI, with 1.2.0 visible during this review.
-- Pandas remains active on PyPI, with 3.0.1 visible during this review, but no pandas upgrade is required for the architecture.
-- RapidFuzz remains active on PyPI, with 3.14.5 visible during this review, but adoption is deferred.
-- jsonschema remains active on PyPI, with 4.26.0 visible during this review, but adoption is deferred.
+- Current-state files support fast generation and reporting reads.
+- Append-only history supports auditability and debugging.
+- This matches the successful pattern already used for review decisions and source attempts.
 
 ### Authentication & Security
 
-**Decision: No authentication or authorization system for MVP.**
+**Decision: No user authentication layer for this slice.**
 
-This is a local CLI. There are no user accounts, sessions, roles, hosted APIs, or multi-user permissions in scope.
+Rationale:
 
-**Decision: Keep secrets local and out of artifacts.**
+- This remains an internal local CLI workflow.
+- The relevant safety issue is not access control; it is controlled automated mutation.
 
-`data/config/config.json` remains private and ignored. API tokens must not be written to caches, source-attempt logs, quality reports, Markdown, `.docx`, PDF, or console summaries.
+**Decision: Use policy-based remediation safety rather than auth-based safety.**
 
-**Decision: Treat fetched content as untrusted text.**
+Rationale:
 
-Lyrics/chords from external sources must be cleaned or escaped before Markdown or `.docx` rendering. The application must not execute source content or preserve embedded HTML/script-like artifacts as trusted markup.
-
-**Decision: External metadata APIs must identify and rate-limit.**
-
-If MusicBrainz is added later, requests must use a meaningful User-Agent and respect the documented default one-request-per-second IP limit. Metadata enrichment must remain optional and must not run during offline generation.
+- The key guardrails are:
+  - backup required before write
+  - bounded retry count
+  - explicit remediation reason
+  - escalation when thresholds are not met
+- These controls fit the actual product risk better than adding auth infrastructure.
 
 ### API & Communication Patterns
 
-**Decision: No public API layer.**
+**Decision: No new network API boundary for MVP.**
 
-The architecture uses local function calls and file contracts, not REST, GraphQL, RPC, WebSockets, queues, or background workers.
+Rationale:
 
-**Decision: Normalize source outputs before quality assessment.**
+- This slice is an internal extension of the local pipeline.
+- Adding REST or GraphQL would add architectural surface without solving the core problem.
 
-Source-specific functions should return or be wrapped into Candidate records with requested artist/title, source name, content type, content, source-returned metadata when available, status, error, and retrieval timestamp.
+**Decision: Machine-readable local reports are the main communication contract.**
 
-**Decision: Keep source failures recoverable and structured.**
+Rationale:
 
-Source adapters should return `candidate`, `not_found`, or `error` outcomes rather than letting one broken site crash the whole run when fallback sources remain.
+- Agentic tests and remediation workflows need stable, local, inspectable contracts.
+- JSON outputs fit the current architecture and the existing review/reporting style.
 
-**Decision: Reports are the communication surface.**
+**Decision: Verification and remediation should plug into existing report flow.**
 
-Each generation run should produce human-readable console/file output and machine-readable report data describing included, excluded, missing, Questionable, and explicitly overridden songs.
+Rationale:
+
+- Duplicating report pathways would create drift.
+- The reporting layer should unify:
+  - content-quality state
+  - score state
+  - document neatness state
+  - remediation attempts
+  - escalation reasons
 
 ### Frontend Architecture
-
-**Decision: No frontend architecture for MVP.**
-
-The PRD explicitly excludes a GUI. There is no component model, routing, client-side state management, responsive design, animation, or web accessibility architecture to decide.
-
-**Decision: Treat Markdown/report output as the user-facing inspection surface.**
-
-Markdown songbooks and review reports are the primary low-intervention way for the user and AI agents to inspect quality before printing.
-
-### Infrastructure & Deployment
-
-**Decision: Local execution only.**
-
-There is no hosting platform, server deployment, container strategy, cloud account, or multi-environment infrastructure in MVP.
-
-**Decision: Keep verification local and `unittest`-based.**
-
-The baseline verification command remains:
-
-```bash
-python3 -m unittest discover -s tests -p 'test_*.py'
-```
-
-Tests must avoid live external websites, Genius credentials, private local config, local cache assumptions, and binary `.docx` comparisons.
-
-**Decision: Use standard-library logging.**
-
-`main.py` owns CLI logging configuration. Helper modules use module loggers and return structured outcomes where practical.
-
-**Decision: CI is useful but not required for architecture MVP.**
-
-GitHub Actions or another CI workflow can be added later as a quality improvement, but it is not required before the quality pipeline stories begin.
-
-### Decision Impact Analysis
-
-**Implementation Sequence:**
-
-1. Reconcile documented Python/runtime expectations with the verified development baseline.
-2. Add data contracts and loaders for Candidate, Quality Signal, Quality Status, Review Decision, Source Attempt, Favourite, and Selection.
-3. Add pure quality assessment helpers for missing content, junk markup, duplicate blocks, overlong content, low-confidence matches, and chord plausibility.
-4. Add source-attempt recording around existing source fallback functions.
-5. Add review-decision application with content-hash validation.
-6. Add selection/favourite loading and malformed-entry reporting.
-7. Add generation filtering that excludes Questionable songs by default.
-8. Add machine-readable and human-readable quality reports.
-9. Add Markdown songbook output.
-10. Preserve `.docx` output from accepted content.
-11. Add optional PDF conversion only after Markdown and `.docx` are stable.
-
-**Cross-Component Dependencies:**
-
-- Quality filtering depends on stable content identity, quality status, and review decisions.
-- Review decisions depend on content hashing and raw cache compatibility.
-- Offline generation depends on strict separation between source adapters and renderers.
-- Selections/favourites depend on the same song-key semantics as caches.
-- Markdown and `.docx` renderers must consume accepted content rather than making quality decisions.
-- Reports depend on quality signals, review decisions, and generation filtering sharing consistent reason codes.
-- Any later dependency adoption must preserve simple local execution and focused `unittest` coverage.
-
-**Current-Version Verification Sources:**
-
-- Python Developer's Guide, Status of Python versions: https://devguide.python.org/versions/
-- python-docx on PyPI: https://pypi.org/project/python-docx/
-- pandas on PyPI: https://pypi.org/project/pandas/
-- RapidFuzz on PyPI: https://pypi.org/project/RapidFuzz/
-- jsonschema on PyPI: https://pypi.org/project/jsonschema/
-- MusicBrainz API and rate limiting docs: https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting
 
 ## Implementation Patterns & Consistency Rules
 
 ### Pattern Categories Defined
 
-**Critical Conflict Points Identified:** 12 areas where AI agents could otherwise make incompatible choices:
-
-- Song identity keys
-- JSON/JSONL field names
-- New state file locations
-- Quality signal codes and severities
-- Review decision semantics
-- Source adapter return shapes
-- Offline-vs-online behavior
-- Report formats
-- Markdown output structure
-- `.docx` rendering boundaries
-- Error handling/logging
-- Test placement and mocking style
+**Critical Conflict Points Identified:**
+12 areas where AI agents could make incompatible choices if not explicitly constrained
 
 ### Naming Patterns
 
-**Database Naming Conventions:**
+**Data File Naming Conventions:**
+- Current-state JSON files use `snake_case` names under `data/review/`
+- Append-only history files use `*.jsonl`
+- Backup directories use noun-based paths, for example `data/review/backups/`
+- Remediated current-state files must distinguish content type and role by field, not by ad hoc filename variants
 
-No database is used in MVP. Agents must not introduce table, migration, ORM, or database naming conventions unless a future architecture decision explicitly adds a database.
-
-**API Naming Conventions:**
-
-No public API is used in MVP. Agents must not introduce REST, GraphQL, route, request, response, or status-code conventions for internal behavior. Internal communication uses Python data structures and local files.
+**Identity Naming Conventions:**
+- Song identity remains exact:
+  - `artist`
+  - `title`
+  - `song_key`
+- Content domains remain exact:
+  - `lyrics`
+  - `chords`
+- Score fields use explicit names:
+  - `quality_score`
+  - `score_version`
+  - `score_reasons`
+- Verification fields use explicit names:
+  - `review_ready`
+  - `verification_status`
+  - `verification_reasons`
 
 **Code Naming Conventions:**
-
-- Python files: lowercase with underscores, e.g. `quality_assessment.py`, `review_state.py`, `selection_state.py`.
-- Functions and variables: `snake_case`.
-- Constants: `UPPER_SNAKE_CASE`.
-- Data field names in JSON/JSONL: `snake_case`.
-- Song key field: `song_key`.
-- Content type values: `lyrics` and `chords`.
-- Quality values: `clean`, `questionable`, `missing`.
-- Review decision values: `accept`, `reject`, `override`.
-- Source outcome values: `candidate`, `not_found`, `error`.
-
-Song identity must preserve exact existing `artist` and `title` cache fields. Derived keys use the existing display form:
-
-```text
-Artist - Title
-```
-
-Do not globally normalize artist/title values for cache lookup. Normalized variants may be computed for matching, but they must not replace original cache identity.
+- New helper modules remain flat under `app/`
+- Function names remain straightforward and descriptive
+- State loaders/savers use explicit verbs:
+  - `load_*`
+  - `save_*`
+  - `build_*`
+  - `evaluate_*`
+  - `apply_*`
+- Do not introduce parallel synonyms for the same concept:
+  - use `remediation`, not alternating between `repair`, `fixup`, and `cleanup` as top-level state terms
 
 ### Structure Patterns
 
 **Project Organization:**
+- Raw fetched content stays in existing JSONL cache files
+- Current-state review and verification data stays under `data/review/`
+- Named selections remain under `data/selections/`
+- Favourite membership remains in `data/src/CampfireSongs.csv`
+- Tests remain in `tests/test_*.py`
 
-- Keep `main.py` as CLI orchestration only.
-- Keep application code in flat `app/*.py` helper modules.
-- Add new behavior as small modules under `app/`, not nested packages.
-- Keep tests in `tests/test_*.py`.
-- Keep generated BMAD artifacts under `_bmad-output/`.
-- Keep runtime input/state/output under `data/`.
+**State Layering Rules:**
+- Raw cache = immutable fetched snapshot
+- Remediated content = separate current-state layer
+- Scores = separate current-state layer
+- Verification results = separate current-state layer
+- Remediation attempts = append-only history
+- Backups = explicit preserved pre-edit state
 
-Recommended new modules:
-
-- `app/content_models.py`: lightweight constructors/validators for Candidates, Quality Signals, Quality Status, Review Decisions, Source Attempts, and Selections.
-- `app/quality_assessment.py`: pure quality checks and scoring.
-- `app/review_state.py`: load/write quality status and review decisions.
-- `app/selection_state.py`: load/write favourites and selections.
-- `app/reporting.py`: generation quality reports.
-- `app/markdown_generation.py`: Markdown songbook rendering.
-- `app/output_pipeline.py`: orchestration from accepted content to Markdown, `.docx`, and optional PDF.
-
-Agents may adjust exact module names only if they keep the same flat-module shape and document the reason in the story implementation notes.
-
-**File Structure Patterns:**
-
-New runtime files use these locations:
-
-```text
-data/review/quality_status.json
-data/review/review_decisions.json
-data/review/source_attempts.jsonl
-data/review/reports/*.json
-data/selections/favourites.json
-data/selections/*.json
-data/output/*.md
-data/output/*.docx
-data/output/*.pdf
-```
-
-Helpers that write these files must create parent directories before saving. Generated reports and outputs must not be assumed to exist.
+**Module Ownership Pattern:**
+- `app/cache.py` owns raw cache read/write semantics
+- `app/quality_assessment.py` owns deterministic signal generation
+- new score module should own score derivation only
+- new verification module should own document neatness evaluation only
+- new remediation module should own backup-first transformation orchestration
+- `app/reporting.py` remains the aggregation layer for machine-readable run outputs
 
 ### Format Patterns
 
-**API Response Formats:**
-
-Not applicable. Internal source adapters should still return structured result dictionaries or dataclass-like dictionaries with these fields where relevant:
-
-```json
-{
-  "artist": "requested artist",
-  "title": "requested title",
-  "song_key": "Artist - Title",
-  "content_type": "lyrics",
-  "source": "genius",
-  "content": "candidate text",
-  "source_artist": "artist from source",
-  "source_title": "title from source",
-  "status": "candidate",
-  "error": null,
-  "retrieved_at": "2026-05-19T10:00:00+01:00"
-}
-```
-
 **Data Exchange Formats:**
+- Use `snake_case` in all new JSON and JSONL structures
+- Preserve exact `song_key` derivation rules from current architecture
+- Use `sha256:<hex>` content-hash format for version binding
+- Use explicit status enums rather than free-form prose where a field is machine-consumed
 
-- JSON files use top-level objects, not bare arrays, so schema metadata can be added later.
-- JSONL files use one valid JSON object per line.
-- Datetimes use ISO-8601 strings with timezone when practical.
-- Content hashes use the format `sha256:<hex>`.
-- Missing optional string metadata should be `null`, not empty strings, unless the field is existing cache content.
-- Existing sentinel content values `"Lyrics not found."` and `"Chords not found."` must remain recognized.
+**Current-State Record Pattern:**
+Each new current-state record should follow this shape discipline:
+- identity fields first
+- state/result fields second
+- reasons/signals next
+- metadata timestamps last
 
-Quality signal shape:
+Example pattern:
+- `song_key`
+- `content_type`
+- `content_hash`
+- `quality_score`
+- `quality_band`
+- `review_ready`
+- `score_reasons`
+- `updated_at`
 
-```json
-{
-  "code": "missing_chords",
-  "severity": "error",
-  "message": "Chords are missing or unusable.",
-  "content_type": "chords"
-}
-```
-
-Severity values:
-
-- `info`: useful trace information
-- `warning`: questionable but potentially usable
-- `error`: exclude by default
-
-Review decision shape:
-
-```json
-{
-  "song_key": "Artist - Title",
-  "content_type": "chords",
-  "content_hash": "sha256:...",
-  "decision": "accept",
-  "reason": "Manually reviewed and playable.",
-  "decided_at": "2026-05-19T10:00:00+01:00"
-}
-```
+**History Record Pattern:**
+Append-only remediation history records should include:
+- identity
+- pre-change reference
+- post-change reference
+- remediation action
+- outcome
+- escalation flag
+- retry_count
+- timestamp
 
 ### Communication Patterns
 
-**Event System Patterns:**
+**Reporting Contract:**
+- Human-readable summaries must be derived from machine-readable report state, not the other way around
+- Verification failures, score failures, remediation failures, and escalation outcomes must remain distinct in the report
+- Reports must not collapse document-level and content-level failures into one generic `quality issue`
 
-No event bus is used. Source attempts provide append-only audit history but must not become event-sourced application state. Generation reads current-state files, not reconstructed event streams.
-
-**State Management Patterns:**
-
-- Raw content state lives in existing JSONL caches.
-- Current quality state lives in `quality_status.json`.
-- User intent lives in `review_decisions.json`, `favourites.json`, and selection files.
-- Source history lives in `source_attempts.jsonl`.
-- Generated reports are snapshots of a run and must not be the source of truth for future generation.
+**Escalation Contract:**
+- Escalation reasons must be encoded as stable machine-readable categories
+- Human-facing explanations may elaborate, but the category must remain explicit
+- Agents must not silently treat `not fixable` and `not allowed to fix` as the same state
 
 ### Process Patterns
 
-**Error Handling Patterns:**
+**Remediation Process Pattern:**
+1. Load current content state
+2. Create backup reference before modification
+3. Apply bounded remediation
+4. Recompute content hash
+5. Re-score content
+6. Re-run relevant verification
+7. Record remediation attempt
+8. Escalate if thresholds still fail or retry bound is reached
 
-- Source/network failures return structured `error` or `not_found` outcomes when fallback can continue.
-- File validation errors for user-editable state should be collected and reported with file path, field, and reason.
-- Offline generation must fail/report if required local state is missing, but must not call source adapters.
-- Optional PDF conversion failure must not delete Markdown or `.docx` artifacts.
-- Helper modules log operational details with `logging.getLogger(__name__)`.
-- `main.py` remains responsible for CLI-level logging configuration and top-level exits.
+**Verification Process Pattern:**
+- Verification runs after generation and after remediation where relevant
+- Document verification evaluates generated artifacts, not just source content
+- Review-ready state is computed, not hand-set
+- Agentic tests consume the same verification outputs used by reports
 
-**Loading State Patterns:**
-
-There is no UI loading state. CLI progress should be concise and stable. Long-running operations should log source attempts and write reports rather than relying on transient console output.
+**Retry and Escalation Pattern:**
+- Remediation attempts must be bounded per content item
+- Retry count must be explicit and persisted
+- Once the retry bound is reached, the item must escalate
+- Escalated items must remain inspectable and not be silently suppressed
 
 ### Enforcement Guidelines
 
 **All AI Agents MUST:**
-
-- Preserve repo-root execution with `python3 main.py ...`.
-- Preserve exact `artist` and `title` cache identity.
-- Keep existing JSONL caches backward-compatible.
-- Keep network calls out of offline generation.
-- Keep source-specific parsing out of `main.py`, quality assessment, review-state loading, and renderers.
-- Keep quality assessment pure enough to unit test without network, files, or `python-docx`.
-- Bind review decisions to content hashes.
-- Use `unittest`, `tempfile`, and `unittest.mock` for regression tests.
-- Record any intentional change to runtime paths, cache shape, sentinels, or CLI behavior in the story notes and tests.
+- preserve raw cache immutability
+- create backup state before direct content edits
+- preserve exact `artist` / `title` / `song_key` identity semantics
+- use `snake_case` in all new machine-readable records
+- keep current-state and append-only history separate
+- write new behavior into focused helper modules rather than broadening `main.py`
 
 **Pattern Enforcement:**
-
-- Run `python3 -m unittest discover -s tests -p 'test_*.py'` after application changes.
-- Add focused tests for any changed cache, state, quality, filtering, or generation behavior.
-- Treat deviations from this document as architecture changes, not local implementation preferences.
-- Update this architecture document or `_bmad-output/project-context.md` when a new durable rule is established.
+- Enforce through focused `unittest` coverage on loaders, writers, scoring, verification, remediation, and escalation
+- Treat report shape as a compatibility contract
+- Document pattern violations in story review findings and correct them before expanding the surface area
 
 ### Pattern Examples
 
 **Good Examples:**
-
-```python
-song_key = f"{artist} - {title}"
-```
-
-```json
-{
-  "song_key": "Oasis - Wonderwall",
-  "content_type": "chords",
-  "quality": "questionable",
-  "signals": [
-    {"code": "low_title_match", "severity": "warning", "message": "Source title differs."}
-  ]
-}
-```
-
-```text
-tests/test_quality_assessment.py
-tests/test_review_state.py
-tests/test_generation_filtering.py
-```
+- raw cache unchanged, remediated content stored separately
+- score recalculated after remediation and tied to current content hash
+- document verification stored with explicit artifact identity and pass/fail reasons
+- remediation attempt recorded in append-only history with before/after references
 
 **Anti-Patterns:**
-
-- Rewriting `artist` or `title` globally to normalized forms.
-- Adding a database to store review decisions.
-- Making `--generate-from-cache` call source adapters.
-- Hiding quality decisions inside `app/document_creation.py`.
-- Writing API tokens into source-attempt records.
-- Comparing generated `.docx` files as binary blobs in tests.
-- Adding pytest-only tests without an explicit test-framework migration.
-- Replacing `"Lyrics not found."` or `"Chords not found."` without updating all affected readers, reports, and tests.
+- overwriting raw fetched cache content without preserved backup
+- storing scores only in prose reports
+- mixing current-state records and history in the same file
+- using ad hoc field names for the same concept across modules
+- silently retrying remediation without persisted attempt tracking
 
 ## Project Structure & Boundaries
+
+### Requirements Mapping
+
+**FR Category: Document Neatness Evaluation -> `app/document_verification.py` + `data/review/document_quality.json`**
+
+- Evaluates Markdown and `.docx` outputs for readability and wasted whitespace
+- Uses per-song-block heuristics only as contributing signals to an artifact-level review gate
+- Produces deterministic artifact-level verification results
+- Feeds review-ready gate and report aggregation
+
+**FR Category: Agentic Verification Before Manual Review -> `app/review_gate.py` + `app/reporting.py`**
+
+- Computes whether a run is review-ready before asking for human inspection
+- Unifies score results, neatness verification, remediation outcomes, and escalation state
+- Exposes machine-readable gate decisions to tests and reports
+
+**FR Category: Per-Song Lyrics/Chords Quality Scoring -> `app/content_scoring.py` + `data/review/content_scores.json`**
+
+- Computes deterministic quality scores per song and content type
+- Composes with existing `app/quality_assessment.py` signals
+- Tracks score version, reasons, and current content hash
+
+**FR Category: Backup-First Agent Remediation -> `app/remediation.py` + `app/remediation_state.py` + `data/review/backups/` + `data/review/remediated_content.json`**
+
+- Creates explicit backup state before direct edits
+- Stores remediated current-state content separately from raw cache content
+- Records bounded remediation attempts and resulting state transitions
+
+**FR Category: Audit and Escalation Controls -> `app/remediation_state.py` + `data/review/audit/remediation_attempts.jsonl` + `app/reporting.py`**
+
+- Persists append-only remediation history
+- Encodes escalation reasons and retry exhaustion
+- Keeps audit state available for tests, reports, and manual inspection
 
 ### Complete Project Directory Structure
 
@@ -609,350 +490,270 @@ CampfireSongbookBuilder/
 ├── README.md
 ├── LICENSE
 ├── requirements.txt
-├── .flake8
 ├── .gitignore
+├── .flake8
 ├── main.py
+├── clean_chords_cache.py
+├── clean_chords_cache_brackets.py
+├── fix_mojibake_in_cache.py
+├── migrate_cache_to_jsonl.py
 ├── app/
 │   ├── __init__.py
 │   ├── cache.py
-│   ├── content_models.py              # new: shared local data contracts
+│   ├── content_models.py
 │   ├── document_creation.py
 │   ├── document_formatting.py
 │   ├── document_generation.py
 │   ├── fetch_data.py
-│   ├── generation_filtering.py        # new: include/exclude accepted content
+│   ├── generation_filtering.py
 │   ├── load_config.py
 │   ├── load_songs.py
-│   ├── markdown_generation.py         # new: inspectable songbook output
-│   ├── output_pipeline.py             # new: Markdown -> docx -> optional PDF orchestration
-│   ├── quality_assessment.py          # new: pure deterministic content checks
-│   ├── reporting.py                   # new: quality/generation reports
-│   ├── review_state.py                # new: quality status and review decisions
-│   ├── selection_state.py             # new: favourites and named selections
+│   ├── pdf_generation.py
+│   ├── quality_assessment.py
+│   ├── reporting.py
+│   ├── review_state.py
+│   ├── selection_state.py
 │   ├── song_info.py
-│   └── text_cleaning.py
+│   ├── source_attempts.py
+│   ├── text_cleaning.py
+│   ├── content_scoring.py
+│   ├── document_verification.py
+│   ├── remediation.py
+│   ├── remediation_state.py
+│   └── review_gate.py
 ├── data/
-│   ├── cache/
-│   │   ├── chords_cache.jsonl
-│   │   └── lyrics_cache.jsonl
+│   ├── src/
+│   │   └── CampfireSongs.csv
 │   ├── config/
-│   │   ├── config.example.json
-│   │   └── config.json                # ignored local private config
-│   ├── output/
-│   │   ├── *.md                       # generated Markdown songbooks
-│   │   ├── *.docx                     # generated Word songbooks
-│   │   └── *.pdf                      # optional generated PDFs
-│   ├── review/
-│   │   ├── quality_status.json        # generated current quality state
-│   │   ├── review_decisions.json      # user-editable decisions
-│   │   ├── source_attempts.jsonl      # generated append-only audit history
-│   │   └── reports/
-│   │       └── *.json                 # generated per-run reports
+│   │   ├── config.json
+│   │   └── config.example.json
+│   ├── cache/
+│   │   ├── lyrics_cache.jsonl
+│   │   └── chords_cache.jsonl
 │   ├── selections/
-│   │   ├── favourites.json            # user-editable favourite songs
-│   │   └── *.json                     # user-editable named selections
-│   └── src/
-│       └── CampfireSongs.csv
+│   │   └── *.json
+│   ├── output/
+│   │   ├── Lyrics_Document.docx
+│   │   ├── Chords_Document.docx
+│   │   ├── Lyrics_Document.md
+│   │   ├── Chords_Document.md
+│   │   └── pdf/
+│   ├── reports/
+│   │   ├── quality/
+│   │   └── verification/
+│   └── review/
+│       ├── content_scores.json
+│       ├── remediated_content.json
+│       ├── document_quality.json
+│       ├── audit/
+│       │   └── remediation_attempts.jsonl
+│       └── backups/
+│           ├── content/
+│           └── artifacts/
+├── tests/
+│   ├── docx_stub.py
+│   ├── test_cache.py
+│   ├── test_config.py
+│   ├── test_content_models.py
+│   ├── test_document_creation.py
+│   ├── test_generation_filtering.py
+│   ├── test_load_songs.py
+│   ├── test_main.py
+│   ├── test_quality_assessment.py
+│   ├── test_reporting.py
+│   ├── test_review_state.py
+│   ├── test_selection_state.py
+│   ├── test_source_attempts.py
+│   ├── test_source_retry.py
+│   ├── test_content_scoring.py
+│   ├── test_document_verification.py
+│   ├── test_remediation.py
+│   ├── test_remediation_state.py
+│   └── test_review_gate.py
 ├── docs/
 │   ├── index.md
-│   ├── project-overview.md
 │   ├── architecture.md
+│   ├── component-inventory.md
 │   ├── development-guide.md
-│   ├── source-tree-analysis.md
-│   └── component-inventory.md
-├── tests/
-│   ├── test_config.py
-│   ├── test_content_models.py         # new
-│   ├── test_generation_filtering.py   # new
-│   ├── test_markdown_generation.py    # new
-│   ├── test_quality_assessment.py     # new
-│   ├── test_reporting.py              # new
-│   ├── test_review_state.py           # new
-│   └── test_selection_state.py        # new
-├── _bmad-output/
-│   ├── project-context.md
-│   └── planning-artifacts/
-│       └── architecture.md
-├── clean_chords_cache.py
-├── clean_chords_cache_brackets.py
-├── fix_mojibake_in_cache.py
-└── migrate_cache_to_jsonl.py
+│   ├── project-overview.md
+│   ├── project-scan-report.json
+│   └── source-tree-analysis.md
+├── _bmad/
+└── _bmad-output/
 ```
-
-New files marked `new` are architectural target locations. They should be introduced incrementally by implementation stories when the relevant behavior is built.
 
 ### Architectural Boundaries
 
-**API Boundaries:**
+**Entry Point Boundary:**
+- `main.py` remains a thin orchestrator
+- CLI parsing, run-mode selection, and top-level error handling stay here
+- Business logic must remain in `app/*.py` helpers
 
-There are no public API boundaries. External communication occurs only through source-specific HTTP/API calls in `app/fetch_data.py` or future source adapter helpers. All external source results must be normalized before quality assessment.
+**Raw Content Boundary:**
+- `app/cache.py` owns read/write access to `data/cache/*.jsonl`
+- Raw cache files are immutable fetched snapshots from the perspective of this slice
+- No remediation logic writes back into raw cache files
 
-**Component Boundaries:**
+**Current-State Review Boundary:**
+- `app/remediation_state.py` owns `data/review/` loaders and writers
+- `data/review/remediated_content.json` is the highest-priority current-state content layer for generation and scoring
+- `data/review/content_scores.json` stores current deterministic score state
+- `data/review/document_quality.json` stores artifact verification state
+- `data/review/audit/remediation_attempts.jsonl` stores append-only audit history
 
-- `main.py`: parse CLI arguments, load config/song list, select workflow, call orchestration helpers.
-- `app/fetch_data.py`: external source calls and scraper-specific parsing.
-- `app/document_generation.py`: cache population workflows.
-- `app/cache.py`: JSONL cache read/write behavior.
-- `app/quality_assessment.py`: pure quality checks; no network, no file writes, no document rendering.
-- `app/review_state.py`: load/write quality status and review decisions.
-- `app/selection_state.py`: load/write favourites and named selections.
-- `app/generation_filtering.py`: combine cached content, quality status, review decisions, and selections into accepted/excluded sets.
-- `app/reporting.py`: build machine-readable and human-readable quality/generation reports.
-- `app/markdown_generation.py`: render accepted content to Markdown.
-- `app/document_creation.py` and `app/document_formatting.py`: preserve `.docx` generation and formatting responsibilities.
-- `app/output_pipeline.py`: coordinate Markdown, `.docx`, and optional PDF output once content has already been accepted.
+**Scoring Boundary:**
+- `app/quality_assessment.py` continues to derive low-level content signals
+- `app/content_scoring.py` converts those signals into stable quality scores and reasons
+- Scoring must not own backup creation, document inspection, or escalation policy
 
-**Service Boundaries:**
+**Document Verification Boundary:**
+- `app/document_verification.py` evaluates generated artifacts only
+- It does not edit source content
+- It emits deterministic neatness findings and review-ready inputs
 
-No services are introduced. Module boundaries are the architectural boundaries.
+**Remediation Boundary:**
+- `app/remediation.py` owns backup-first transformation orchestration
+- It may modify remediated current-state content directly after backup creation
+- It must not mutate raw caches
+- It must re-score and re-verify after every attempted change
 
-**Data Boundaries:**
+**Review Gate Boundary:**
+- `app/review_gate.py` computes machine-readable readiness state
+- It combines score thresholds, document neatness, remediation exhaustion, and escalation flags
+- It does not generate documents or fetch content
 
-- Raw source content boundary: `data/cache/*.jsonl`.
-- User source-list boundary: `data/src/CampfireSongs.csv`.
-- Review/current-state boundary: `data/review/*.json`.
-- Audit/history boundary: `data/review/source_attempts.jsonl`.
-- Selection boundary: `data/selections/*.json`.
-- Generated artifact boundary: `data/output/*`.
+**Reporting Boundary:**
+- `app/reporting.py` remains the single aggregation layer for run outputs
+- Human-readable summaries derive from machine-readable report state
+- Report shape is a compatibility contract for agentic tests
 
-### Requirements to Structure Mapping
+### Service and Data Integration Boundaries
 
-**Feature Mapping:**
+**Generation Flow:**
+1. `main.py`
+2. `app/load_songs.py` and optional `app/selection_state.py`
+3. `app/cache.py` and existing fetch/generation modules
+4. `app/remediation_state.py` current-state overlay resolution
+5. `app/content_scoring.py`
+6. document generation modules
+7. `app/document_verification.py`
+8. `app/review_gate.py`
+9. `app/reporting.py`
 
-- FR-1 through FR-4, Song Quality Assessment:
-  - `app/quality_assessment.py`
-  - `app/content_models.py`
-  - `tests/test_quality_assessment.py`
-  - `tests/test_content_models.py`
+**Remediation Flow:**
+1. load raw or current remediated content
+2. create backup in `data/review/backups/`
+3. apply bounded remediation in `app/remediation.py`
+4. persist updated current-state content in `data/review/remediated_content.json`
+5. recompute score in `data/review/content_scores.json`
+6. rerun artifact verification where relevant
+7. append remediation history in `data/review/audit/remediation_attempts.jsonl`
+8. compute escalation or review-ready state
 
-- FR-5 through FR-7, Source Retry and Review Workflow:
-  - `app/fetch_data.py`
-  - `app/document_generation.py`
-  - `app/review_state.py`
-  - `app/generation_filtering.py`
-  - `app/reporting.py`
-  - `data/review/quality_status.json`
-  - `data/review/review_decisions.json`
-  - `data/review/source_attempts.jsonl`
-  - `tests/test_review_state.py`
-  - `tests/test_generation_filtering.py`
+### Requirement-to-Structure Mapping
 
-- FR-8 through FR-10, Easier Song Addition:
-  - `app/load_songs.py`
-  - `app/reporting.py`
-  - `main.py` CLI orchestration
-  - `tests/test_reporting.py`
+**Neat Documents**
+- Runtime: `app/document_verification.py`
+- State: `data/review/document_quality.json`
+- Tests: `tests/test_document_verification.py`
 
-- FR-11 through FR-13, Favourites and Selections:
-  - `app/selection_state.py`
-  - `app/generation_filtering.py`
-  - `data/selections/favourites.json`
-  - `data/selections/*.json`
-  - `tests/test_selection_state.py`
-  - `tests/test_generation_filtering.py`
+**Agentic Verification Before Manual Review**
+- Runtime: `app/review_gate.py`, `app/reporting.py`
+- State: `data/reports/verification/`, `data/review/document_quality.json`, `data/review/content_scores.json`
+- Tests: `tests/test_review_gate.py`, `tests/test_reporting.py`, `tests/test_main.py`
 
-- FR-14 through FR-15, Offline Generation:
-  - `main.py`
-  - `app/cache.py`
-  - `app/generation_filtering.py`
-  - `app/output_pipeline.py`
-  - tests that assert source adapters are not called in offline modes
+**Per-Song Quality Scores**
+- Runtime: `app/content_scoring.py`, `app/quality_assessment.py`
+- State: `data/review/content_scores.json`
+- Tests: `tests/test_content_scoring.py`, `tests/test_quality_assessment.py`
 
-- FR-16 through FR-19, Output Pipeline and Printable Quality:
-  - `app/markdown_generation.py`
-  - `app/output_pipeline.py`
-  - `app/document_creation.py`
-  - `app/document_formatting.py`
-  - `data/output/*.md`
-  - `data/output/*.docx`
-  - `data/output/*.pdf`
-  - `tests/test_markdown_generation.py`
+**Agentic Improvement with Backups**
+- Runtime: `app/remediation.py`, `app/remediation_state.py`
+- State: `data/review/remediated_content.json`, `data/review/backups/`, `data/review/audit/remediation_attempts.jsonl`
+- Tests: `tests/test_remediation.py`, `tests/test_remediation_state.py`
 
-**Cross-Cutting Concerns:**
-
-- Cache compatibility: `app/cache.py`, `app/generation_filtering.py`, cache-related tests.
-- Content hashing: `app/content_models.py` or `app/review_state.py`.
-- Logging: `main.py` plus module-level loggers.
-- Validation: `app/content_models.py`, `app/review_state.py`, `app/selection_state.py`.
-- Reports: `app/reporting.py`, `data/review/reports/*.json`.
-- CLI compatibility: `main.py` and targeted CLI branch tests where practical.
-
-### Integration Points
-
-**Internal Communication:**
-
-Data flows through plain Python dictionaries/dataclass-like records:
-
-```text
-CampfireSongs.csv
-  -> load_songs
-  -> fetch/cache workflows
-  -> Candidate records
-  -> quality_assessment
-  -> quality_status/review_decisions
-  -> selection_state
-  -> generation_filtering
-  -> reporting
-  -> markdown_generation
-  -> document_creation/document_formatting
-  -> optional PDF conversion
-```
-
-**External Integrations:**
-
-- Genius through `lyricsgenius` and private local config.
-- Lyrics/chord websites through `requests` and BeautifulSoup/lxml scraping in source-specific helpers.
-- Optional MusicBrainz metadata confidence checks after a future architecture/story decision.
-- Optional Pandoc or another converter for PDF after Markdown and `.docx` are stable.
-
-**Data Flow:**
-
-Online fetch/cache mode may call external sources and write raw caches, source attempts, quality status, and reports. Offline generation mode reads local caches, quality/review state, and selections, then writes reports and output artifacts without network calls.
-
-### File Organization Patterns
-
-**Configuration Files:**
-
-- `requirements.txt`: pinned runtime dependencies.
-- `.flake8`: style constraints.
-- `data/config/config.example.json`: tracked config template.
-- `data/config/config.json`: ignored private local config.
-
-**Source Organization:**
-
-Application modules remain flat under `app/`. New modules should be small and responsibility-focused. Do not move scraper logic, document formatting, or cache mechanics into `main.py`.
-
-**Test Organization:**
-
-Tests live in `tests/test_*.py` and use `unittest`. Use `tempfile.TemporaryDirectory` for local state and `unittest.mock` for source/network isolation.
-
-**Asset Organization:**
-
-There are no static UI assets. Runtime content and generated artifacts live under `data/`.
-
-### Development Workflow Integration
-
-**Development Server Structure:**
-
-No development server. Run commands from the repository root with `python3 main.py ...`.
-
-**Build Process Structure:**
-
-No build process for MVP. Document generation is the runtime output process.
-
-**Deployment Structure:**
-
-No deployment structure for MVP. The product is a local CLI. Future packaging, CI, or release workflows can be added after the quality pipeline is stable.
+**Audit Trail and Escalation**
+- Runtime: `app/remediation_state.py`, `app/review_gate.py`, `app/reporting.py`
+- State: `data/review/audit/remediation_attempts.jsonl`, `data/reports/quality/`
+- Tests: `tests/test_remediation_state.py`, `tests/test_review_gate.py`, `tests/test_reporting.py`
 
 ## Architecture Validation Results
 
 ### Coherence Validation ✅
 
 **Decision Compatibility:**
-
-The decisions are compatible. The selected brownfield Python CLI scaffold supports the local-file data architecture, additive review state, deterministic quality assessment, offline generation, Markdown-first output, and continued `.docx` generation. No selected decision requires a database, web server, frontend framework, hosted infrastructure, authentication system, or major CLI rewrite.
-
-The only deliberate tension is the legacy README/project-context claim of Python 3.8+ support versus the 2026 reality that Python 3.8 is end-of-life. The architecture resolves this by treating Python 3.12 as the verified development runtime and by avoiding new work to preserve 3.8 behavior. This should be reconciled in documentation or project context during implementation.
+The architectural decisions are compatible. Raw cache immutability, remediated current-state overlays, backup-first remediation, append-only audit history, and machine-readable reporting work together without contradiction.
 
 **Pattern Consistency:**
-
-The naming, structure, data-format, error-handling, logging, and test patterns all support the core decisions. The patterns preserve exact cache identity, isolate source adapters, keep quality checks pure, bind review decisions to content hashes, and prevent offline generation from reaching network code.
+Implementation patterns support the decisions well. Naming, layering, retry, escalation, and reporting contracts are aligned with the selected local-file Python CLI architecture.
 
 **Structure Alignment:**
-
-The proposed structure maps each new responsibility to a flat `app/*.py` helper module while preserving existing module boundaries. Runtime state is placed under `data/` with clear separation between raw caches, review state, source-attempt history, selections, reports, and generated artifacts.
+The project structure supports the architecture. The proposed `app/` modules and `data/review/` state layer cleanly map to the new scoring, verification, remediation, and audit responsibilities.
 
 ### Requirements Coverage Validation ✅
 
-**Epic/Feature Coverage:**
-
-No epics were loaded. The architecture maps all PRD feature categories directly to modules, state files, and tests.
+**Feature Coverage:**
+All five feature areas are architecturally supported:
+- document neatness evaluation
+- agentic verification before manual review
+- per-song quality scoring
+- backup-first direct remediation
+- audit and escalation controls
 
 **Functional Requirements Coverage:**
-
-- FR-1 through FR-4 are covered by `quality_assessment.py`, quality signals, content hashes, and quality status.
-- FR-5 through FR-7 are covered by source-attempt recording, source fallback boundaries, review decisions, and generation filtering.
-- FR-8 through FR-10 are covered by source-list validation, reports, file/CLI operation, and agent-editable local state.
-- FR-11 through FR-13 are covered by favourites/selections state and quality-aware filtering.
-- FR-14 through FR-15 are covered by cache-first reads, offline generation boundaries, and cache compatibility rules.
-- FR-16 through FR-19 are covered by Markdown output, preserved `.docx` generation, optional PDF conversion, and print-quality signals.
+All functional requirement categories identified in project context are covered by specific modules, state files, and integration flows.
 
 **Non-Functional Requirements Coverage:**
-
-- CLI compatibility is preserved by keeping `main.py` as the entrypoint and avoiding a starter rewrite.
-- Offline behavior is protected by separating source adapters from generation.
-- Source failures are recoverable through structured outcomes and source attempts.
-- Inspectability is addressed with JSON/JSONL state and Markdown output.
-- Testability is addressed with pure quality helpers, file loaders, mocks, and `unittest`.
-- Implementation simplicity is addressed by preserving the single-process CLI and flat module structure.
-- Security is addressed by keeping secrets local, avoiding token leakage, and treating fetched content as untrusted text.
+The architecture supports repo-root CLI preservation, exact identity preservation, deterministic verification, inspectable outputs/state, agent-operable tests, and backup safety.
 
 ### Implementation Readiness Validation ✅
 
 **Decision Completeness:**
-
-Critical decisions are documented with rationale and current-version checks where technology versions matter. Deferred decisions are explicit and do not block the quality pipeline.
+Critical decisions are documented clearly enough to guide implementation agents consistently.
 
 **Structure Completeness:**
-
-The project tree identifies existing files, proposed new modules, proposed runtime state files, test locations, and boundary ownership. It is specific enough for story creation and implementation agents.
+The project structure is concrete and specific enough for implementation planning.
 
 **Pattern Completeness:**
-
-The main AI-agent conflict points are addressed: song keys, JSON field naming, state locations, quality signals, review decisions, source outcomes, offline behavior, reports, Markdown rendering, `.docx` boundaries, logging, validation, and tests.
+The implementation patterns are sufficiently explicit to prevent common agent conflicts around naming, layering, and audit semantics.
 
 ### Gap Analysis Results
 
-**Critical Gaps: None.**
+**Critical Gaps**
+- None identified
 
-No missing architectural decision blocks implementation.
+**Important Gaps**
+- Artifact identity rules for document verification records should be specified explicitly
 
-**Important Gaps:**
-
-- Python baseline documentation needs reconciliation because Python 3.8 is end-of-life while existing docs mention Python 3.8+.
-- Initial quality thresholds must be tuned against real cache samples during implementation.
-- PDF conversion remains intentionally optional and needs a later concrete converter decision.
-
-**Nice-to-Have Gaps:**
-
-- Add CI after the test suite grows beyond the current minimal baseline.
-- Consider RapidFuzz if deterministic title/artist matching is too weak.
-- Consider jsonschema if hand validation becomes too scattered.
-- Consider packaging modernization after the core quality workflow works.
+**Nice-to-Have Gaps**
+- Add schema appendix for new `data/review/` files
+- Add enum appendix for verification and escalation status values
 
 ### Validation Issues Addressed
 
-- Avoided starter/template churn by selecting the existing brownfield scaffold.
-- Avoided cache breakage by placing quality/review state beside raw caches.
-- Avoided stale manual approvals by requiring content hashes on review decisions.
-- Avoided network surprises by making offline generation a hard boundary.
-- Avoided over-scoping by deferring GUI, hosted service, auth, database, CLI framework migration, packaging migration, and optional PDF tooling.
+No blocking architectural issues were found. Remaining issues are policy-detail refinements that do not require structural redesign.
 
 ### Architecture Completeness Checklist
 
 **Requirements Analysis**
-
 - [x] Project context thoroughly analyzed
 - [x] Scale and complexity assessed
 - [x] Technical constraints identified
 - [x] Cross-cutting concerns mapped
 
 **Architectural Decisions**
-
 - [x] Critical decisions documented with versions
 - [x] Technology stack fully specified
 - [x] Integration patterns defined
-- [x] Performance considerations addressed
+- [ ] Performance considerations addressed
 
 **Implementation Patterns**
-
 - [x] Naming conventions established
 - [x] Structure patterns defined
 - [x] Communication patterns specified
 - [x] Process patterns documented
 
 **Project Structure**
-
 - [x] Complete directory structure defined
 - [x] Component boundaries established
 - [x] Integration points mapped
@@ -960,35 +761,239 @@ No missing architectural decision blocks implementation.
 
 ### Architecture Readiness Assessment
 
-**Overall Status:** READY FOR IMPLEMENTATION
+Status: Implementation-ready with one remaining documentation gap.
 
-**Confidence Level:** High
+The architecture is sufficiently complete to guide AI agents through consistent implementation. Remaining gaps are limited to document-verification artifact identity wording rather than unresolved policy defaults.
 
-**Key Strengths:**
+Not applicable for this slice.
 
-- Strong alignment with the existing codebase and project context.
-- Clear quality-first path without a rewrite.
-- Explicit local file contracts for review, quality, selections, and reports.
-- Preserves offline generation and existing caches.
-- Gives future agents concrete module boundaries and anti-patterns.
+Rationale:
 
-**Areas for Future Enhancement:**
+- No GUI is planned.
+- Neatness is a document/output concern, not an application UI concern.
 
-- Tune quality thresholds with real song/cache examples.
-- Add CI once more regression tests exist.
-- Decide optional PDF conversion tooling after Markdown and `.docx` are stable.
-- Consider packaging/runtime modernization after MVP quality features are implemented.
+### Infrastructure & Deployment
 
-### Implementation Handoff
+**Decision: Keep local single-process execution as the operating model.**
 
-**AI Agent Guidelines:**
+Rationale:
 
-- Follow all architectural decisions exactly as documented.
-- Use implementation patterns consistently across all components.
-- Respect project structure and boundaries.
-- Refer to this document for all architectural questions.
-- Preserve cache compatibility and offline behavior unless a future architecture change explicitly says otherwise.
+- The current architecture is already aligned with the PRD.
+- Verification and remediation can be implemented as additional orchestration steps and helper modules.
 
-**First Implementation Priority:**
+**Decision: Expand automated verification through `unittest` and agent-consumable report checks.**
 
-Start with the architectural foundation story: reconcile Python/runtime documentation, define shared content/state contracts, add state loaders, and add focused `unittest` coverage before wiring quality filtering into document generation.
+Rationale:
+
+- This directly serves the requirement that agentic tests verify quality before manual inspection.
+- It preserves the current developer workflow and repo-root execution model.
+
+### Decision Impact Analysis
+
+**Implementation Sequence:**
+
+1. Define score and remediation data contracts
+2. Define remediated current-state and backup model
+3. Define document-quality verification contract
+4. Implement score computation
+5. Implement document neatness verification
+6. Implement remediation orchestration with bounded retries
+7. Integrate verification/remediation results into reporting and generation gates
+
+**Cross-Component Dependencies:**
+
+- Score computation depends on existing Quality Signals and current content identity
+- Remediation depends on backup creation and remediated current-state storage
+- Document neatness verification depends on generated artifact identity and output pipeline hooks
+- Escalation logic depends on scores, neatness checks, remediation history, and retry bounds
+- Reporting depends on all of the above staying aligned under exact `song_key` / hash semantics
+
+## Implementation Patterns & Consistency Rules
+
+### Pattern Categories Defined
+
+**Critical Conflict Points Identified:**
+12 areas where AI agents could make incompatible choices if not explicitly constrained
+
+### Naming Patterns
+
+**Data File Naming Conventions:**
+
+- Current-state JSON files use `snake_case` names under `data/review/`
+- Append-only history files use `*.jsonl`
+- Backup directories use noun-based paths, for example `data/review/backups/`
+- Remediated current-state files must distinguish content type and role by field, not by ad hoc filename variants
+
+**Identity Naming Conventions:**
+
+- Song identity remains exact:
+  - `artist`
+  - `title`
+  - `song_key`
+- Content domains remain exact:
+  - `lyrics`
+  - `chords`
+- Score fields use explicit names:
+  - `quality_score`
+  - `score_version`
+  - `score_reasons`
+- Verification fields use explicit names:
+  - `review_ready`
+  - `verification_status`
+  - `verification_reasons`
+
+**Code Naming Conventions:**
+
+- New helper modules remain flat under `app/`
+- Function names remain straightforward and descriptive
+- State loaders/savers use explicit verbs:
+  - `load_*`
+  - `save_*`
+  - `build_*`
+  - `evaluate_*`
+  - `apply_*`
+- Do not introduce parallel synonyms for the same concept:
+  - use `remediation`, not alternating between `repair`, `fixup`, and `cleanup` as top-level state terms
+
+### Structure Patterns
+
+**Project Organization:**
+
+- Raw fetched content stays in existing JSONL cache files
+- Current-state review and verification data stays under `data/review/`
+- Named selections remain under `data/selections/`
+- Favourite membership remains in `data/src/CampfireSongs.csv`
+- Tests remain in `tests/test_*.py`
+
+**State Layering Rules:**
+
+- Raw cache = immutable fetched snapshot
+- Remediated content = separate current-state layer
+- Scores = separate current-state layer
+- Verification results = separate current-state layer
+- Remediation attempts = append-only history
+- Backups = explicit preserved pre-edit state
+
+**Module Ownership Pattern:**
+
+- `app/cache.py` owns raw cache read/write semantics
+- `app/quality_assessment.py` owns deterministic signal generation
+- a new score module should own score derivation only
+- a new verification module should own document neatness evaluation only
+- a new remediation module should own backup-first transformation orchestration
+- `app/reporting.py` remains the aggregation layer for machine-readable run outputs
+
+### Format Patterns
+
+**Data Exchange Formats:**
+
+- Use `snake_case` in all new JSON and JSONL structures
+- Preserve exact `song_key` derivation rules from current architecture
+- Use `sha256:<hex>` content-hash format for version binding
+- Use explicit status enums rather than free-form prose where a field is machine-consumed
+
+**Current-State Record Pattern:**
+
+Each new current-state record should follow this shape discipline:
+
+- identity fields first
+- state/result fields second
+- reasons/signals next
+- metadata timestamps last
+
+Example pattern:
+
+- `song_key`
+- `content_type`
+- `content_hash`
+- `quality_score`
+- `review_ready`
+- `score_reasons`
+- `updated_at`
+
+**History Record Pattern:**
+
+Append-only remediation history records should include:
+
+- identity
+- pre-change reference
+- post-change reference
+- remediation action
+- outcome
+- escalation flag
+- timestamp
+
+### Communication Patterns
+
+**Reporting Contract:**
+
+- Human-readable summaries must be derived from machine-readable report state, not the other way around
+- Verification failures, score failures, remediation failures, and escalation outcomes must remain distinct in the report
+- Reports must not collapse document-level and content-level failures into one generic quality issue
+
+**Escalation Contract:**
+
+- Escalation reasons must be encoded as stable machine-readable categories
+- Human-facing explanations may elaborate, but the category must remain explicit
+- Agents must not silently treat “not fixable” and “not allowed to fix” as the same state
+
+### Process Patterns
+
+**Remediation Process Pattern:**
+
+1. Load current content state
+2. Create backup reference before modification
+3. Apply bounded remediation
+4. Recompute content hash
+5. Re-score content
+6. Re-run relevant verification
+7. Record remediation attempt
+8. Escalate if thresholds still fail or retry bound is reached
+
+**Verification Process Pattern:**
+
+- Verification runs after generation and after remediation where relevant
+- Document verification evaluates generated artifacts, not just source content
+- Review-ready state is computed, not hand-set
+- Agentic tests consume the same verification outputs used by reports
+
+**Retry and Escalation Pattern:**
+
+- Remediation attempts must be bounded per content item
+- Retry count must be explicit and persisted
+- Once the retry bound is reached, the item must escalate
+- Escalated items must remain inspectable and not be silently suppressed
+
+### Enforcement Guidelines
+
+**All AI Agents MUST:**
+
+- preserve raw cache immutability
+- create backup state before direct content edits
+- preserve exact `artist` / `title` / `song_key` identity semantics
+- use `snake_case` in all new machine-readable records
+- keep current-state and append-only history separate
+- write new behavior into focused helper modules rather than broadening `main.py`
+
+**Pattern Enforcement:**
+
+- Enforce through focused `unittest` coverage on loaders, writers, scoring, verification, remediation, and escalation
+- Treat report shape as a compatibility contract
+- Document pattern violations in story review findings and correct them before expanding the surface area
+
+### Pattern Examples
+
+**Good Examples:**
+
+- raw cache unchanged, remediated content stored separately
+- score recalculated after remediation and tied to current content hash
+- document verification stored with explicit artifact identity and pass/fail reasons
+- remediation attempt recorded in append-only history with before/after references
+
+**Anti-Patterns:**
+
+- overwriting raw fetched cache content without preserved backup
+- storing scores only in prose reports
+- mixing current-state records and history in the same file
+- using ad hoc field names for the same concept across modules
+- silently retrying remediation without persisted attempt tracking

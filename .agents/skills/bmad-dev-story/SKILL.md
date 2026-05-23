@@ -73,10 +73,6 @@ Activation is complete. Begin the workflow below.
 ## Execution
 
 <workflow>
-  <critical>AUTONOMOUS DEV-STORY MODE: do not wander through broad repo or planning discovery once the canonical story file and directly referenced implementation/test files are loaded.</critical>
-  <critical>Read only the canonical story file, sprint-status.yaml, project-context facts, and the specific implementation/test files named by the story unless a direct import chain forces one more local file.</critical>
-  <critical>After context load, you MUST cross the write boundary quickly: update sprint status to in-progress, add/modify a failing focused test, run it, then implement the minimal code change.</critical>
-  <critical>If you have not created or modified a code or test file after the initial context read, you are off track and must stop reading more files and start the red phase immediately.</critical>
   <critical>Communicate all responses in {communication_language} and language MUST be tailored to {user_skill_level}</critical>
   <critical>Generate all documents in {document_output_language}</critical>
   <critical>Only modify the story file in these areas: Tasks/Subtasks checkboxes, Dev Agent Record (Debug Log, Completion Notes), File List,
@@ -211,14 +207,13 @@ Activation is complete. Begin the workflow below.
   </step>
 
   <step n="2" goal="Load project context and story information">
-    <critical>Load only the minimum local context required to implement the current story task sequence</critical>
+    <critical>Load all available context to inform implementation</critical>
 
     <action>Load {project_context} for coding standards and project-wide patterns (if exists)</action>
     <action>Parse sections: Story, Acceptance Criteria, Tasks/Subtasks, Dev Notes, Dev Agent Record, File List, Change Log, Status</action>
     <action>Load comprehensive context from story file's Dev Notes section</action>
     <action>Extract developer guidance from Dev Notes: architecture requirements, previous learnings, technical specifications</action>
     <action>Use enhanced story context to inform implementation decisions and approaches</action>
-    <action>Read only the directly relevant implementation and test files named by the story before editing; avoid broad repo scans or unrelated planning documents</action>
     <output>✅ **Context Loaded**
       Story and project context available for implementation
     </output>
@@ -301,7 +296,6 @@ Activation is complete. Begin the workflow below.
 
   <step n="5" goal="Implement task following red-green-refactor cycle">
     <critical>FOLLOW THE STORY FILE TASKS/SUBTASKS SEQUENCE EXACTLY AS WRITTEN - NO DEVIATION</critical>
-    <critical>Write-first contract: after this step begins, each cycle must produce a concrete file edit or a focused failing test run before any further context gathering.</critical>
 
     <action>Review the current task/subtask from the story file - this is your authoritative implementation guide</action>
     <action>Plan implementation following red-green-refactor cycle</action>
