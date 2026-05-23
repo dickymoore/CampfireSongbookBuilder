@@ -1,5 +1,5 @@
 # generated: 2026-05-21T12:41:36+01:00
-# last_updated: 2026-05-23T19:56:30+01:00
+# last_updated: 2026-05-23T20:04:30+01:00
 # project: CampfireSongbookBuilder
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-21T12:41:36+01:00
-last_updated: 2026-05-23T19:56:30+01:00
+last_updated: 2026-05-23T20:04:30+01:00
 project: CampfireSongbookBuilder
 project_key: NOKEY
 tracking_system: file-system
@@ -50,7 +50,7 @@ development_status:
   epic-1-retrospective: optional
   epic-2: in-progress
   2-1-persist-deterministic-per-song-lyrics-and-chords-scores: done
-  2-2-compose-scores-from-existing-quality-signals: backlog
+  2-2-compose-scores-from-existing-quality-signals: done
   2-3-rank-songs-for-review-and-remediation-priority: backlog
   epic-2-retrospective: optional
   epic-3: backlog
