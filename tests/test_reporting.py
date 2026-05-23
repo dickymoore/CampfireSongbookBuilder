@@ -397,8 +397,90 @@ class TestReporting(unittest.TestCase):
         self.assertEqual(report["summary"]["not_review_ready_count"], 1)
         self.assertEqual(report["summary"]["counts"]["review_ready"], 1)
         self.assertEqual(report["summary"]["counts"]["not_review_ready"], 1)
+        self.assertEqual(report["summary"]["manual_review_ready_count"], 1)
+        self.assertEqual(report["summary"]["manual_review_blocked_count"], 1)
+        self.assertEqual(report["summary"]["counts"]["manual_review_ready"], 1)
+        self.assertEqual(report["summary"]["counts"]["manual_review_blocked"], 1)
         self.assertEqual(report["document_verification"], document_verification)
         self.assertEqual(report["review_gate_decisions"], review_gate_decisions)
+        self.assertEqual(report["manual_review_gate"]["ready_count"], 1)
+        self.assertEqual(report["manual_review_gate"]["blocked_count"], 1)
+        self.assertEqual(
+            report["manual_review_gate"]["blocked_artifacts"][0]["blocking_stage"],
+            "document_verification",
+        )
+        self.assertEqual(
+            report["manual_review_gate"]["blocked_artifacts"][0]["failure_reasons"],
+            ["sparse_layout"],
+        )
+
+    def test_build_traceable_quality_report_keeps_manual_review_blocks_separate_from_song_quality(self):
+        generation_results = [
+            {
+                "artist": "The Campfire Trio",
+                "title": "Trail Song",
+                "song_key": "The Campfire Trio - Trail Song",
+                "content_type": "lyrics",
+                "content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+                "quality": "questionable",
+                "included": False,
+                "decision_source": "quality_questionable",
+                "reason": "Song content needs review.",
+                "signals": [
+                    {
+                        "code": "low_confidence_match",
+                        "severity": "warning",
+                        "message": "Source metadata does not match the requested song.",
+                        "content_type": "lyrics",
+                    }
+                ],
+                "quality_status": {
+                    "content_type": "lyrics",
+                    "quality": "questionable",
+                },
+                "review_decision": None,
+            }
+        ]
+        document_verification = [
+            {
+                "artifact_path": "data/output/Lyrics_Document.docx",
+                "artifact_type": "docx",
+                "verification_status": "failed",
+                "verification_reasons": ["fragmented_song_blocks"],
+                "verified_at": "2026-05-23T18:00:00+01:00",
+            }
+        ]
+        review_gate_decisions = [
+            {
+                "artifact_path": "data/output/Lyrics_Document.docx",
+                "artifact_type": "docx",
+                "review_ready": False,
+                "failure_reasons": ["fragmented_song_blocks"],
+                "computed_at": "2026-05-23T18:01:00+01:00",
+            }
+        ]
+
+        report = build_traceable_quality_report(
+            generation_results,
+            source="generate_from_cache",
+            generated_at="2026-05-23T18:01:00+01:00",
+            document_verification=document_verification,
+            review_gate_decisions=review_gate_decisions,
+        )
+
+        self.assertEqual(report["summary"]["questionable_count"], 1)
+        self.assertEqual(report["summary"]["manual_review_blocked_count"], 1)
+        self.assertEqual(
+            report["summary"]["questionable_songs"][0]["song_key"],
+            "The Campfire Trio - Trail Song",
+        )
+        self.assertEqual(
+            report["manual_review_gate"]["blocked_artifacts"][0]["verification_reasons"],
+            ["fragmented_song_blocks"],
+        )
+        self.assertTrue(
+            report["manual_review_gate"]["blocked_artifacts"][0]["blocked_from_manual_review"]
+        )
 
     def test_write_traceable_quality_report_redacts_sensitive_values(self):
         report = {

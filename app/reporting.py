@@ -164,6 +164,53 @@ def _build_selection_issue_entry(record):
     return entry
 
 
+def _artifact_key(record):
+    return (
+        record.get("artifact_path"),
+        record.get("artifact_type"),
+    )
+
+
+def _build_manual_review_gate(document_verification_rows, review_gate_rows):
+    verification_by_artifact = {
+        _artifact_key(record): record
+        for record in document_verification_rows
+        if record.get("artifact_path") and record.get("artifact_type")
+    }
+
+    ready_artifacts = []
+    blocked_artifacts = []
+    for decision in review_gate_rows:
+        verification_record = verification_by_artifact.get(_artifact_key(decision), {})
+        gate_entry = {
+            "artifact_path": decision.get("artifact_path"),
+            "artifact_type": decision.get("artifact_type"),
+            "review_ready": decision.get("review_ready"),
+            "blocked_from_manual_review": decision.get("review_ready") is False,
+            "blocking_stage": (
+                "document_verification" if decision.get("review_ready") is False else None
+            ),
+            "failure_reasons": copy.deepcopy(decision.get("failure_reasons", [])),
+            "computed_at": decision.get("computed_at"),
+            "verification_status": verification_record.get("verification_status"),
+            "verification_reasons": copy.deepcopy(
+                verification_record.get("verification_reasons", [])
+            ),
+            "verified_at": verification_record.get("verified_at"),
+        }
+        if gate_entry["blocked_from_manual_review"]:
+            blocked_artifacts.append(gate_entry)
+        else:
+            ready_artifacts.append(gate_entry)
+
+    return {
+        "ready_count": len(ready_artifacts),
+        "blocked_count": len(blocked_artifacts),
+        "ready_artifacts": ready_artifacts,
+        "blocked_artifacts": blocked_artifacts,
+    }
+
+
 def build_traceable_quality_report(
     generation_results,
     source="generate_from_cache",
@@ -213,6 +260,10 @@ def build_traceable_quality_report(
         for record in review_gate_decisions or []
         if isinstance(record, dict)
     ]
+    manual_review_gate = _build_manual_review_gate(
+        document_verification_rows,
+        review_gate_rows,
+    )
     clean_songs = [
         _build_summary_entry(song)
         for song in songs
@@ -261,6 +312,8 @@ def build_traceable_quality_report(
         "not_review_ready_count": sum(
             1 for decision in review_gate_rows if decision.get("review_ready") is False
         ),
+        "manual_review_ready_count": manual_review_gate["ready_count"],
+        "manual_review_blocked_count": manual_review_gate["blocked_count"],
         "counts": {
             "clean": len(clean_songs),
             "excluded_clean": len(excluded_clean_songs),
@@ -276,6 +329,8 @@ def build_traceable_quality_report(
             "not_review_ready": sum(
                 1 for decision in review_gate_rows if decision.get("review_ready") is False
             ),
+            "manual_review_ready": manual_review_gate["ready_count"],
+            "manual_review_blocked": manual_review_gate["blocked_count"],
         },
         "clean_songs": clean_songs,
         "excluded_clean_songs": excluded_clean_songs,
@@ -287,6 +342,7 @@ def build_traceable_quality_report(
         "pdf_errors": pdf_error_rows,
         "document_verification": document_verification_rows,
         "review_gate_decisions": review_gate_rows,
+        "manual_review_gate": manual_review_gate,
     }
 
     report = {
@@ -300,6 +356,7 @@ def build_traceable_quality_report(
         "pdf_errors": pdf_error_rows,
         "document_verification": document_verification_rows,
         "review_gate_decisions": review_gate_rows,
+        "manual_review_gate": manual_review_gate,
     }
 
     return _sanitize_value(report)
