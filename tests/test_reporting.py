@@ -357,6 +357,49 @@ class TestReporting(unittest.TestCase):
         self.assertIsNone(report["summary"]["invalid_input_rows"][0]["raw_title"])
         json.dumps(report, allow_nan=False)
 
+    def test_build_traceable_quality_report_includes_review_gate_decisions(self):
+        generation_results = []
+        document_verification = [
+            {
+                "artifact_path": "data/output/Lyrics_Document.md",
+                "artifact_type": "markdown",
+                "verification_status": "passed",
+                "verification_reasons": ["meets_neatness_thresholds"],
+                "verified_at": "2026-05-22T17:03:00+01:00",
+            }
+        ]
+        review_gate_decisions = [
+            {
+                "artifact_path": "data/output/Lyrics_Document.md",
+                "artifact_type": "markdown",
+                "review_ready": True,
+                "failure_reasons": [],
+                "computed_at": "2026-05-22T17:04:00+01:00",
+            },
+            {
+                "artifact_path": "data/output/Chords_Document.docx",
+                "artifact_type": "docx",
+                "review_ready": False,
+                "failure_reasons": ["sparse_layout"],
+                "computed_at": "2026-05-22T17:04:00+01:00",
+            },
+        ]
+
+        report = build_traceable_quality_report(
+            generation_results,
+            source="generate_from_cache",
+            generated_at="2026-05-22T17:04:00+01:00",
+            document_verification=document_verification,
+            review_gate_decisions=review_gate_decisions,
+        )
+
+        self.assertEqual(report["summary"]["review_ready_count"], 1)
+        self.assertEqual(report["summary"]["not_review_ready_count"], 1)
+        self.assertEqual(report["summary"]["counts"]["review_ready"], 1)
+        self.assertEqual(report["summary"]["counts"]["not_review_ready"], 1)
+        self.assertEqual(report["document_verification"], document_verification)
+        self.assertEqual(report["review_gate_decisions"], review_gate_decisions)
+
     def test_write_traceable_quality_report_redacts_sensitive_values(self):
         report = {
             "generated_at": "2026-05-19T15:14:19+01:00",

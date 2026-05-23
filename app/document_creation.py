@@ -27,6 +27,7 @@ from app.review_state import (
     load_review_decisions,
 )
 from app.pdf_generation import convert_document_to_pdf
+from app.review_gate import compute_review_gate_decisions
 from app.text_cleaning import clean_chords, clean_lyrics
 
 
@@ -339,6 +340,7 @@ def create_document_from_cache(
 
     if document_verification_records:
         _save_document_verification_records(document_verification_records)
+    review_gate_decisions = compute_review_gate_decisions(document_verification_records)
 
     return {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
@@ -349,4 +351,5 @@ def create_document_from_cache(
         "pdf_outputs": pdf_outputs,
         "pdf_errors": pdf_errors,
         "document_verification": document_verification_records,
+        "review_gate_decisions": review_gate_decisions,
     }

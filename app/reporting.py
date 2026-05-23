@@ -174,6 +174,8 @@ def build_traceable_quality_report(
     selection_issues=None,
     pdf_outputs=None,
     pdf_errors=None,
+    document_verification=None,
+    review_gate_decisions=None,
 ):
     generated_at_value = generated_at or _now_iso()
     source_attempts_by_song = _group_source_attempts(source_attempts)
@@ -199,6 +201,16 @@ def build_traceable_quality_report(
             "reason": record.get("reason"),
         }
         for record in pdf_errors or []
+        if isinstance(record, dict)
+    ]
+    document_verification_rows = [
+        copy.deepcopy(record)
+        for record in document_verification or []
+        if isinstance(record, dict)
+    ]
+    review_gate_rows = [
+        copy.deepcopy(record)
+        for record in review_gate_decisions or []
         if isinstance(record, dict)
     ]
     clean_songs = [
@@ -243,6 +255,12 @@ def build_traceable_quality_report(
         "selection_issue_count": len(selection_issue_rows),
         "pdf_output_count": len(pdf_output_rows),
         "pdf_error_count": len(pdf_error_rows),
+        "review_ready_count": sum(
+            1 for decision in review_gate_rows if decision.get("review_ready") is True
+        ),
+        "not_review_ready_count": sum(
+            1 for decision in review_gate_rows if decision.get("review_ready") is False
+        ),
         "counts": {
             "clean": len(clean_songs),
             "excluded_clean": len(excluded_clean_songs),
@@ -252,6 +270,12 @@ def build_traceable_quality_report(
             "selection_issue": len(selection_issue_rows),
             "pdf_output": len(pdf_output_rows),
             "pdf_error": len(pdf_error_rows),
+            "review_ready": sum(
+                1 for decision in review_gate_rows if decision.get("review_ready") is True
+            ),
+            "not_review_ready": sum(
+                1 for decision in review_gate_rows if decision.get("review_ready") is False
+            ),
         },
         "clean_songs": clean_songs,
         "excluded_clean_songs": excluded_clean_songs,
@@ -261,6 +285,8 @@ def build_traceable_quality_report(
         "selection_issues": selection_issue_rows,
         "pdf_outputs": pdf_output_rows,
         "pdf_errors": pdf_error_rows,
+        "document_verification": document_verification_rows,
+        "review_gate_decisions": review_gate_rows,
     }
 
     report = {
@@ -272,6 +298,8 @@ def build_traceable_quality_report(
         "selection_issues": selection_issue_rows,
         "pdf_outputs": pdf_output_rows,
         "pdf_errors": pdf_error_rows,
+        "document_verification": document_verification_rows,
+        "review_gate_decisions": review_gate_rows,
     }
 
     return _sanitize_value(report)

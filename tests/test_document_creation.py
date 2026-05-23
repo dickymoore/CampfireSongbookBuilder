@@ -318,11 +318,17 @@ class TestDocumentCreation(unittest.TestCase):
 
             self.assertEqual(errors, [])
             self.assertEqual(len(report_data["document_verification"]), 2)
+            self.assertEqual(len(report_data["review_gate_decisions"]), 2)
             self.assertIn(str(output_path), state["entries"])
             self.assertIn(str(output_path.with_suffix(".md")), state["entries"])
             self.assertEqual(
                 state["entries"][str(output_path)]["verification_status"],
                 "passed",
+            )
+            self.assertTrue(report_data["review_gate_decisions"][0]["review_ready"])
+            self.assertEqual(
+                report_data["review_gate_decisions"][0]["failure_reasons"],
+                [],
             )
             self.assertEqual(
                 state["entries"][str(output_path.with_suffix(".md"))]["verification_reasons"],
