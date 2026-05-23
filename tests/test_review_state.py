@@ -5,7 +5,15 @@ from pathlib import Path
 
 from app.content_models import build_quality_status
 from app.content_models import build_review_decision, compute_content_hash
-from app.review_state import load_quality_status, load_review_decisions, save_quality_status, save_review_decisions
+from app.content_scoring import build_content_score
+from app.review_state import (
+    load_content_scores,
+    load_quality_status,
+    load_review_decisions,
+    save_content_scores,
+    save_quality_status,
+    save_review_decisions,
+)
 
 
 class TestReviewState(unittest.TestCase):
@@ -222,6 +230,137 @@ class TestReviewState(unittest.TestCase):
             reason=reason,
             decided_at=decided_at,
         )
+
+    def _build_content_score(
+        self,
+        artist,
+        title,
+        content_type,
+        content_hash,
+        quality_score,
+        quality_band=None,
+        score_reasons=None,
+        scored_at="2026-05-23T19:00:00+01:00",
+    ):
+        return build_content_score(
+            artist,
+            title,
+            content_type,
+            content_hash,
+            quality_score,
+            quality_band=quality_band,
+            score_reasons=score_reasons or [],
+            scored_at=scored_at,
+        )
+
+    def test_save_and_load_content_scores_round_trip(self):
+        lyric_score = self._build_content_score(
+            "The Campfire Trio",
+            "Trail Song",
+            "lyrics",
+            "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            82,
+            score_reasons=["missing_structure_signal"],
+        )
+        chord_score = self._build_content_score(
+            "The Campfire Trio",
+            "Trail Song",
+            "chords",
+            "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            38,
+            score_reasons=["missing_chords"],
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            target_path = Path(tmp_dir) / "data" / "review" / "content_scores.json"
+
+            save_content_scores(target_path, [lyric_score, chord_score])
+
+            self.assertTrue(target_path.exists())
+            self.assertTrue(target_path.parent.exists())
+
+            state, errors = load_content_scores(target_path)
+
+            self.assertEqual(errors, [])
+            self.assertEqual(state["version"], 1)
+            self.assertEqual(state["entries"]["The Campfire Trio - Trail Song"]["lyrics"], lyric_score)
+            self.assertEqual(state["entries"]["The Campfire Trio - Trail Song"]["chords"], chord_score)
+
+    def test_load_missing_content_scores_returns_empty_state(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            target_path = Path(tmp_dir) / "data" / "review" / "content_scores.json"
+
+            state, errors = load_content_scores(target_path)
+
+            self.assertEqual(errors, [])
+            self.assertEqual(state["version"], 1)
+            self.assertIsNone(state["updated_at"])
+            self.assertEqual(state["entries"], {})
+
+    def test_load_invalid_content_score_reports_field_path_and_preserves_valid_entries(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            target_path = Path(tmp_dir) / "data" / "review" / "content_scores.json"
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            valid_score = self._build_content_score(
+                "The Campfire Trio",
+                "Trail Song",
+                "lyrics",
+                "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                82,
+                score_reasons=["missing_structure_signal"],
+            )
+            payload = {
+                "version": 1,
+                "updated_at": "2026-05-23T19:00:00+01:00",
+                "entries": {
+                    "The Campfire Trio - Trail Song": {
+                        "lyrics": valid_score,
+                        "chords": {
+                            "artist": "The Campfire Trio",
+                            "title": "Trail Song",
+                            "song_key": "The Campfire Trio - Trail Song",
+                            "content_type": "chords",
+                            "content_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                            "quality_score": 101,
+                            "quality_band": "poor",
+                            "score_version": "v1",
+                            "score_reasons": [],
+                            "scored_at": "2026-05-23T19:00:00+01:00",
+                        },
+                    }
+                },
+            }
+            target_path.write_text(json.dumps(payload), encoding="utf-8")
+
+            state, errors = load_content_scores(target_path)
+
+            self.assertEqual(state["entries"]["The Campfire Trio - Trail Song"]["lyrics"], valid_score)
+            self.assertNotIn("chords", state["entries"]["The Campfire Trio - Trail Song"])
+            self.assertEqual(len(errors), 1)
+            self.assertEqual(
+                errors[0]["field"],
+                "entries['The Campfire Trio - Trail Song'].chords.quality_score",
+            )
+            self.assertIn("0-100", errors[0]["reason"])
+
+    def test_save_content_scores_creates_parent_directories_automatically(self):
+        lyric_score = self._build_content_score(
+            "The Campfire Trio",
+            "Trail Song",
+            "lyrics",
+            "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            82,
+            score_reasons=["missing_structure_signal"],
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            target_path = Path(tmp_dir) / "data" / "review" / "nested" / "content_scores.json"
+
+            save_content_scores(target_path, [lyric_score])
+
+            self.assertTrue(target_path.exists())
+            self.assertTrue(target_path.parent.exists())
+            self.assertTrue(target_path.parent.parent.exists())
 
     def test_save_and_load_review_decisions_round_trip(self):
         lyric_decision = self._build_review_decision(

@@ -14,14 +14,23 @@ from app.content_models import (
     validate_quality,
     validate_severity,
 )
+from app.content_scoring import (
+    SCORE_VERSION_V1,
+    build_content_score,
+    validate_quality_band,
+    validate_quality_score,
+    validate_score_version,
+)
 
 
 logger = logging.getLogger(__name__)
 
 QUALITY_STATUS_VERSION = 1
 REVIEW_DECISION_VERSION = 1
+CONTENT_SCORES_VERSION = 1
 DEFAULT_QUALITY_STATUS_PATH = Path("data/review/quality_status.json")
 DEFAULT_REVIEW_DECISIONS_PATH = Path("data/review/review_decisions.json")
+DEFAULT_CONTENT_SCORES_PATH = Path("data/review/content_scores.json")
 
 
 def _empty_quality_status_state(updated_at=None):
@@ -35,6 +44,14 @@ def _empty_quality_status_state(updated_at=None):
 def _empty_review_decisions_state(updated_at=None):
     return {
         "version": REVIEW_DECISION_VERSION,
+        "updated_at": updated_at,
+        "entries": {},
+    }
+
+
+def _empty_content_scores_state(updated_at=None):
+    return {
+        "version": CONTENT_SCORES_VERSION,
         "updated_at": updated_at,
         "entries": {},
     }
@@ -499,6 +516,240 @@ def _validate_review_decision_record(
     return validated_decision
 
 
+def _validate_content_score_record(file_path, outer_song_key, content_type_key, record, errors):
+    record_field_base = "entries['{}'].{}".format(outer_song_key, content_type_key)
+
+    if not isinstance(record, dict):
+        errors.append(
+            _validation_error(
+                file_path,
+                record_field_base,
+                "content score entries must be dictionaries; got {!r}".format(record),
+            )
+        )
+        return None
+
+    artist = _validate_required_text(
+        file_path,
+        "{}.artist".format(record_field_base),
+        record.get("artist"),
+        errors,
+    )
+    title = _validate_required_text(
+        file_path,
+        "{}.title".format(record_field_base),
+        record.get("title"),
+        errors,
+    )
+    song_key = _validate_required_text(
+        file_path,
+        "{}.song_key".format(record_field_base),
+        record.get("song_key"),
+        errors,
+    )
+
+    record_content_type = record.get("content_type")
+    if record_content_type is None:
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.content_type".format(record_field_base),
+                "content_type must be a non-empty string; got None",
+            )
+        )
+        validated_content_type = None
+    else:
+        try:
+            validated_content_type = validate_content_type(record_content_type)
+        except ValueError as exc:
+            errors.append(
+                _validation_error(
+                    file_path,
+                    "{}.content_type".format(record_field_base),
+                    str(exc),
+                )
+            )
+            validated_content_type = None
+
+    if validated_content_type is not None and validated_content_type != content_type_key:
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.content_type".format(record_field_base),
+                "content_type must match enclosing entry key {!r}; got {!r}".format(
+                    content_type_key,
+                    validated_content_type,
+                ),
+            )
+        )
+        validated_content_type = None
+
+    content_hash = record.get("content_hash")
+    if content_hash is None:
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.content_hash".format(record_field_base),
+                "content_hash must be a non-empty string; got None",
+            )
+        )
+        validated_content_hash = None
+    else:
+        try:
+            validated_content_hash = validate_content_hash(content_hash)
+        except ValueError as exc:
+            errors.append(
+                _validation_error(
+                    file_path,
+                    "{}.content_hash".format(record_field_base),
+                    str(exc),
+                )
+            )
+            validated_content_hash = None
+
+    quality_score = record.get("quality_score")
+    try:
+        validated_quality_score = validate_quality_score(quality_score)
+    except ValueError as exc:
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.quality_score".format(record_field_base),
+                str(exc),
+            )
+        )
+        validated_quality_score = None
+
+    quality_band = record.get("quality_band")
+    try:
+        validated_quality_band = validate_quality_band(quality_band)
+    except ValueError as exc:
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.quality_band".format(record_field_base),
+                str(exc),
+            )
+        )
+        validated_quality_band = None
+
+    score_version = record.get("score_version")
+    try:
+        validated_score_version = validate_score_version(score_version)
+    except ValueError as exc:
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.score_version".format(record_field_base),
+                str(exc),
+            )
+        )
+        validated_score_version = None
+
+    score_reasons = record.get("score_reasons")
+    validated_score_reasons = []
+    if score_reasons is None:
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.score_reasons".format(record_field_base),
+                "score_reasons must be a list; got None",
+            )
+        )
+    elif not isinstance(score_reasons, list):
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.score_reasons".format(record_field_base),
+                "score_reasons must be a list; got {!r}".format(score_reasons),
+            )
+        )
+    else:
+        for index, reason in enumerate(score_reasons):
+            if not isinstance(reason, str) or reason == "":
+                errors.append(
+                    _validation_error(
+                        file_path,
+                        "{}.score_reasons[{}]".format(record_field_base, index),
+                        "score_reasons[{}] must be a non-empty string; got {!r}".format(
+                            index,
+                            reason,
+                        ),
+                    )
+                )
+                continue
+            validated_score_reasons.append(reason)
+
+    scored_at = _validate_optional_text(
+        file_path,
+        "{}.scored_at".format(record_field_base),
+        record.get("scored_at"),
+        errors,
+    )
+
+    if (
+        artist is None
+        or title is None
+        or song_key is None
+        or validated_content_type is None
+        or validated_content_hash is None
+        or validated_quality_score is None
+        or validated_quality_band is None
+        or validated_score_version is None
+        or scored_at is None
+    ):
+        return None
+
+    derived_song_key = derive_song_key(artist, title)
+    if song_key != derived_song_key:
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.song_key".format(record_field_base),
+                "song_key must match derived song identity {}; got {!r}".format(
+                    derived_song_key,
+                    song_key,
+                ),
+            )
+        )
+        return None
+
+    if outer_song_key != derived_song_key:
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.song_key".format(record_field_base),
+                "entry key must match derived song identity {}; got {!r}".format(
+                    derived_song_key,
+                    outer_song_key,
+                ),
+            )
+        )
+        return None
+
+    try:
+        return build_content_score(
+            artist,
+            title,
+            validated_content_type,
+            validated_content_hash,
+            validated_quality_score,
+            quality_band=validated_quality_band,
+            score_version=validated_score_version,
+            score_reasons=validated_score_reasons,
+            scored_at=scored_at,
+        )
+    except ValueError as exc:
+        errors.append(
+            _validation_error(
+                file_path,
+                record_field_base,
+                str(exc),
+            )
+        )
+        return None
+
+
 def load_quality_status(file_path=DEFAULT_QUALITY_STATUS_PATH):
     file_path = Path(file_path)
     document, errors = _load_json_document(file_path)
@@ -724,6 +975,115 @@ def load_review_decisions(file_path=DEFAULT_REVIEW_DECISIONS_PATH, current_conte
     return state, errors + state_errors
 
 
+def load_content_scores(file_path=DEFAULT_CONTENT_SCORES_PATH):
+    file_path = Path(file_path)
+    document, errors = _load_json_document(file_path)
+
+    if document is None:
+        if not file_path.exists():
+            return _empty_content_scores_state(), []
+        return _empty_content_scores_state(), errors
+
+    if not isinstance(document, dict):
+        return _empty_content_scores_state(), [
+            _validation_error(
+                file_path,
+                "$",
+                "content scores file must contain a top-level object; got {!r}".format(document),
+            )
+        ]
+
+    state_errors = []
+    version = document.get("version", CONTENT_SCORES_VERSION)
+    if version != CONTENT_SCORES_VERSION:
+        state_errors.append(
+            _validation_error(
+                file_path,
+                "version",
+                "version must be {}; got {!r}".format(CONTENT_SCORES_VERSION, version),
+            )
+        )
+        version = CONTENT_SCORES_VERSION
+
+    updated_at = document.get("updated_at")
+    if updated_at is not None and not isinstance(updated_at, str):
+        state_errors.append(
+            _validation_error(
+                file_path,
+                "updated_at",
+                "updated_at must be a string or null; got {!r}".format(updated_at),
+            )
+        )
+        updated_at = None
+
+    entries = document.get("entries")
+    if entries is None:
+        return _empty_content_scores_state(updated_at=updated_at), errors + state_errors + [
+            _validation_error(
+                file_path,
+                "entries",
+                "entries is required and must be an object keyed by song_key; got None",
+            )
+        ]
+
+    if not isinstance(entries, dict):
+        return _empty_content_scores_state(updated_at=updated_at), errors + state_errors + [
+            _validation_error(
+                file_path,
+                "entries",
+                "entries must be an object keyed by song_key; got {!r}".format(entries),
+            )
+        ]
+
+    validated_entries = {}
+    for outer_song_key, content_type_map in entries.items():
+        if not isinstance(content_type_map, dict):
+            state_errors.append(
+                _validation_error(
+                    file_path,
+                    "entries['{}']".format(outer_song_key),
+                    "song entries must be dictionaries keyed by content_type; got {!r}".format(
+                        content_type_map
+                    ),
+                )
+            )
+            continue
+
+        validated_song_entries = {}
+        for content_type_key, record in content_type_map.items():
+            try:
+                validate_content_type(content_type_key)
+            except ValueError as exc:
+                state_errors.append(
+                    _validation_error(
+                        file_path,
+                        "entries['{}'].{}".format(outer_song_key, content_type_key),
+                        str(exc),
+                    )
+                )
+                continue
+
+            validated_record = _validate_content_score_record(
+                file_path,
+                outer_song_key,
+                content_type_key,
+                record,
+                state_errors,
+            )
+            if validated_record is not None:
+                validated_song_entries[content_type_key] = validated_record
+
+        if validated_song_entries:
+            validated_entries[outer_song_key] = validated_song_entries
+
+    state = {
+        "version": version,
+        "updated_at": updated_at,
+        "entries": validated_entries,
+    }
+    return state, errors + state_errors
+
+
 def build_quality_status_state(quality_status_records, updated_at=None):
     entries = {}
     for quality_status in quality_status_records:
@@ -794,4 +1154,43 @@ def save_review_decisions(file_path, review_decision_records, updated_at=None):
         handle.write("\n")
 
     logger.info("Saved review decisions to %s", file_path)
+    return state
+
+
+def build_content_scores_state(content_score_records, updated_at=None):
+    entries = {}
+    for content_score in content_score_records:
+        if not isinstance(content_score, dict):
+            raise ValueError("content score records must be dictionaries; got {!r}".format(content_score))
+
+        record = build_content_score(
+            content_score.get("artist"),
+            content_score.get("title"),
+            content_score.get("content_type"),
+            content_score.get("content_hash"),
+            content_score.get("quality_score"),
+            quality_band=content_score.get("quality_band"),
+            score_version=content_score.get("score_version", SCORE_VERSION_V1),
+            score_reasons=content_score.get("score_reasons"),
+            scored_at=content_score.get("scored_at"),
+        )
+        entries.setdefault(record["song_key"], {})[record["content_type"]] = record
+
+    return {
+        "version": CONTENT_SCORES_VERSION,
+        "updated_at": updated_at if updated_at is not None else _now_iso(),
+        "entries": entries,
+    }
+
+
+def save_content_scores(file_path, content_score_records, updated_at=None):
+    file_path = Path(file_path)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    state = build_content_scores_state(content_score_records, updated_at=updated_at)
+    with file_path.open("w", encoding="utf-8") as handle:
+        json.dump(state, handle, ensure_ascii=False, indent=2, sort_keys=True)
+        handle.write("\n")
+
+    logger.info("Saved content scores to %s", file_path)
     return state
