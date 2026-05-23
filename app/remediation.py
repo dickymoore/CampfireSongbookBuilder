@@ -3,7 +3,15 @@ import tempfile
 from pathlib import Path
 
 from app.content_models import derive_song_key, validate_content_type
-from app.content_scoring import validate_quality_score
+from app.content_scoring import compose_content_score, validate_quality_score
+from app.document_verification import (
+    DEFAULT_DOCUMENT_QUALITY_PATH,
+    evaluate_document_artifact,
+    load_document_verification,
+    save_document_verification,
+)
+from app.generation_filtering import evaluate_cached_content
+from app.quality_assessment import assess_candidate_quality
 from app.remediation_state import (
     DEFAULT_BACKUPS_DIR,
     DEFAULT_REMEDIATED_CONTENT_PATH,
@@ -14,9 +22,21 @@ from app.remediation_state import (
     record_remediation_audit,
     save_remediated_content,
 )
+from app.review_gate import compute_review_gate_decisions
+from app.review_state import (
+    DEFAULT_CONTENT_SCORES_PATH,
+    DEFAULT_QUALITY_STATUS_PATH,
+    DEFAULT_REVIEW_DECISIONS_PATH,
+    load_content_scores,
+    load_quality_status,
+    load_review_decisions,
+    save_content_scores,
+    save_quality_status,
+)
 
 
 DEFAULT_REMEDIATION_THRESHOLD = 40
+DEFAULT_REMEDIATION_RESOLUTION_THRESHOLD = 60
 ALLOWED_REMEDIATION_OPERATIONS = (
     "whitespace normalization",
     "section restructuring without semantic rewrite",
@@ -217,6 +237,241 @@ def _merge_remediated_record(existing_state, remediated_record):
     return records
 
 
+def _flatten_state_records(state):
+    records = []
+    for entry_group in state.get("entries", {}).values():
+        if not isinstance(entry_group, dict):
+            continue
+        for record in entry_group.values():
+            if isinstance(record, dict):
+                records.append(record)
+    return records
+
+
+def _merge_record(existing_state, record, key_fields):
+    records = []
+    record_key = tuple(record.get(field) for field in key_fields)
+
+    for existing_record in _flatten_state_records(existing_state):
+        existing_key = tuple(existing_record.get(field) for field in key_fields)
+        if existing_key == record_key:
+            continue
+        records.append(existing_record)
+
+    records.append(record)
+    return records
+
+
+def _merge_document_verification_record(existing_state, record):
+    records = []
+    artifact_path = record.get("artifact_path")
+
+    for existing_record in _flatten_state_records(existing_state):
+        if existing_record.get("artifact_path") == artifact_path:
+            continue
+        records.append(existing_record)
+
+    records.append(record)
+    return records
+
+
+def _document_verification_summary(records):
+    summary = []
+    for record in records:
+        summary.append(
+            {
+                "artifact_path": record.get("artifact_path"),
+                "artifact_type": record.get("artifact_type"),
+                "verification_status": record.get("verification_status"),
+                "verification_reasons": list(record.get("verification_reasons", [])),
+            }
+        )
+    return summary
+
+
+def reevaluate_remediated_content(
+    artist,
+    title,
+    content_type,
+    remediated_content,
+    backup_reference,
+    previous_content_score=None,
+    resolution_threshold=DEFAULT_REMEDIATION_RESOLUTION_THRESHOLD,
+    remediated_content_path=DEFAULT_REMEDIATED_CONTENT_PATH,
+    quality_status_path=DEFAULT_QUALITY_STATUS_PATH,
+    content_scores_path=DEFAULT_CONTENT_SCORES_PATH,
+    review_decisions_path=DEFAULT_REVIEW_DECISIONS_PATH,
+    document_quality_path=DEFAULT_DOCUMENT_QUALITY_PATH,
+    artifact_paths=None,
+    audit_path=DEFAULT_REMEDIATION_AUDIT_PATH,
+):
+    artist_value = _require_text("artist", artist)
+    title_value = _require_text("title", title)
+    content_type_value = validate_content_type(content_type)
+    remediated_content_value = _require_text("content", remediated_content)
+
+    song_key = derive_song_key(artist_value, title_value)
+    quality_assessment = assess_candidate_quality(
+        {
+            "artist": artist_value,
+            "title": title_value,
+            "content_type": content_type_value,
+            "content": remediated_content_value,
+        }
+    )
+    quality_status_record = {
+        "artist": artist_value,
+        "title": title_value,
+        "song_key": song_key,
+        "content_type": content_type_value,
+        "content_hash": previous_content_score.get("content_hash")
+        if isinstance(previous_content_score, dict)
+        else None,
+        "quality": quality_assessment["quality"],
+        "signals": quality_assessment["signals"],
+    }
+    quality_status_record["content_hash"] = evaluate_cached_content(
+        artist_value,
+        title_value,
+        content_type_value,
+        remediated_content_value,
+    )["content_hash"]
+    quality_status_state, _ = load_quality_status(quality_status_path)
+    saved_quality_state = save_quality_status(
+        quality_status_path,
+        _merge_record(
+            quality_status_state,
+            quality_status_record,
+            ("song_key", "content_type"),
+        ),
+    )
+
+    rescored_quality_status = saved_quality_state["entries"][
+        song_key
+    ][content_type_value]
+    content_score_record = compose_content_score(rescored_quality_status)
+    content_scores_state, _ = load_content_scores(content_scores_path)
+    saved_content_scores_state = save_content_scores(
+        content_scores_path,
+        _merge_record(
+            content_scores_state,
+            content_score_record,
+            ("song_key", "content_type"),
+        ),
+    )
+
+    review_decisions_state, _ = load_review_decisions(review_decisions_path)
+    current_review_decision = (
+        review_decisions_state.get("entries", {})
+        .get(song_key, {})
+        .get(content_type_value)
+    )
+    current_review_result = evaluate_cached_content(
+        artist_value,
+        title_value,
+        content_type_value,
+        remediated_content_value,
+        quality_status_record=rescored_quality_status,
+        review_decision_record=current_review_decision,
+    )
+
+    refreshed_verification_records = []
+    if artifact_paths:
+        document_verification_state, _ = load_document_verification(document_quality_path)
+        merged_records = _flatten_state_records(document_verification_state)
+
+        for artifact_path in artifact_paths:
+            path = Path(artifact_path)
+            if not path.exists():
+                continue
+            refreshed_record = evaluate_document_artifact(path)
+            refreshed_verification_records.append(refreshed_record)
+            merged_records = _merge_document_verification_record(
+                {"entries": {str(index): {"record": record} for index, record in enumerate(merged_records)}},
+                refreshed_record,
+            )
+
+        if refreshed_verification_records:
+            save_document_verification(document_quality_path, merged_records)
+
+    review_gate_decisions = compute_review_gate_decisions(refreshed_verification_records)
+
+    previous_quality_score = None
+    previous_content_hash = None
+    if isinstance(previous_content_score, dict):
+        previous_quality_score = previous_content_score.get("quality_score")
+        previous_content_hash = previous_content_score.get("content_hash")
+
+    current_quality_score = content_score_record["quality_score"]
+    score_improved = (
+        isinstance(previous_quality_score, int) and current_quality_score > previous_quality_score
+    )
+    verification_passed = all(
+        record.get("verification_status") == "passed"
+        for record in refreshed_verification_records
+    )
+    if not refreshed_verification_records:
+        verification_passed = True
+
+    evaluation_outcome = (
+        "resolved"
+        if current_quality_score >= resolution_threshold and verification_passed
+        else "unresolved"
+    )
+    unresolved_reasons = []
+    if current_quality_score < resolution_threshold:
+        unresolved_reasons.append("still_below_threshold")
+    if not verification_passed:
+        unresolved_reasons.append("verification_failed")
+
+    post_change_reference = _post_change_reference(
+        remediated_content_path,
+        song_key,
+        content_type_value,
+    )
+    details = {
+        "resolution_threshold": resolution_threshold,
+        "before_content_hash": previous_content_hash,
+        "after_content_hash": content_score_record["content_hash"],
+        "before_quality_score": previous_quality_score,
+        "after_quality_score": current_quality_score,
+        "score_improved": score_improved,
+        "review_result": {
+            "quality": current_review_result.get("quality"),
+            "included": current_review_result.get("included"),
+            "decision_source": current_review_result.get("decision_source"),
+            "reason": current_review_result.get("reason"),
+        },
+        "document_verification": _document_verification_summary(refreshed_verification_records),
+        "review_gate_decisions": review_gate_decisions,
+        "unresolved_reasons": unresolved_reasons,
+    }
+    record_remediation_audit(
+        artist_value,
+        title_value,
+        content_type_value,
+        backup_reference,
+        "post_remediation_re_evaluation",
+        evaluation_outcome,
+        post_change_reference=post_change_reference,
+        file_path=audit_path,
+        details=details,
+    )
+
+    return {
+        "status": evaluation_outcome,
+        "quality_status": rescored_quality_status,
+        "content_score": content_score_record,
+        "score_improved": score_improved,
+        "unresolved_reasons": unresolved_reasons,
+        "review_result": current_review_result,
+        "document_verification": refreshed_verification_records,
+        "review_gate_decisions": review_gate_decisions,
+        "saved_quality_state": saved_quality_state,
+        "saved_content_scores_state": saved_content_scores_state,
+    }
+
+
 def run_bounded_remediation(
     artist,
     title,
@@ -224,10 +479,16 @@ def run_bounded_remediation(
     content,
     content_score,
     threshold=DEFAULT_REMEDIATION_THRESHOLD,
+    resolution_threshold=DEFAULT_REMEDIATION_RESOLUTION_THRESHOLD,
     workspace_root=".",
     remediated_content_path=DEFAULT_REMEDIATED_CONTENT_PATH,
     backups_dir=DEFAULT_BACKUPS_DIR,
     audit_path=DEFAULT_REMEDIATION_AUDIT_PATH,
+    quality_status_path=DEFAULT_QUALITY_STATUS_PATH,
+    content_scores_path=DEFAULT_CONTENT_SCORES_PATH,
+    review_decisions_path=DEFAULT_REVIEW_DECISIONS_PATH,
+    document_quality_path=DEFAULT_DOCUMENT_QUALITY_PATH,
+    artifact_paths=None,
     runner=subprocess.run,
 ):
     artist_value = _require_text("artist", artist)
@@ -395,11 +656,26 @@ def run_bounded_remediation(
         post_change_reference=post_change_reference,
         file_path=audit_path,
     )
+    post_remediation_evaluation = reevaluate_remediated_content(
+        artist_value,
+        title_value,
+        content_type_value,
+        remediated_content,
+        backup_reference,
+        previous_content_score=content_score,
+        resolution_threshold=resolution_threshold,
+        quality_status_path=quality_status_path,
+        content_scores_path=content_scores_path,
+        review_decisions_path=review_decisions_path,
+        document_quality_path=document_quality_path,
+        artifact_paths=artifact_paths,
+        audit_path=audit_path,
+    )
 
     return {
         "status": "success",
         "allowed": True,
-        "manual_review_required": False,
+        "manual_review_required": post_remediation_evaluation["status"] != "resolved",
         "reason_code": evaluation["reason_code"],
         "reason": evaluation["reason"],
         "signal_codes": evaluation["signal_codes"],
@@ -408,6 +684,7 @@ def run_bounded_remediation(
         "post_change_reference": post_change_reference,
         "remediated_content": remediated_content,
         "saved_state": saved_state,
+        "post_remediation_evaluation": post_remediation_evaluation,
         "command": command,
         "prompt": prompt,
     }

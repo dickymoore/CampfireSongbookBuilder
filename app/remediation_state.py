@@ -14,7 +14,15 @@ from app.content_models import (
 logger = logging.getLogger(__name__)
 
 REMEDIATED_CONTENT_VERSION = 1
-REMEDIATION_OUTCOMES = ("allowed", "attempted", "refused", "success", "failed")
+REMEDIATION_OUTCOMES = (
+    "allowed",
+    "attempted",
+    "refused",
+    "success",
+    "failed",
+    "resolved",
+    "unresolved",
+)
 DEFAULT_REMEDIATED_CONTENT_PATH = Path("data/review/remediated_content.json")
 DEFAULT_BACKUPS_DIR = Path("data/review/backups")
 DEFAULT_REMEDIATION_AUDIT_PATH = Path("data/review/audit/remediation_attempts.jsonl")
@@ -122,6 +130,7 @@ def build_remediation_audit_record(
     outcome,
     post_change_reference=None,
     timestamp=None,
+    details=None,
 ):
     artist_value = _require_text("artist", artist)
     title_value = _require_text("title", title)
@@ -136,8 +145,14 @@ def build_remediation_audit_record(
         post_change_reference_value = _require_text("post_change_reference", post_change_reference)
 
     timestamp_value = _require_text("timestamp", timestamp if timestamp is not None else _now_iso())
+    if details is None:
+        details_value = None
+    else:
+        if not isinstance(details, dict):
+            raise ValueError("details must be a dictionary; got {!r}".format(details))
+        details_value = details
 
-    return {
+    record = {
         "artist": artist_value,
         "title": title_value,
         "song_key": derive_song_key(artist_value, title_value),
@@ -148,6 +163,9 @@ def build_remediation_audit_record(
         "outcome": outcome_value,
         "timestamp": timestamp_value,
     }
+    if details_value is not None:
+        record["details"] = details_value
+    return record
 
 
 def create_backup_record(
@@ -408,6 +426,7 @@ def record_remediation_audit(
     post_change_reference=None,
     timestamp=None,
     file_path=DEFAULT_REMEDIATION_AUDIT_PATH,
+    details=None,
 ):
     audit_record = build_remediation_audit_record(
         artist,
@@ -418,6 +437,7 @@ def record_remediation_audit(
         outcome,
         post_change_reference=post_change_reference,
         timestamp=timestamp,
+        details=details,
     )
     return append_remediation_audit_record(file_path, audit_record)
 
