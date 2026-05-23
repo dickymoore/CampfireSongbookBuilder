@@ -482,6 +482,106 @@ class TestReporting(unittest.TestCase):
             report["manual_review_gate"]["blocked_artifacts"][0]["blocked_from_manual_review"]
         )
 
+    def test_build_traceable_quality_report_includes_worst_first_priority_view(self):
+        content_scores = [
+            {
+                "artist": "The Campfire Trio",
+                "title": "Trail Song",
+                "song_key": "The Campfire Trio - Trail Song",
+                "content_type": "lyrics",
+                "content_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "quality_score": 25,
+                "quality_band": "poor",
+                "score_version": "v1",
+                "score_reasons": ["signal:missing_lyrics"],
+                "scored_at": "2026-05-23T19:02:00+01:00",
+            },
+            {
+                "artist": "The Campfire Trio",
+                "title": "Trail Song",
+                "song_key": "The Campfire Trio - Trail Song",
+                "content_type": "chords",
+                "content_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "quality_score": 62,
+                "quality_band": "reviewable",
+                "score_version": "v1",
+                "score_reasons": ["quality:questionable"],
+                "scored_at": "2026-05-23T19:02:00+01:00",
+            },
+            {
+                "artist": "The Campfire Trio",
+                "title": "Firelight Waltz",
+                "song_key": "The Campfire Trio - Firelight Waltz",
+                "content_type": "lyrics",
+                "content_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "quality_score": 90,
+                "quality_band": "clean",
+                "score_version": "v1",
+                "score_reasons": [],
+                "scored_at": "2026-05-23T19:02:00+01:00",
+            },
+        ]
+
+        report = build_traceable_quality_report(
+            [],
+            source="generate_from_cache",
+            generated_at="2026-05-23T19:02:00+01:00",
+            content_scores=content_scores,
+        )
+
+        self.assertEqual(report["summary"]["priority_item_count"], 2)
+        self.assertEqual(report["summary"]["counts"]["priority_item"], 2)
+        self.assertEqual(
+            [(item["song_key"], item["content_type"]) for item in report["priority_report"]["items"]],
+            [
+                ("The Campfire Trio - Trail Song", "lyrics"),
+                ("The Campfire Trio - Trail Song", "chords"),
+            ],
+        )
+        self.assertEqual(
+            [item["priority_rank"] for item in report["priority_report"]["items"]],
+            [1, 2],
+        )
+
+    def test_build_traceable_quality_report_can_include_clean_priority_items_when_requested(self):
+        content_scores = [
+            {
+                "artist": "The Campfire Trio",
+                "title": "Trail Song",
+                "song_key": "The Campfire Trio - Trail Song",
+                "content_type": "lyrics",
+                "content_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                "quality_score": 70,
+                "quality_band": "reviewable",
+                "score_version": "v1",
+                "score_reasons": ["quality:questionable"],
+                "scored_at": "2026-05-23T19:02:00+01:00",
+            },
+            {
+                "artist": "The Campfire Trio",
+                "title": "Firelight Waltz",
+                "song_key": "The Campfire Trio - Firelight Waltz",
+                "content_type": "lyrics",
+                "content_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                "quality_score": 90,
+                "quality_band": "clean",
+                "score_version": "v1",
+                "score_reasons": [],
+                "scored_at": "2026-05-23T19:02:00+01:00",
+            },
+        ]
+
+        report = build_traceable_quality_report(
+            [],
+            source="generate_from_cache",
+            generated_at="2026-05-23T19:02:00+01:00",
+            content_scores=content_scores,
+            include_clean_priority=True,
+        )
+
+        self.assertEqual(report["priority_report"]["count"], 2)
+        self.assertEqual(report["priority_report"]["items"][1]["quality_band"], "clean")
+
     def test_write_traceable_quality_report_redacts_sensitive_values(self):
         report = {
             "generated_at": "2026-05-19T15:14:19+01:00",

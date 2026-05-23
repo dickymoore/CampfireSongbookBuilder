@@ -10,6 +10,12 @@ from app.content_models import (
 
 QUALITY_BANDS = ("clean", "reviewable", "questionable", "poor")
 SCORE_VERSION_V1 = "v1"
+_QUALITY_BAND_PRIORITY = {
+    "poor": 0,
+    "questionable": 1,
+    "reviewable": 2,
+    "clean": 3,
+}
 
 _CLEAN_MINIMUM = 85
 _REVIEWABLE_MINIMUM = 60
@@ -183,6 +189,41 @@ def compose_content_scores(quality_status_records, scored_at=None):
         compose_content_score(record, scored_at=scored_at)
         for record in quality_status_records or []
     ]
+
+
+def prioritize_content_scores(content_scores, include_clean=False):
+    prioritized = []
+    for record in content_scores or []:
+        score = build_content_score(
+            record.get("artist"),
+            record.get("title"),
+            record.get("content_type"),
+            record.get("content_hash"),
+            record.get("quality_score"),
+            quality_band=record.get("quality_band"),
+            score_version=record.get("score_version", SCORE_VERSION_V1),
+            score_reasons=record.get("score_reasons"),
+            scored_at=record.get("scored_at"),
+        )
+        if not include_clean and score["quality_band"] == "clean":
+            continue
+        prioritized.append(score)
+
+    prioritized.sort(
+        key=lambda record: (
+            _QUALITY_BAND_PRIORITY[record["quality_band"]],
+            record["quality_score"],
+            record["song_key"],
+            record["content_type"],
+        )
+    )
+
+    ranked = []
+    for index, record in enumerate(prioritized, start=1):
+        ranked_record = dict(record)
+        ranked_record["priority_rank"] = index
+        ranked.append(ranked_record)
+    return ranked
 
 
 def build_content_score(

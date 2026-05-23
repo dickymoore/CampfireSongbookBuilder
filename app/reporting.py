@@ -6,6 +6,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from app.content_scoring import prioritize_content_scores
+
 
 logger = logging.getLogger(__name__)
 
@@ -211,6 +213,17 @@ def _build_manual_review_gate(document_verification_rows, review_gate_rows):
     }
 
 
+def _build_priority_report(content_scores, include_clean=False):
+    prioritized_scores = prioritize_content_scores(
+        content_scores,
+        include_clean=include_clean,
+    )
+    return {
+        "count": len(prioritized_scores),
+        "items": prioritized_scores,
+    }
+
+
 def build_traceable_quality_report(
     generation_results,
     source="generate_from_cache",
@@ -223,6 +236,8 @@ def build_traceable_quality_report(
     pdf_errors=None,
     document_verification=None,
     review_gate_decisions=None,
+    content_scores=None,
+    include_clean_priority=False,
 ):
     generated_at_value = generated_at or _now_iso()
     source_attempts_by_song = _group_source_attempts(source_attempts)
@@ -260,9 +275,18 @@ def build_traceable_quality_report(
         for record in review_gate_decisions or []
         if isinstance(record, dict)
     ]
+    content_score_rows = [
+        copy.deepcopy(record)
+        for record in content_scores or []
+        if isinstance(record, dict)
+    ]
     manual_review_gate = _build_manual_review_gate(
         document_verification_rows,
         review_gate_rows,
+    )
+    priority_report = _build_priority_report(
+        content_score_rows,
+        include_clean=include_clean_priority,
     )
     clean_songs = [
         _build_summary_entry(song)
@@ -314,6 +338,7 @@ def build_traceable_quality_report(
         ),
         "manual_review_ready_count": manual_review_gate["ready_count"],
         "manual_review_blocked_count": manual_review_gate["blocked_count"],
+        "priority_item_count": priority_report["count"],
         "counts": {
             "clean": len(clean_songs),
             "excluded_clean": len(excluded_clean_songs),
@@ -331,6 +356,7 @@ def build_traceable_quality_report(
             ),
             "manual_review_ready": manual_review_gate["ready_count"],
             "manual_review_blocked": manual_review_gate["blocked_count"],
+            "priority_item": priority_report["count"],
         },
         "clean_songs": clean_songs,
         "excluded_clean_songs": excluded_clean_songs,
@@ -343,6 +369,7 @@ def build_traceable_quality_report(
         "document_verification": document_verification_rows,
         "review_gate_decisions": review_gate_rows,
         "manual_review_gate": manual_review_gate,
+        "priority_report": priority_report,
     }
 
     report = {
@@ -357,6 +384,8 @@ def build_traceable_quality_report(
         "document_verification": document_verification_rows,
         "review_gate_decisions": review_gate_rows,
         "manual_review_gate": manual_review_gate,
+        "content_scores": content_score_rows,
+        "priority_report": priority_report,
     }
 
     return _sanitize_value(report)

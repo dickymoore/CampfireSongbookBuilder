@@ -5,6 +5,7 @@ from app.content_scoring import (
     build_content_score,
     compose_content_score,
     compose_content_scores,
+    prioritize_content_scores,
     quality_band_for_score,
 )
 from app.content_models import build_quality_status, build_quality_signal
@@ -213,6 +214,76 @@ class TestContentScoring(unittest.TestCase):
         )
 
         self.assertEqual(first, second)
+
+    def test_prioritize_content_scores_orders_worst_first_and_keeps_content_types_distinct(self):
+        scores = [
+            build_content_score(
+                "The Campfire Trio",
+                "Trail Song",
+                "lyrics",
+                "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                25,
+                score_reasons=["signal:missing_lyrics"],
+                scored_at="2026-05-23T19:01:00+01:00",
+            ),
+            build_content_score(
+                "The Campfire Trio",
+                "Trail Song",
+                "chords",
+                "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                62,
+                score_reasons=["quality:questionable"],
+                scored_at="2026-05-23T19:01:00+01:00",
+            ),
+            build_content_score(
+                "The Campfire Trio",
+                "Firelight Waltz",
+                "lyrics",
+                "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                90,
+                score_reasons=[],
+                scored_at="2026-05-23T19:01:00+01:00",
+            ),
+        ]
+
+        prioritized = prioritize_content_scores(scores)
+
+        self.assertEqual(
+            [(record["song_key"], record["content_type"]) for record in prioritized],
+            [
+                ("The Campfire Trio - Trail Song", "lyrics"),
+                ("The Campfire Trio - Trail Song", "chords"),
+            ],
+        )
+        self.assertEqual([record["priority_rank"] for record in prioritized], [1, 2])
+
+    def test_prioritize_content_scores_can_include_clean_items_when_requested(self):
+        scores = [
+            build_content_score(
+                "The Campfire Trio",
+                "Trail Song",
+                "lyrics",
+                "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                70,
+                score_reasons=["quality:questionable"],
+                scored_at="2026-05-23T19:01:00+01:00",
+            ),
+            build_content_score(
+                "The Campfire Trio",
+                "Firelight Waltz",
+                "lyrics",
+                "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                90,
+                score_reasons=[],
+                scored_at="2026-05-23T19:01:00+01:00",
+            ),
+        ]
+
+        prioritized = prioritize_content_scores(scores, include_clean=True)
+
+        self.assertEqual(len(prioritized), 2)
+        self.assertEqual(prioritized[0]["quality_band"], "reviewable")
+        self.assertEqual(prioritized[1]["quality_band"], "clean")
 
 
 if __name__ == "__main__":
