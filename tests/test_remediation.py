@@ -73,11 +73,20 @@ class TestRemediation(unittest.TestCase):
             self.assertIn("Hard constraints:", captured["prompt"])
             self.assertIn("semantic rewriting", captured["prompt"])
 
+            backup_reference = result["backup_reference"]
+            backup_path = Path(backup_reference)
+            self.assertTrue(backup_path.exists())
+            self.assertTrue(str(backup_path).startswith(str(backups_dir)))
+
             remediated_state, errors = load_remediated_content(remediated_content_path)
             self.assertEqual(errors, [])
             self.assertEqual(
                 remediated_state["entries"]["The Campfire Trio - Trail Song"]["lyrics"]["content"],
                 "Verse 1\nChorus",
+            )
+            self.assertEqual(
+                remediated_state["entries"]["The Campfire Trio - Trail Song"]["lyrics"]["backup_reference"],
+                backup_reference,
             )
             quality_state, quality_errors = load_quality_status(quality_status_path)
             self.assertEqual(quality_errors, [])
@@ -98,6 +107,8 @@ class TestRemediation(unittest.TestCase):
                 [record["outcome"] for record in audit_records],
                 ["allowed", "attempted", "success", "resolved"],
             )
+            for record in audit_records:
+                self.assertEqual(record["pre_change_reference"], backup_reference)
 
     def test_run_bounded_remediation_refuses_out_of_scope_candidate(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

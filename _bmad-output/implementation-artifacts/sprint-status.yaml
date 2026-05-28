@@ -1,5 +1,5 @@
 # generated: 2026-05-27T15:04:19+01:00
-# last_updated: 2026-05-28T11:13:50+01:00
+# last_updated: 2026-05-28T17:23:46+01:00
 # project: CampfireSongbookBuilder
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: '2026-05-27T15:04:19+01:00'
-last_updated: '2026-05-28T11:13:50+01:00'
+last_updated: '2026-05-28T17:23:46+01:00'
 project: CampfireSongbookBuilder
 project_key: NOKEY
 tracking_system: file-system
@@ -54,8 +54,9 @@ development_status:
   2-3-rank-songs-for-review-and-remediation-priority: done
   2-4-surface-reasoned-score-outputs-for-review: done
   epic-2-retrospective: optional
-  epic-3: done
-  3-1-create-backupfirst-remediation-state-and-provenance-records: backlog
+  epic-3: in-progress
+  3-1-create-backup-first-remediation-state-and-provenance-records: done
+  3-1-validate-source-list-rows-before-fetching: done
   3-2-run-bounded-agentic-cleanup-through-codex-exec: done
   3-3-rescore-and-reverify-after-agentic-cleanup: backlog
   3-4-enforce-retry-limits-and-escalation-boundaries: done

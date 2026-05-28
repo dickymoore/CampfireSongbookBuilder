@@ -37,6 +37,35 @@ class TestRemediationState(unittest.TestCase):
             self.assertEqual(saved["content"], "First line\nSecond line")
             self.assertEqual(saved["content_hash"], record["content_hash"])
 
+    def test_create_backup_record_avoids_overwriting_when_called_twice(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            backups_dir = Path(tmp_dir) / "data" / "review" / "backups"
+
+            record1 = create_backup_record(
+                "The Campfire Trio",
+                "Trail Song",
+                "lyrics",
+                "First line\nSecond line",
+                backups_dir=backups_dir,
+                captured_at="2026-05-23T19:20:00+01:00",
+            )
+            record2 = create_backup_record(
+                "The Campfire Trio",
+                "Trail Song",
+                "lyrics",
+                "First line\nSecond line",
+                backups_dir=backups_dir,
+                captured_at="2026-05-23T19:20:00+01:00",
+            )
+
+            self.assertNotEqual(record1["backup_path"], record2["backup_path"])
+            backup1 = Path(record1["backup_path"])
+            backup2 = Path(record2["backup_path"])
+            self.assertTrue(backup1.exists())
+            self.assertTrue(backup2.exists())
+            self.assertEqual(json.loads(backup1.read_text(encoding="utf-8"))["content"], "First line\nSecond line")
+            self.assertEqual(json.loads(backup2.read_text(encoding="utf-8"))["content"], "First line\nSecond line")
+
     def test_save_and_load_remediated_content_round_trip(self):
         remediated_record = build_remediated_content_record(
             "The Campfire Trio",

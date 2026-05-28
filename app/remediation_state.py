@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -186,11 +187,23 @@ def create_backup_record(
     target_dir = Path(backups_dir)
     target_dir.mkdir(parents=True, exist_ok=True)
     timestamp_slug = re.sub(r"[^0-9T+-]", "", captured_at_value.replace(":", "").replace("-", ""))
-    target_path = target_dir / "{}-{}-{}.json".format(
+    content_hash = compute_content_hash(content_value)
+    hash_suffix = content_hash.split(":", 1)[1][:12] if ":" in content_hash else content_hash[:12]
+    name_seed = "{}-{}-{}-{}".format(
         _safe_path_component(song_key),
         content_type_value,
         timestamp_slug,
+        hash_suffix,
     )
+    target_path = target_dir / "{}.json".format(name_seed)
+    if target_path.exists():
+        for counter in range(1, 1000):
+            candidate = target_dir / "{}-{}.json".format(name_seed, counter)
+            if not candidate.exists():
+                target_path = candidate
+                break
+        else:
+            raise FileExistsError("Unable to select a unique backup path under {}".format(target_dir))
 
     record = {
         "artist": artist_value,
@@ -198,14 +211,16 @@ def create_backup_record(
         "song_key": song_key,
         "content_type": content_type_value,
         "content": content_value,
-        "content_hash": compute_content_hash(content_value),
+        "content_hash": content_hash,
         "captured_at": captured_at_value,
         "backup_path": str(target_path),
     }
 
-    with target_path.open("w", encoding="utf-8") as handle:
+    tmp_path = target_path.with_name(target_path.name + ".tmp")
+    with tmp_path.open("w", encoding="utf-8") as handle:
         json.dump(record, handle, ensure_ascii=False, indent=2, sort_keys=True)
         handle.write("\n")
+    os.replace(tmp_path, target_path)
 
     logger.info("Saved remediation backup to %s", target_path)
     return record
