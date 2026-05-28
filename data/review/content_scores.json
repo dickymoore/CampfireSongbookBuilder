@@ -1,0 +1,20 @@
+{
+  "entries": {
+    "The Campfire Trio - Trail Song": {
+      "lyrics": {
+        "artist": "The Campfire Trio",
+        "content_hash": "sha256:db74c59cc7971dc73f516e5d9f08ccaa3c63ccc34f6894c5e68028abe62b9e7d",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-05-27T18:23:15+01:00",
+        "song_key": "The Campfire Trio - Trail Song",
+        "title": "Trail Song"
+      }
+    }
+  },
+  "updated_at": "2026-05-27T18:23:15+01:00",
+  "version": 1
+}

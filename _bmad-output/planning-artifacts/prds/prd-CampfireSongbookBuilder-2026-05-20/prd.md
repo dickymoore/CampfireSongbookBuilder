@@ -2,7 +2,7 @@
 title: CampfireSongbookBuilder Output Quality and Agentic Remediation
 status: approved-for-planning
 created: 2026-05-20
-updated: 2026-05-21
+updated: 2026-05-25
 ---
 
 # PRD: CampfireSongbookBuilder Output Quality and Agentic Remediation
@@ -40,7 +40,7 @@ Dicky, acting as an internal operator and reviewer of the songbook-generation wo
 
 ### 2.4 Key User Journeys
 
-- **UJ-1. Dicky generates a compact, readable draft book.** Dicky runs the builder. The system produces Markdown and `.docx` artifacts, evaluates layout quality, and reports whether the document is neat enough for manual inspection. He opens an output that is already readable and not padded with unnecessary whitespace.
+- **UJ-1. Dicky generates a compact, readable draft book.** Dicky runs the builder. The system produces Markdown, `.docx`, and PDF artifacts, evaluates layout quality for each requested artifact type, and reports whether each output is neat enough for manual inspection. He opens an output that is already readable and not padded with unnecessary whitespace.
 
 - **UJ-2. Dicky sees which songs are weak before reading everything.** Dicky runs a cache-based generation or review pass. The system assigns quality scores to lyrics and chords for each Song, highlights the weakest items first, and gives him a ranked view of what most needs attention.
 
@@ -55,7 +55,7 @@ Dicky, acting as an internal operator and reviewer of the songbook-generation wo
 - **Cached Content** — Existing locally stored lyrics or chords/tab records in JSONL cache files.
 - **Lyrics Quality Score** — A numeric or ordinal quality score assigned to a Song’s Lyrics.
 - **Chords Quality Score** — A numeric or ordinal quality score assigned to a Song’s Chords/Tab.
-- **Document Quality Check** — An automated evaluation of generated Markdown or `.docx` output for readability and whitespace efficiency.
+- **Document Quality Check** — An automated evaluation of generated Markdown, `.docx`, or PDF output for readability, whitespace efficiency, and other deterministic print-hostile structure signals relevant to the artifact type.
 - **Neat Document** — A generated document that is readable and avoids unnecessary whitespace. `[ASSUMPTION: This slice should treat “neat” as a measurable layout property rather than a subjective styling preference.]`
 - **Agentic Test** — An automated verification step run by an agent or the system before asking Dicky to inspect generated artifacts.
 - **Remediation** — A bounded agent-driven improvement to Lyrics, Chords/Tab, or output structure intended to raise quality.
@@ -66,17 +66,17 @@ Dicky, acting as an internal operator and reviewer of the songbook-generation wo
 
 ### 4.1 Document Neatness Evaluation
 
-**Description:** The system evaluates generated songbook outputs for readability and whitespace efficiency so that manual review happens on artifacts that already meet a minimum presentation standard. Realizes UJ-1 and UJ-4.
+**Description:** The system evaluates generated songbook outputs for readability, whitespace efficiency, and artifact-specific print-hostile structure so that manual review happens on artifacts that already meet a minimum presentation standard. Realizes UJ-1 and UJ-4.
 
 **Functional Requirements:**
 
 #### FR-1: Evaluate generated documents for neatness
 
-The system can assess generated Markdown and `.docx` outputs for readability and wasted whitespace.
+The system can assess generated Markdown, `.docx`, and PDF outputs for readability, wasted whitespace, and artifact-specific print-hostile structure.
 
 **Consequences (testable):**
-- A generation run produces a document-level quality result for each requested output artifact.
-- The evaluation checks for excessive whitespace, sparse pages, visually fragmented song layout, or similar print-hostile structure. `[ASSUMPTION: Initial neatness checks can be heuristic rather than page-render-perfect.]`
+- A generation run produces a document-level quality result for each requested output artifact, including PDF when PDF generation is requested and succeeds.
+- The evaluation checks for excessive whitespace, sparse pages, visually fragmented song layout, or similar print-hostile structure, using rendered-output heuristics for PDF rather than inferring PDF quality only from Markdown or `.docx`. `[ASSUMPTION: Initial neatness checks can be heuristic rather than page-render-perfect.]`
 - The result is stored or reported in a machine-readable form that downstream tests and agents can consume.
 
 #### FR-2: Define neatness thresholds for review readiness
@@ -84,8 +84,8 @@ The system can assess generated Markdown and `.docx` outputs for readability and
 The system can decide whether a generated artifact is ready for human review.
 
 **Consequences (testable):**
-- A document that meets the configured threshold is marked review-ready.
-- A document that fails is marked not review-ready and includes reasons.
+- An artifact that meets the configured threshold is marked review-ready.
+- An artifact that fails is marked not review-ready and includes reasons.
 - The threshold logic is configurable or isolated so it can be tuned without rewriting unrelated generation logic.
 
 ### 4.2 Agentic Verification Before Manual Review
@@ -111,6 +111,16 @@ The system can persist agentic verification outcomes in an inspectable local for
 - Verification outcomes include pass/fail state, reasons, and artifact identity.
 - The results are local-file based and compatible with the current CLI workflow.
 - The format is stable enough for AI agents to use in follow-up remediation workflows.
+
+#### FR-13: Govern PDF as a first-class output artifact
+
+The system can treat PDF as a governed artifact type rather than an ungated byproduct.
+
+**Consequences (testable):**
+- A generated PDF receives its own machine-readable verification result and review-ready decision when PDF generation succeeds.
+- PDF conversion or generation failure is recorded distinctly from PDF verification failure so agents can tell whether no PDF exists or an existing PDF failed quality checks.
+- Reporting and review gating include PDF outcomes alongside Markdown and `.docx` outcomes.
+- If remediation or regeneration affects downstream artifacts, relevant PDF verification and gate outcomes are refreshed before escalation or review decisions are finalized.
 
 ### 4.3 Per-Song Quality Scoring
 
@@ -210,6 +220,7 @@ The system can determine when automated remediation stops and Dicky should be as
 - **NFR-4: Keep automated verification deterministic where practical.** The same content snapshot and thresholds should produce the same quality outcome.
 - **NFR-5: Keep tests agent-operable.** Agentic verification must be runnable without requiring Dicky to manually inspect outputs first.
 - **NFR-6: Preserve backup safety.** Direct content edits by agents must never happen without a recoverable pre-edit state.
+- **NFR-7: Distinguish generation failures from verification failures.** Artifact-governance outputs must not collapse missing-artifact generation problems into quality-check failures.
 
 ## 6. Constraints and Guardrails
 
@@ -242,6 +253,7 @@ The system can determine when automated remediation stops and Dicky should be as
 ### 8.1 In Scope
 
 - Document neatness heuristics and pass/fail review readiness checks
+- Governed PDF verification, review gating, and re-evaluation behavior
 - Machine-readable agentic verification results
 - Deterministic per-song Lyrics and Chords/Tab quality scores
 - Backup-first direct agent remediation for bounded content improvements
@@ -259,8 +271,8 @@ The system can determine when automated remediation stops and Dicky should be as
 ## 9. Success Metrics
 
 **Primary**
-- **SM-1:** Generated documents intended for review pass automated neatness checks at a materially higher rate than the current baseline. Validates FR-1, FR-2, FR-3.
-- **SM-2:** Dicky is no longer asked to inspect documents that have already failed objective layout-quality gates. Validates FR-3, FR-4.
+- **SM-1:** Generated Markdown, `.docx`, and PDF artifacts intended for review pass automated neatness checks at a materially higher rate than the current baseline. Validates FR-1, FR-2, FR-3, FR-13.
+- **SM-2:** Dicky is no longer asked to inspect governed artifacts that have already failed objective layout-quality gates. Validates FR-3, FR-4, FR-13.
 - **SM-3:** Each Song’s Lyrics and Chords/Tab receives a persisted quality score usable for prioritization and reporting. Validates FR-5, FR-6, FR-7.
 - **SM-4:** Agents can improve a meaningful subset of low-quality content directly while preserving backups and auditability. Validates FR-8, FR-9, FR-10, FR-11.
 
@@ -289,14 +301,22 @@ The system can determine when automated remediation stops and Dicky should be as
 
 - Document neatness is an artifact-level review gate.
 - The gate may use per-song-block heuristics as contributing signals, but review-ready state is decided at the artifact level rather than by independent per-song document approvals.
+- PDF neatness is evaluated from deterministic rendered-output heuristics and must not be inferred solely from the upstream Markdown or `.docx` verification result.
 
-### 10.3 Backup and Audit Locations
+### 10.3 Governed PDF Artifact Semantics
+
+- PDF is a first-class governed artifact when the run requests PDF output.
+- PDF conversion/generation failure and PDF verification failure must remain separate machine-readable outcomes.
+- Review gating and reporting must propagate PDF-specific outcomes alongside the other requested artifact types.
+- Post-remediation or regeneration flows must refresh relevant PDF gate outcomes before final escalation or review-ready decisions are recorded.
+
+### 10.4 Backup and Audit Locations
 
 - Backup artifacts live under `data/review/backups/`.
 - Remediation audit and provenance records live under `data/review/audit/`.
 - These locations remain local-file based and inspectable by both humans and agents.
 
-### 10.4 Allowed `codex exec` Remediation Operations
+### 10.5 Allowed `codex exec` Remediation Operations
 
 - The bounded `codex exec` remediation allowlist for v1 is limited to:
   - whitespace normalization
@@ -305,21 +325,22 @@ The system can determine when automated remediation stops and Dicky should be as
   - normalization or removal of repeated junk blocks
 - Semantic rewriting, musical reinterpretation, lyric invention, and content expansion are not allowed in v1.
 
-### 10.5 Automatic Retry Limit
+### 10.6 Automatic Retry Limit
 
 - The automatic remediation retry limit is `2` attempts per content item before mandatory escalation.
 
-## 10. Open Questions
+## 11. Open Questions
 
 1. Should score reporting expose only the `0-100` numeric result, or expose both the numeric value and the derived band in all reports?
-2. Which exact per-song-block heuristics should contribute to the artifact-level neatness gate in v1?
+2. Which exact per-song-block heuristics should contribute to the artifact-level neatness gate in v1 for Markdown/`.docx`, and which deterministic rendered-output heuristics should govern PDF in v1?
 3. Should remediation update the canonical cache content directly, or create a separate remediated-current-state layer first?
 4. Should audit records use one append-only stream per content type or a unified append-only stream under `data/review/audit/`?
 
-## 11. Assumptions Index
+## 12. Assumptions Index
 
 - §3 Glossary — “Neat Document” should be treated as a measurable layout property rather than a subjective styling preference.
 - §4.1 FR-1 — Initial neatness checks can be heuristic rather than page-render-perfect.
+- §4.2 FR-13 — PDF quality governance should use deterministic rendered-output heuristics rather than treat PDF as a file-existence-only byproduct.
 - §4.3 FR-5 — v1 scoring should be deterministic and rule-based, not model-scored.
 - §4.4 FR-8 — semantic rewrites and musical reinterpretation should remain out of scope for this slice unless explicitly approved later.
 - §4.5 FR-12 — v1 should enforce bounded remediation attempts per content item, with a default retry limit of 2 before escalation.

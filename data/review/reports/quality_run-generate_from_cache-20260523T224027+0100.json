@@ -1,0 +1,3330 @@
+{
+  "content_scores": [],
+  "document_verification": [
+    {
+      "artifact_path": "data/output/Lyrics_Document.md",
+      "artifact_type": "markdown",
+      "verification_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-05-23T22:40:27+01:00"
+    },
+    {
+      "artifact_path": "data/output/Lyrics_Document.docx",
+      "artifact_type": "docx",
+      "verification_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-05-23T22:40:27+01:00"
+    },
+    {
+      "artifact_path": "data/output/Chords_Document.md",
+      "artifact_type": "markdown",
+      "verification_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-05-23T22:40:27+01:00"
+    },
+    {
+      "artifact_path": "data/output/Chords_Document.docx",
+      "artifact_type": "docx",
+      "verification_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-05-23T22:40:27+01:00"
+    }
+  ],
+  "generated_at": "2026-05-23T22:40:27+01:00",
+  "manual_review_gate": {
+    "blocked_artifacts": [
+      {
+        "artifact_path": "data/output/Lyrics_Document.md",
+        "artifact_type": "markdown",
+        "blocked_from_manual_review": true,
+        "blocking_stage": "document_verification",
+        "computed_at": "2026-05-23T22:40:27+01:00",
+        "failure_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "review_ready": false,
+        "verification_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "verification_status": "failed",
+        "verified_at": "2026-05-23T22:40:27+01:00"
+      },
+      {
+        "artifact_path": "data/output/Lyrics_Document.docx",
+        "artifact_type": "docx",
+        "blocked_from_manual_review": true,
+        "blocking_stage": "document_verification",
+        "computed_at": "2026-05-23T22:40:27+01:00",
+        "failure_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "review_ready": false,
+        "verification_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "verification_status": "failed",
+        "verified_at": "2026-05-23T22:40:27+01:00"
+      },
+      {
+        "artifact_path": "data/output/Chords_Document.md",
+        "artifact_type": "markdown",
+        "blocked_from_manual_review": true,
+        "blocking_stage": "document_verification",
+        "computed_at": "2026-05-23T22:40:27+01:00",
+        "failure_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "review_ready": false,
+        "verification_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "verification_status": "failed",
+        "verified_at": "2026-05-23T22:40:27+01:00"
+      },
+      {
+        "artifact_path": "data/output/Chords_Document.docx",
+        "artifact_type": "docx",
+        "blocked_from_manual_review": true,
+        "blocking_stage": "document_verification",
+        "computed_at": "2026-05-23T22:40:27+01:00",
+        "failure_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "review_ready": false,
+        "verification_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "verification_status": "failed",
+        "verified_at": "2026-05-23T22:40:27+01:00"
+      }
+    ],
+    "blocked_count": 4,
+    "ready_artifacts": [],
+    "ready_count": 0
+  },
+  "pdf_errors": [],
+  "pdf_outputs": [],
+  "priority_report": {
+    "count": 0,
+    "items": []
+  },
+  "report_type": "quality_run",
+  "review_gate_decisions": [
+    {
+      "artifact_path": "data/output/Lyrics_Document.md",
+      "artifact_type": "markdown",
+      "computed_at": "2026-05-23T22:40:27+01:00",
+      "failure_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "review_ready": false
+    },
+    {
+      "artifact_path": "data/output/Lyrics_Document.docx",
+      "artifact_type": "docx",
+      "computed_at": "2026-05-23T22:40:27+01:00",
+      "failure_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "review_ready": false
+    },
+    {
+      "artifact_path": "data/output/Chords_Document.md",
+      "artifact_type": "markdown",
+      "computed_at": "2026-05-23T22:40:27+01:00",
+      "failure_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "review_ready": false
+    },
+    {
+      "artifact_path": "data/output/Chords_Document.docx",
+      "artifact_type": "docx",
+      "computed_at": "2026-05-23T22:40:27+01:00",
+      "failure_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "review_ready": false
+    }
+  ],
+  "selection_issues": [],
+  "songs": [
+    {
+      "artist": "Here We Go Magic",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Here We Go Magic",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Here We Go Magic - Alone but Moving",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Alone but Moving"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Here We Go Magic - Alone but Moving",
+      "source_attempts": [],
+      "title": "Alone but Moving"
+    },
+    {
+      "artist": "Here We Go Magic",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Here We Go Magic",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Here We Go Magic - Alone but Moving",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Alone but Moving"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Here We Go Magic - Alone but Moving",
+      "source_attempts": [],
+      "title": "Alone but Moving"
+    },
+    {
+      "artist": "Beyonce",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Beyonce",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Beyonce - Bodyguard",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Bodyguard"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Beyonce - Bodyguard",
+      "source_attempts": [],
+      "title": "Bodyguard"
+    },
+    {
+      "artist": "Beyonce",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Beyonce",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Beyonce - Bodyguard",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Bodyguard"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Beyonce - Bodyguard",
+      "source_attempts": [],
+      "title": "Bodyguard"
+    },
+    {
+      "artist": "Blur",
+      "content_hash": "sha256:5cd45e80f178f4943e12b21f09513b42c3134f805e9658ff9c3ab499a36450c3",
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Blur",
+        "content_hash": "sha256:5cd45e80f178f4943e12b21f09513b42c3134f805e9658ff9c3ab499a36450c3",
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "lyrics",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          },
+          {
+            "code": "excessive_bracket_noise",
+            "content_type": "lyrics",
+            "message": "Bracket noise makes the content hard to read.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "Blur - Coffee & TV",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 16,
+          "bracket_tag_count": 4,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": true,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 60,
+          "longest_line_length": 51,
+          "signal_count": 2,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 1392
+        },
+        "title": "Coffee & TV"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        },
+        {
+          "code": "excessive_bracket_noise",
+          "content_type": "lyrics",
+          "message": "Bracket noise makes the content hard to read.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "Blur - Coffee & TV",
+      "source_attempts": [],
+      "title": "Coffee & TV"
+    },
+    {
+      "artist": "Blur",
+      "content_hash": "sha256:d60e64e1b9d0adad68c0d786b6af7fa3c91549d4a2c8422f889e1bf08af3ba13",
+      "content_type": "chords",
+      "decision_source": "default_exclude",
+      "included": false,
+      "quality": "questionable",
+      "quality_status": {
+        "artist": "Blur",
+        "content_hash": "sha256:d60e64e1b9d0adad68c0d786b6af7fa3c91549d4a2c8422f889e1bf08af3ba13",
+        "content_type": "chords",
+        "quality": "questionable",
+        "signals": [
+          {
+            "code": "unusable_chords",
+            "content_type": "chords",
+            "message": "Chords were not found.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "Blur - Coffee & TV",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 1,
+          "longest_line_length": 17,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 17
+        },
+        "title": "Coffee & TV"
+      },
+      "reason": "Questionable content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "unusable_chords",
+          "content_type": "chords",
+          "message": "Chords were not found.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "Blur - Coffee & TV",
+      "source_attempts": [],
+      "title": "Coffee & TV"
+    },
+    {
+      "artist": "Bruce Springsteen",
+      "content_hash": "sha256:01ff3aa0abcbb2719d748418f6c32544783a3972fabc849f7a230a303e3738ab",
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Bruce Springsteen",
+        "content_hash": "sha256:01ff3aa0abcbb2719d748418f6c32544783a3972fabc849f7a230a303e3738ab",
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "lyrics",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          },
+          {
+            "code": "excessive_bracket_noise",
+            "content_type": "lyrics",
+            "message": "Bracket noise makes the content hard to read.",
+            "severity": "warning"
+          },
+          {
+            "code": "print_hostile_content",
+            "content_type": "lyrics",
+            "message": "Content is likely too long for comfortable printing.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "Bruce Springsteen - Dancing in the Dark",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 18,
+          "bracket_tag_count": 5,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": true,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": true,
+          "has_quality_signals": true,
+          "line_count": 63,
+          "longest_line_length": 78,
+          "signal_count": 3,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 1818
+        },
+        "title": "Dancing in the Dark"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        },
+        {
+          "code": "excessive_bracket_noise",
+          "content_type": "lyrics",
+          "message": "Bracket noise makes the content hard to read.",
+          "severity": "warning"
+        },
+        {
+          "code": "print_hostile_content",
+          "content_type": "lyrics",
+          "message": "Content is likely too long for comfortable printing.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "Bruce Springsteen - Dancing in the Dark",
+      "source_attempts": [],
+      "title": "Dancing in the Dark"
+    },
+    {
+      "artist": "Bruce Springsteen",
+      "content_hash": "sha256:c7c2fb7089ac4f0c4cea5b438a4ab69c2e48cf69eb5ebb0a02361c9bda9e7350",
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Bruce Springsteen",
+        "content_hash": "sha256:c7c2fb7089ac4f0c4cea5b438a4ab69c2e48cf69eb5ebb0a02361c9bda9e7350",
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "chords",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          },
+          {
+            "code": "print_hostile_content",
+            "content_type": "chords",
+            "message": "Content is likely too long for comfortable printing.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "Bruce Springsteen - Dancing in the Dark",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 6,
+          "bracket_tag_count": 0,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": true,
+          "has_quality_signals": true,
+          "line_count": 74,
+          "longest_line_length": 75,
+          "signal_count": 2,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 3130
+        },
+        "title": "Dancing in the Dark"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        },
+        {
+          "code": "print_hostile_content",
+          "content_type": "chords",
+          "message": "Content is likely too long for comfortable printing.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "Bruce Springsteen - Dancing in the Dark",
+      "source_attempts": [],
+      "title": "Dancing in the Dark"
+    },
+    {
+      "artist": "The Darkness",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Darkness",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "The Darkness - Giving Up",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Giving Up"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "The Darkness - Giving Up",
+      "source_attempts": [],
+      "title": "Giving Up"
+    },
+    {
+      "artist": "The Darkness",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Darkness",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "The Darkness - Giving Up",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Giving Up"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "The Darkness - Giving Up",
+      "source_attempts": [],
+      "title": "Giving Up"
+    },
+    {
+      "artist": "The Smiths",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Smiths",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "The Smiths - I Don't Owe you Anything",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "I Don't Owe you Anything"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "The Smiths - I Don't Owe you Anything",
+      "source_attempts": [],
+      "title": "I Don't Owe you Anything"
+    },
+    {
+      "artist": "The Smiths",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Smiths",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "The Smiths - I Don't Owe you Anything",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "I Don't Owe you Anything"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "The Smiths - I Don't Owe you Anything",
+      "source_attempts": [],
+      "title": "I Don't Owe you Anything"
+    },
+    {
+      "artist": "Honeyblood",
+      "content_hash": "sha256:fea6480c6d19808c0351f949681ad7d48cc1197ac07c3f20e2279bf80d5ea87f",
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Honeyblood",
+        "content_hash": "sha256:fea6480c6d19808c0351f949681ad7d48cc1197ac07c3f20e2279bf80d5ea87f",
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "lyrics",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          },
+          {
+            "code": "excessive_bracket_noise",
+            "content_type": "lyrics",
+            "message": "Bracket noise makes the content hard to read.",
+            "severity": "warning"
+          },
+          {
+            "code": "print_hostile_content",
+            "content_type": "lyrics",
+            "message": "Content is likely too long for comfortable printing.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "Honeyblood - Justine, Misery Queen",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 12,
+          "bracket_tag_count": 4,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": true,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": true,
+          "has_quality_signals": true,
+          "line_count": 63,
+          "longest_line_length": 56,
+          "signal_count": 3,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 1536
+        },
+        "title": "Justine, Misery Queen"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        },
+        {
+          "code": "excessive_bracket_noise",
+          "content_type": "lyrics",
+          "message": "Bracket noise makes the content hard to read.",
+          "severity": "warning"
+        },
+        {
+          "code": "print_hostile_content",
+          "content_type": "lyrics",
+          "message": "Content is likely too long for comfortable printing.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "Honeyblood - Justine, Misery Queen",
+      "source_attempts": [],
+      "title": "Justine, Misery Queen"
+    },
+    {
+      "artist": "Honeyblood",
+      "content_hash": "sha256:d60e64e1b9d0adad68c0d786b6af7fa3c91549d4a2c8422f889e1bf08af3ba13",
+      "content_type": "chords",
+      "decision_source": "default_exclude",
+      "included": false,
+      "quality": "questionable",
+      "quality_status": {
+        "artist": "Honeyblood",
+        "content_hash": "sha256:d60e64e1b9d0adad68c0d786b6af7fa3c91549d4a2c8422f889e1bf08af3ba13",
+        "content_type": "chords",
+        "quality": "questionable",
+        "signals": [
+          {
+            "code": "unusable_chords",
+            "content_type": "chords",
+            "message": "Chords were not found.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "Honeyblood - Justine, Misery Queen",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 1,
+          "longest_line_length": 17,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 17
+        },
+        "title": "Justine, Misery Queen"
+      },
+      "reason": "Questionable content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "unusable_chords",
+          "content_type": "chords",
+          "message": "Chords were not found.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "Honeyblood - Justine, Misery Queen",
+      "source_attempts": [],
+      "title": "Justine, Misery Queen"
+    },
+    {
+      "artist": "Killing Joke",
+      "content_hash": "sha256:115cd34d5368e9f7b3214b7d1ac281511780ac789f61296401fb542c3165cace",
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Killing Joke",
+        "content_hash": "sha256:115cd34d5368e9f7b3214b7d1ac281511780ac789f61296401fb542c3165cace",
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "lyrics",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Killing Joke - Love Like Blood",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 51,
+          "longest_line_length": 50,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 996
+        },
+        "title": "Love Like Blood"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Killing Joke - Love Like Blood",
+      "source_attempts": [],
+      "title": "Love Like Blood"
+    },
+    {
+      "artist": "Killing Joke",
+      "content_hash": "sha256:25c9b0f765010dfd72dc316050205db3f9425fd179e07c491330bbc78942bd52",
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Killing Joke",
+        "content_hash": "sha256:25c9b0f765010dfd72dc316050205db3f9425fd179e07c491330bbc78942bd52",
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "chords",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Killing Joke - Love Like Blood",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 4,
+          "bracket_tag_count": 0,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 60,
+          "longest_line_length": 50,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 1969
+        },
+        "title": "Love Like Blood"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Killing Joke - Love Like Blood",
+      "source_attempts": [],
+      "title": "Love Like Blood"
+    },
+    {
+      "artist": "Alison Moyet",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Alison Moyet",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Alison Moyet - Love Resurrection",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Love Resurrection"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Alison Moyet - Love Resurrection",
+      "source_attempts": [],
+      "title": "Love Resurrection"
+    },
+    {
+      "artist": "Alison Moyet",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Alison Moyet",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Alison Moyet - Love Resurrection",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Love Resurrection"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Alison Moyet - Love Resurrection",
+      "source_attempts": [],
+      "title": "Love Resurrection"
+    },
+    {
+      "artist": "The Monkees",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Monkees",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "The Monkees - Me & Magdelana",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Me & Magdelana"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "The Monkees - Me & Magdelana",
+      "source_attempts": [],
+      "title": "Me & Magdelana"
+    },
+    {
+      "artist": "The Monkees",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Monkees",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "The Monkees - Me & Magdelana",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Me & Magdelana"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "The Monkees - Me & Magdelana",
+      "source_attempts": [],
+      "title": "Me & Magdelana"
+    },
+    {
+      "artist": "Everything Everything",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Everything Everything",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Everything Everything - My CZ UR BF",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "My CZ UR BF"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Everything Everything - My CZ UR BF",
+      "source_attempts": [],
+      "title": "My CZ UR BF"
+    },
+    {
+      "artist": "Everything Everything",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Everything Everything",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Everything Everything - My CZ UR BF",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "My CZ UR BF"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Everything Everything - My CZ UR BF",
+      "source_attempts": [],
+      "title": "My CZ UR BF"
+    },
+    {
+      "artist": "Super Furry Animals",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Super Furry Animals",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Super Furry Animals - Ohio Heat",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Ohio Heat"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Super Furry Animals - Ohio Heat",
+      "source_attempts": [],
+      "title": "Ohio Heat"
+    },
+    {
+      "artist": "Super Furry Animals",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Super Furry Animals",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Super Furry Animals - Ohio Heat",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Ohio Heat"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Super Furry Animals - Ohio Heat",
+      "source_attempts": [],
+      "title": "Ohio Heat"
+    },
+    {
+      "artist": "David Bowie",
+      "content_hash": "sha256:f04eb4c95ef3bf8be8dc1db35aa95b875e277bb367e8baea51010b7f050f16b0",
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "David Bowie",
+        "content_hash": "sha256:f04eb4c95ef3bf8be8dc1db35aa95b875e277bb367e8baea51010b7f050f16b0",
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "lyrics",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          },
+          {
+            "code": "excessive_bracket_noise",
+            "content_type": "lyrics",
+            "message": "Bracket noise makes the content hard to read.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "David Bowie - Oh! You Pretty Things",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 16,
+          "bracket_tag_count": 5,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": true,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 50,
+          "longest_line_length": 58,
+          "signal_count": 2,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 1573
+        },
+        "title": "Oh! You Pretty Things"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        },
+        {
+          "code": "excessive_bracket_noise",
+          "content_type": "lyrics",
+          "message": "Bracket noise makes the content hard to read.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "David Bowie - Oh! You Pretty Things",
+      "source_attempts": [],
+      "title": "Oh! You Pretty Things"
+    },
+    {
+      "artist": "David Bowie",
+      "content_hash": "sha256:c3613438498374791d1802528d490c1cf70a0d24280602fde567a4e59be11be6",
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "David Bowie",
+        "content_hash": "sha256:c3613438498374791d1802528d490c1cf70a0d24280602fde567a4e59be11be6",
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "chords",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          },
+          {
+            "code": "print_hostile_content",
+            "content_type": "chords",
+            "message": "Content is likely too long for comfortable printing.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "David Bowie - Oh! You Pretty Things",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 1,
+          "bracket_tag_count": 0,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": true,
+          "has_quality_signals": true,
+          "line_count": 88,
+          "longest_line_length": 83,
+          "signal_count": 2,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 2497
+        },
+        "title": "Oh! You Pretty Things"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        },
+        {
+          "code": "print_hostile_content",
+          "content_type": "chords",
+          "message": "Content is likely too long for comfortable printing.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "David Bowie - Oh! You Pretty Things",
+      "source_attempts": [],
+      "title": "Oh! You Pretty Things"
+    },
+    {
+      "artist": "The Shins",
+      "content_hash": "sha256:3a64e17a0474533089f03549a067f4e31553561ccdabf7cc5323e05e22b209db",
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Shins",
+        "content_hash": "sha256:3a64e17a0474533089f03549a067f4e31553561ccdabf7cc5323e05e22b209db",
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "lyrics",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          },
+          {
+            "code": "excessive_bracket_noise",
+            "content_type": "lyrics",
+            "message": "Bracket noise makes the content hard to read.",
+            "severity": "warning"
+          },
+          {
+            "code": "print_hostile_content",
+            "content_type": "lyrics",
+            "message": "Content is likely too long for comfortable printing.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "The Shins - Phantom Limb",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 18,
+          "bracket_tag_count": 2,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": true,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": true,
+          "has_quality_signals": true,
+          "line_count": 70,
+          "longest_line_length": 43,
+          "signal_count": 3,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 1550
+        },
+        "title": "Phantom Limb"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        },
+        {
+          "code": "excessive_bracket_noise",
+          "content_type": "lyrics",
+          "message": "Bracket noise makes the content hard to read.",
+          "severity": "warning"
+        },
+        {
+          "code": "print_hostile_content",
+          "content_type": "lyrics",
+          "message": "Content is likely too long for comfortable printing.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "The Shins - Phantom Limb",
+      "source_attempts": [],
+      "title": "Phantom Limb"
+    },
+    {
+      "artist": "The Shins",
+      "content_hash": "sha256:3a84067d69f383111efa78ad8253ceaf205c06cdaa30093ce49356459a5618c5",
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Shins",
+        "content_hash": "sha256:3a84067d69f383111efa78ad8253ceaf205c06cdaa30093ce49356459a5618c5",
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "chords",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          },
+          {
+            "code": "excessive_bracket_noise",
+            "content_type": "chords",
+            "message": "Bracket noise makes the content hard to read.",
+            "severity": "warning"
+          },
+          {
+            "code": "print_hostile_content",
+            "content_type": "chords",
+            "message": "Content is likely too long for comfortable printing.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "The Shins - Phantom Limb",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 12,
+          "bracket_tag_count": 0,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": true,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": true,
+          "has_quality_signals": true,
+          "line_count": 116,
+          "longest_line_length": 42,
+          "signal_count": 3,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 2620
+        },
+        "title": "Phantom Limb"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        },
+        {
+          "code": "excessive_bracket_noise",
+          "content_type": "chords",
+          "message": "Bracket noise makes the content hard to read.",
+          "severity": "warning"
+        },
+        {
+          "code": "print_hostile_content",
+          "content_type": "chords",
+          "message": "Content is likely too long for comfortable printing.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "The Shins - Phantom Limb",
+      "source_attempts": [],
+      "title": "Phantom Limb"
+    },
+    {
+      "artist": "Big Moon",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Big Moon",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Big Moon - Silent Movie Suzie",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Silent Movie Suzie"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Big Moon - Silent Movie Suzie",
+      "source_attempts": [],
+      "title": "Silent Movie Suzie"
+    },
+    {
+      "artist": "Big Moon",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Big Moon",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Big Moon - Silent Movie Suzie",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Silent Movie Suzie"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Big Moon - Silent Movie Suzie",
+      "source_attempts": [],
+      "title": "Silent Movie Suzie"
+    },
+    {
+      "artist": "Honeyblood",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Honeyblood",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Honeyblood - Sister Wolf",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Sister Wolf"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Honeyblood - Sister Wolf",
+      "source_attempts": [],
+      "title": "Sister Wolf"
+    },
+    {
+      "artist": "Honeyblood",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Honeyblood",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Honeyblood - Sister Wolf",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Sister Wolf"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Honeyblood - Sister Wolf",
+      "source_attempts": [],
+      "title": "Sister Wolf"
+    },
+    {
+      "artist": "The Shins",
+      "content_hash": "sha256:c11ffe1326bd044c0642672736c6936e4304b359e0549f1f1479621b416c1c49",
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Shins",
+        "content_hash": "sha256:c11ffe1326bd044c0642672736c6936e4304b359e0549f1f1479621b416c1c49",
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "lyrics",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "The Shins - Sleeping Lessons",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 34,
+          "longest_line_length": 50,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 953
+        },
+        "title": "Sleeping Lessons"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "The Shins - Sleeping Lessons",
+      "source_attempts": [],
+      "title": "Sleeping Lessons"
+    },
+    {
+      "artist": "The Shins",
+      "content_hash": "sha256:6597130afd96574a58d796b63bf3734298ac132806701dbb1b2f1ef735aa64d5",
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Shins",
+        "content_hash": "sha256:6597130afd96574a58d796b63bf3734298ac132806701dbb1b2f1ef735aa64d5",
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "chords",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "The Shins - Sleeping Lessons",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 54,
+          "longest_line_length": 95,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 2179
+        },
+        "title": "Sleeping Lessons"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "The Shins - Sleeping Lessons",
+      "source_attempts": [],
+      "title": "Sleeping Lessons"
+    },
+    {
+      "artist": "Echobelly",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Echobelly",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Echobelly - Today Tomorrow Sometimes Never",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Today Tomorrow Sometimes Never"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Echobelly - Today Tomorrow Sometimes Never",
+      "source_attempts": [],
+      "title": "Today Tomorrow Sometimes Never"
+    },
+    {
+      "artist": "Echobelly",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Echobelly",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Echobelly - Today Tomorrow Sometimes Never",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "Today Tomorrow Sometimes Never"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Echobelly - Today Tomorrow Sometimes Never",
+      "source_attempts": [],
+      "title": "Today Tomorrow Sometimes Never"
+    },
+    {
+      "artist": "Britney Spears",
+      "content_hash": "sha256:30b8415817d796a89ecd01d9477c9dfd3f7bc69771112d52785c83de6b9401e4",
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Britney Spears",
+        "content_hash": "sha256:30b8415817d796a89ecd01d9477c9dfd3f7bc69771112d52785c83de6b9401e4",
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "lyrics",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          },
+          {
+            "code": "excessive_bracket_noise",
+            "content_type": "lyrics",
+            "message": "Bracket noise makes the content hard to read.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "Britney Spears - Toxic",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 18,
+          "bracket_tag_count": 6,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": true,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 58,
+          "longest_line_length": 71,
+          "signal_count": 2,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 1602
+        },
+        "title": "Toxic"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        },
+        {
+          "code": "excessive_bracket_noise",
+          "content_type": "lyrics",
+          "message": "Bracket noise makes the content hard to read.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "Britney Spears - Toxic",
+      "source_attempts": [],
+      "title": "Toxic"
+    },
+    {
+      "artist": "Britney Spears",
+      "content_hash": "sha256:fb456beef85b1235f970c7a6814bcf10d08978932ba0b3b3a0b9d76f93c64323",
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "Britney Spears",
+        "content_hash": "sha256:fb456beef85b1235f970c7a6814bcf10d08978932ba0b3b3a0b9d76f93c64323",
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "duplicate_block",
+            "content_type": "chords",
+            "message": "Repeated blocks make the content difficult to trust.",
+            "severity": "error"
+          },
+          {
+            "code": "print_hostile_content",
+            "content_type": "chords",
+            "message": "Content is likely too long for comfortable printing.",
+            "severity": "warning"
+          }
+        ],
+        "song_key": "Britney Spears - Toxic",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "duplicate_block_count": 1,
+          "has_duplicate_block": true,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": true,
+          "has_quality_signals": true,
+          "line_count": 110,
+          "longest_line_length": 52,
+          "signal_count": 2,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 2525
+        },
+        "title": "Toxic"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        },
+        {
+          "code": "print_hostile_content",
+          "content_type": "chords",
+          "message": "Content is likely too long for comfortable printing.",
+          "severity": "warning"
+        }
+      ],
+      "song_key": "Britney Spears - Toxic",
+      "source_attempts": [],
+      "title": "Toxic"
+    },
+    {
+      "artist": "The Smiths",
+      "content_hash": null,
+      "content_type": "lyrics",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Smiths",
+        "content_hash": null,
+        "content_type": "lyrics",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_lyrics",
+            "content_type": "lyrics",
+            "message": "Lyrics are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "The Smiths - What Difference Does it Make?",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "What Difference Does it Make?"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "The Smiths - What Difference Does it Make?",
+      "source_attempts": [],
+      "title": "What Difference Does it Make?"
+    },
+    {
+      "artist": "The Smiths",
+      "content_hash": null,
+      "content_type": "chords",
+      "decision_source": "quality_missing",
+      "included": false,
+      "quality": "missing",
+      "quality_status": {
+        "artist": "The Smiths",
+        "content_hash": null,
+        "content_type": "chords",
+        "quality": "missing",
+        "signals": [
+          {
+            "code": "missing_chords",
+            "content_type": "chords",
+            "message": "Chords are missing or unusable.",
+            "severity": "error"
+          }
+        ],
+        "song_key": "The Smiths - What Difference Does it Make?",
+        "summary": {
+          "artist_mismatch": false,
+          "bracket_char_count": 0,
+          "bracket_tag_count": 0,
+          "has_duplicate_block": false,
+          "has_email_header_artifacts": false,
+          "has_excessive_bracket_noise": false,
+          "has_html_residue": false,
+          "has_low_confidence_match": false,
+          "has_print_hostile_content": false,
+          "has_quality_signals": true,
+          "line_count": 0,
+          "longest_line_length": 0,
+          "signal_count": 1,
+          "source_artist_present": false,
+          "source_title_present": false,
+          "title_mismatch": false,
+          "total_characters": 0
+        },
+        "title": "What Difference Does it Make?"
+      },
+      "reason": "Missing content is excluded by default.",
+      "review_decision": null,
+      "signals": [
+        {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      ],
+      "song_key": "The Smiths - What Difference Does it Make?",
+      "source_attempts": [],
+      "title": "What Difference Does it Make?"
+    }
+  ],
+  "source": "generate_from_cache",
+  "summary": {
+    "clean_count": 0,
+    "clean_songs": [],
+    "counts": {
+      "clean": 0,
+      "excluded_clean": 0,
+      "invalid_input": 0,
+      "manual_review_blocked": 4,
+      "manual_review_ready": 0,
+      "missing": 38,
+      "not_review_ready": 4,
+      "pdf_error": 0,
+      "pdf_output": 0,
+      "priority_item": 0,
+      "questionable": 2,
+      "review_ready": 0,
+      "selection_issue": 0
+    },
+    "document_verification": [
+      {
+        "artifact_path": "data/output/Lyrics_Document.md",
+        "artifact_type": "markdown",
+        "verification_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "verification_status": "failed",
+        "verified_at": "2026-05-23T22:40:27+01:00"
+      },
+      {
+        "artifact_path": "data/output/Lyrics_Document.docx",
+        "artifact_type": "docx",
+        "verification_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "verification_status": "failed",
+        "verified_at": "2026-05-23T22:40:27+01:00"
+      },
+      {
+        "artifact_path": "data/output/Chords_Document.md",
+        "artifact_type": "markdown",
+        "verification_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "verification_status": "failed",
+        "verified_at": "2026-05-23T22:40:27+01:00"
+      },
+      {
+        "artifact_path": "data/output/Chords_Document.docx",
+        "artifact_type": "docx",
+        "verification_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "verification_status": "failed",
+        "verified_at": "2026-05-23T22:40:27+01:00"
+      }
+    ],
+    "excluded_clean_count": 0,
+    "excluded_clean_songs": [],
+    "excluded_count": 2,
+    "included_count": 0,
+    "invalid_input_count": 0,
+    "invalid_input_rows": [],
+    "manual_review_blocked_count": 4,
+    "manual_review_gate": {
+      "blocked_artifacts": [
+        {
+          "artifact_path": "data/output/Lyrics_Document.md",
+          "artifact_type": "markdown",
+          "blocked_from_manual_review": true,
+          "blocking_stage": "document_verification",
+          "computed_at": "2026-05-23T22:40:27+01:00",
+          "failure_reasons": [
+            "print_hostile_structure",
+            "excessive_whitespace"
+          ],
+          "review_ready": false,
+          "verification_reasons": [
+            "print_hostile_structure",
+            "excessive_whitespace"
+          ],
+          "verification_status": "failed",
+          "verified_at": "2026-05-23T22:40:27+01:00"
+        },
+        {
+          "artifact_path": "data/output/Lyrics_Document.docx",
+          "artifact_type": "docx",
+          "blocked_from_manual_review": true,
+          "blocking_stage": "document_verification",
+          "computed_at": "2026-05-23T22:40:27+01:00",
+          "failure_reasons": [
+            "print_hostile_structure",
+            "excessive_whitespace"
+          ],
+          "review_ready": false,
+          "verification_reasons": [
+            "print_hostile_structure",
+            "excessive_whitespace"
+          ],
+          "verification_status": "failed",
+          "verified_at": "2026-05-23T22:40:27+01:00"
+        },
+        {
+          "artifact_path": "data/output/Chords_Document.md",
+          "artifact_type": "markdown",
+          "blocked_from_manual_review": true,
+          "blocking_stage": "document_verification",
+          "computed_at": "2026-05-23T22:40:27+01:00",
+          "failure_reasons": [
+            "print_hostile_structure",
+            "excessive_whitespace"
+          ],
+          "review_ready": false,
+          "verification_reasons": [
+            "print_hostile_structure",
+            "excessive_whitespace"
+          ],
+          "verification_status": "failed",
+          "verified_at": "2026-05-23T22:40:27+01:00"
+        },
+        {
+          "artifact_path": "data/output/Chords_Document.docx",
+          "artifact_type": "docx",
+          "blocked_from_manual_review": true,
+          "blocking_stage": "document_verification",
+          "computed_at": "2026-05-23T22:40:27+01:00",
+          "failure_reasons": [
+            "print_hostile_structure",
+            "excessive_whitespace"
+          ],
+          "review_ready": false,
+          "verification_reasons": [
+            "print_hostile_structure",
+            "excessive_whitespace"
+          ],
+          "verification_status": "failed",
+          "verified_at": "2026-05-23T22:40:27+01:00"
+        }
+      ],
+      "blocked_count": 4,
+      "ready_artifacts": [],
+      "ready_count": 0
+    },
+    "manual_review_ready_count": 0,
+    "missing_count": 38,
+    "missing_songs": [
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Here We Go Magic - Alone but Moving",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Here We Go Magic - Alone but Moving",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Beyonce - Bodyguard",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Beyonce - Bodyguard",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Blur - Coffee & TV",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Bruce Springsteen - Dancing in the Dark",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Bruce Springsteen - Dancing in the Dark",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Darkness - Giving Up",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Darkness - Giving Up",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Smiths - I Don't Owe you Anything",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Smiths - I Don't Owe you Anything",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Honeyblood - Justine, Misery Queen",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Killing Joke - Love Like Blood",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Killing Joke - Love Like Blood",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Alison Moyet - Love Resurrection",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Alison Moyet - Love Resurrection",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Monkees - Me & Magdelana",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Monkees - Me & Magdelana",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Everything Everything - My CZ UR BF",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Everything Everything - My CZ UR BF",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Super Furry Animals - Ohio Heat",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Super Furry Animals - Ohio Heat",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "David Bowie - Oh! You Pretty Things",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "David Bowie - Oh! You Pretty Things",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Shins - Phantom Limb",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Shins - Phantom Limb",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Big Moon - Silent Movie Suzie",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Big Moon - Silent Movie Suzie",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Honeyblood - Sister Wolf",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Honeyblood - Sister Wolf",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Shins - Sleeping Lessons",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Shins - Sleeping Lessons",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Echobelly - Today Tomorrow Sometimes Never",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Echobelly - Today Tomorrow Sometimes Never",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Britney Spears - Toxic",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "lyrics",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "Britney Spears - Toxic",
+        "top_signal": {
+          "code": "duplicate_block",
+          "content_type": "chords",
+          "message": "Repeated blocks make the content difficult to trust.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "lyrics",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Smiths - What Difference Does it Make?",
+        "top_signal": {
+          "code": "missing_lyrics",
+          "content_type": "lyrics",
+          "message": "Lyrics are missing or unusable.",
+          "severity": "error"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "missing",
+        "reason": "Missing content is excluded by default.",
+        "song_key": "The Smiths - What Difference Does it Make?",
+        "top_signal": {
+          "code": "missing_chords",
+          "content_type": "chords",
+          "message": "Chords are missing or unusable.",
+          "severity": "error"
+        }
+      }
+    ],
+    "not_review_ready_count": 4,
+    "overridden_count": 0,
+    "pdf_error_count": 0,
+    "pdf_errors": [],
+    "pdf_output_count": 0,
+    "pdf_outputs": [],
+    "priority_item_count": 0,
+    "priority_report": {
+      "count": 0,
+      "items": []
+    },
+    "questionable_count": 2,
+    "questionable_songs": [
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "questionable",
+        "reason": "Questionable content is excluded by default.",
+        "song_key": "Blur - Coffee & TV",
+        "top_signal": {
+          "code": "unusable_chords",
+          "content_type": "chords",
+          "message": "Chords were not found.",
+          "severity": "warning"
+        }
+      },
+      {
+        "content_type": "chords",
+        "included": false,
+        "quality": "questionable",
+        "reason": "Questionable content is excluded by default.",
+        "song_key": "Honeyblood - Justine, Misery Queen",
+        "top_signal": {
+          "code": "unusable_chords",
+          "content_type": "chords",
+          "message": "Chords were not found.",
+          "severity": "warning"
+        }
+      }
+    ],
+    "review_gate_decisions": [
+      {
+        "artifact_path": "data/output/Lyrics_Document.md",
+        "artifact_type": "markdown",
+        "computed_at": "2026-05-23T22:40:27+01:00",
+        "failure_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "review_ready": false
+      },
+      {
+        "artifact_path": "data/output/Lyrics_Document.docx",
+        "artifact_type": "docx",
+        "computed_at": "2026-05-23T22:40:27+01:00",
+        "failure_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "review_ready": false
+      },
+      {
+        "artifact_path": "data/output/Chords_Document.md",
+        "artifact_type": "markdown",
+        "computed_at": "2026-05-23T22:40:27+01:00",
+        "failure_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "review_ready": false
+      },
+      {
+        "artifact_path": "data/output/Chords_Document.docx",
+        "artifact_type": "docx",
+        "computed_at": "2026-05-23T22:40:27+01:00",
+        "failure_reasons": [
+          "print_hostile_structure",
+          "excessive_whitespace"
+        ],
+        "review_ready": false
+      }
+    ],
+    "review_ready_count": 0,
+    "selection_issue_count": 0,
+    "selection_issues": []
+  }
+}

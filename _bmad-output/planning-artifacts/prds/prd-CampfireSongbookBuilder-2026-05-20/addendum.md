@@ -10,6 +10,10 @@
   - modify canonical cached content directly after backup, or
   - introduce a remediated-current-state layer above raw caches
 - Document neatness may require artifact-level metrics such as whitespace density, sparse-page detection, song-fragmentation checks, or over-separated block detection.
+- PDF governance needs separate technical treatment from source-document verification:
+  - PDF conversion/generation failure must remain distinct from PDF verification failure
+  - deterministic PDF heuristics may include text-extraction success, sparse-page detection, fragment-heavy layout signals, and page-count-related checks
+  - PDF verification outcomes need to propagate through reporting and post-remediation re-evaluation, not stop at file creation
 - Remediation scope should probably start with structure-preserving cleanup rather than semantic rewriting:
   - whitespace normalization
   - section restructuring

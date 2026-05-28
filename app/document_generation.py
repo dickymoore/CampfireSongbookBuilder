@@ -2,19 +2,35 @@ import logging
 from datetime import datetime
 
 from app.content_models import build_quality_status, compute_content_hash, derive_song_key
+from app.content_scoring import compose_content_score
 from app.fetch_data import get_lyrics_from_sources, get_chords_from_sources
 from app.cache import jsonl_save_entry, jsonl_load_entry, jsonl_load_all
 from app.document_formatting import sort_songs
 from app.quality_assessment import assess_candidate_quality
-from app.review_state import DEFAULT_QUALITY_STATUS_PATH, load_quality_status, save_quality_status
+from app.review_state import (
+    DEFAULT_CONTENT_SCORES_PATH,
+    DEFAULT_QUALITY_STATUS_PATH,
+    load_content_scores,
+    load_quality_status,
+    save_content_scores,
+    save_quality_status,
+)
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 QUALITY_STATUS_PATH = DEFAULT_QUALITY_STATUS_PATH
+CONTENT_SCORES_PATH = DEFAULT_CONTENT_SCORES_PATH
 
 
 def _flatten_quality_status_records(state):
+    records = []
+    for song_entries in state.get("entries", {}).values():
+        records.extend(song_entries.values())
+    return records
+
+
+def _flatten_content_score_records(state):
     records = []
     for song_entries in state.get("entries", {}).values():
         records.extend(song_entries.values())
@@ -59,6 +75,44 @@ def _save_quality_status_record(artist, title, content_type, content, quality_re
     ]
     filtered_records.append(record)
     save_quality_status(QUALITY_STATUS_PATH, filtered_records)
+
+    try:
+        content_score_record = compose_content_score(record, scored_at=record.get("assessed_at"))
+    except ValueError as exc:
+        logger.warning(
+            "Failed to compute content score for %s (%s): %s",
+            record.get("song_key"),
+            record.get("content_type"),
+            exc,
+        )
+        return
+
+    score_state, score_errors = load_content_scores(
+        CONTENT_SCORES_PATH,
+        current_content_hashes={
+            content_score_record["song_key"]: {
+                content_score_record["content_type"]: content_score_record["content_hash"]
+            }
+        },
+    )
+    if score_errors:
+        logger.warning("Content scores load reported %d recoverable issue(s).", len(score_errors))
+
+    score_records = _flatten_content_score_records(score_state)
+    filtered_score_records = [
+        existing
+        for existing in score_records
+        if not (
+            existing.get("song_key") == content_score_record["song_key"]
+            and existing.get("content_type") == content_score_record["content_type"]
+        )
+    ]
+    filtered_score_records.append(content_score_record)
+    save_content_scores(
+        CONTENT_SCORES_PATH,
+        filtered_score_records,
+        updated_at=record.get("assessed_at"),
+    )
 
 
 def _assess_cached_content(artist, title, content_type, content):

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from app.content_models import build_favourite_record, build_review_decision, compute_content_hash
 from app.document_verification import load_document_verification
-from app.review_state import save_review_decisions
+from app.review_state import load_content_scores, save_review_decisions
 from tests.docx_stub import install_docx_stub
 
 install_docx_stub()
@@ -30,13 +30,16 @@ class TestDocumentCreation(unittest.TestCase):
         import app.document_creation as document_creation
 
         original_document_quality_path = document_creation.DOCUMENT_QUALITY_PATH
+        original_content_scores_path = document_creation.CONTENT_SCORES_PATH
         document_creation.DOCUMENT_QUALITY_PATH = (
             tmp_path / "data" / "review" / "document_quality.json"
         )
+        document_creation.CONTENT_SCORES_PATH = tmp_path / "data" / "review" / "content_scores.json"
         try:
             return create_document_from_cache(*args, **kwargs)
         finally:
             document_creation.DOCUMENT_QUALITY_PATH = original_document_quality_path
+            document_creation.CONTENT_SCORES_PATH = original_content_scores_path
 
     def test_create_document_from_cache_excludes_questionable_and_overlong_content_by_default(self):
         song_list = [
@@ -84,6 +87,46 @@ class TestDocumentCreation(unittest.TestCase):
             self.assertEqual(
                 report_entries["Long Song"]["reason"],
                 "Questionable content is excluded by default.",
+            )
+
+    def test_create_document_from_cache_persists_content_scores_for_lyrics_and_chords(self):
+        song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
+        lyrics_cache = {"The Campfire Trio - Trail Song": "First line\nSecond line"}
+        chords_cache = {"The Campfire Trio - Trail Song": "[G]Trail song"}
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            lyrics_output_path = tmp_path / "lyrics.docx"
+            chords_output_path = tmp_path / "chords.docx"
+
+            report_data = self._run_create_document(
+                tmp_path,
+                song_list,
+                lyrics_cache,
+                chords_cache,
+                lyrics_output=lyrics_output_path,
+                chords_output=chords_output_path,
+            )
+
+            content_scores_path = tmp_path / "data" / "review" / "content_scores.json"
+            state, errors = load_content_scores(content_scores_path)
+
+            self.assertEqual(errors, [])
+            self.assertIn("The Campfire Trio - Trail Song", state["entries"])
+            self.assertIn("lyrics", state["entries"]["The Campfire Trio - Trail Song"])
+            self.assertIn("chords", state["entries"]["The Campfire Trio - Trail Song"])
+
+            lyric_score = state["entries"]["The Campfire Trio - Trail Song"]["lyrics"]
+            chord_score = state["entries"]["The Campfire Trio - Trail Song"]["chords"]
+            self.assertEqual(lyric_score["quality_score"], 100)
+            self.assertEqual(lyric_score["quality_band"], "clean")
+            self.assertEqual(chord_score["quality_score"], 100)
+            self.assertEqual(chord_score["quality_band"], "clean")
+
+            self.assertTrue(isinstance(report_data.get("content_scores"), list))
+            self.assertEqual(
+                {(record["song_key"], record["content_type"]) for record in report_data["content_scores"]},
+                {("The Campfire Trio - Trail Song", "lyrics"), ("The Campfire Trio - Trail Song", "chords")},
             )
 
     def test_create_document_from_cache_includes_questionable_content_with_override(self):

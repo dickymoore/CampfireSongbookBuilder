@@ -52,6 +52,7 @@ def _write_generation_report(report_data):
         pdf_errors=report_data.get("pdf_errors", []),
         document_verification=report_data.get("document_verification", []),
         review_gate_decisions=report_data.get("review_gate_decisions", []),
+        content_scores=report_data.get("content_scores", []),
     )
     report_path = write_traceable_quality_report(report)
     print(summarize_traceable_quality_report(report, report_path))

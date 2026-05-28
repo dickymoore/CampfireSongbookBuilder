@@ -3,6 +3,7 @@ stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 inputDocuments:
   - _bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-20/prd.md
   - _bmad-output/planning-artifacts/prds/prd-CampfireSongbookBuilder-2026-05-20/addendum.md
+  - _bmad-output/planning-artifacts/sprint-change-proposal-2026-05-25.md
   - _bmad-output/implementation-artifacts/all-epics-retro-2026-05-20.md
   - _bmad-output/project-context.md
   - docs/index.md
@@ -12,7 +13,7 @@ user_name: 'Dicky'
 date: '2026-05-20'
 lastStep: 8
 status: 'complete'
-completedAt: '2026-05-20'
+completedAt: '2026-05-25'
 ---
 
 # Architecture Decision Document
@@ -25,13 +26,14 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 **Functional Requirements:**
 
-The new roadmap slice defines 12 functional requirements across five product areas:
+The new roadmap slice defines 13 functional requirements across six product areas:
 
-- document neatness evaluation for Markdown and `.docx` outputs
+- document neatness evaluation for Markdown, `.docx`, and PDF outputs
 - agentic verification before manual review
 - per-song Lyrics and Chords/Tab quality scoring
 - backup-first direct agent remediation
 - remediation provenance and escalation controls
+- PDF artifact governance, reporting propagation, and remediation re-evaluation
 
 Architecturally, these requirements move the project from passive quality filtering into an active verification-and-remediation pipeline. The system must now evaluate content, evaluate generated artifacts, decide whether automation is allowed to act, preserve pre-edit state, and expose the whole chain in local inspectable artifacts.
 
@@ -61,7 +63,7 @@ The complexity comes less from scale and more from state correctness: scores, ba
 - The existing runtime is a single-process Python CLI invoked as `python3 main.py` from the repository root.
 - Existing JSONL cache semantics and exact `artist` / `title` identity are compatibility constraints.
 - The project should remain flat-module and local-file based.
-- Existing document generation already produces Markdown, `.docx`, and optional PDF.
+- Existing document generation already produces Markdown, `.docx`, and PDF, but the delivered planning baseline has only formalized Markdown and `.docx` artifact governance so far.
 - The next slice should prefer deterministic local rules and existing infrastructure over new paid or hosted services.
 - Agent remediation is allowed only with backup-first safety.
 - The slice resolves the state-management fork in favor of a remediated current-state layer above raw caches; canonical raw caches remain immutable fetched snapshots.
@@ -71,11 +73,13 @@ The complexity comes less from scale and more from state correctness: scores, ba
 - content identity and content-hash versioning
 - deterministic score computation
 - artifact-level neatness verification
+- deterministic PDF rendered-output verification
 - backup and rollback safety
 - remediation provenance
 - bounded retry / escalation control
 - integration of scoring with existing Quality Signals
 - compatibility with offline generation and current reporting flows
+- separation of generation/conversion failures from verification failures
 - automated testability of agentic verification and remediation behavior
 
 ## Starter Template Evaluation
@@ -161,10 +165,12 @@ The current scaffold already supports incremental, test-first brownfield extensi
 **Important Decisions (Shape Architecture):**
 
 - Treat document neatness as heuristic and deterministic in v1
+- Treat PDF as a first-class governed artifact rather than a file-existence-only byproduct
 - Compose scores from existing Quality Signals plus new verification/remediation signals
 - Keep verification and remediation local-file based, not service-based
 - Keep remediation orchestration inside the CLI/helper pipeline rather than introducing a queue or daemon
 - Treat review-ready as a machine-readable gate state, not just a human summary line
+- Distinguish artifact conversion failures from artifact verification failures in machine-readable state
 
 ### Policy Defaults Resolved for V1
 
@@ -176,6 +182,7 @@ The current scaffold already supports incremental, test-first brownfield extensi
   - `0-39` = `poor`
 - Target automatic remediation for content scoring below `60`.
 - Treat document neatness as an artifact-level review gate informed by per-song-block heuristics.
+- Treat PDF verification as a deterministic rendered-output check with outcomes stored separately from PDF conversion failures.
 - Store backup artifacts under `data/review/backups/`.
 - Store remediation audit and provenance records under `data/review/audit/`.
 - Freeze the `codex exec` remediation allowlist to:
@@ -218,6 +225,14 @@ Rationale:
 - `data/review/document_quality.json`
 - `data/review/backups/` for preserved pre-remediation artifacts or content snapshots
 - `data/review/audit/remediation_attempts.jsonl` for append-only remediation audit and provenance history
+
+**Decision: Govern PDF artifacts in the same verification state model with distinct failure semantics.**
+
+Rationale:
+
+- PDF is already a supported output path and now needs first-class planning coverage.
+- A missing PDF file due to converter failure is operationally different from an existing PDF that fails layout verification.
+- Reusing the existing verification state model preserves local-file inspectability and reporting consistency.
 
 **Decision: Keep current-state and history separate.**
 
@@ -454,9 +469,10 @@ Append-only remediation history records should include:
 
 **FR Category: Document Neatness Evaluation -> `app/document_verification.py` + `data/review/document_quality.json`**
 
-- Evaluates Markdown and `.docx` outputs for readability and wasted whitespace
+- Evaluates Markdown, `.docx`, and PDF outputs for readability, wasted whitespace, and deterministic print-hostile structure
 - Uses per-song-block heuristics only as contributing signals to an artifact-level review gate
 - Produces deterministic artifact-level verification results
+- Distinguishes artifact generation/conversion failure from artifact verification failure in machine-readable outputs
 - Feeds review-ready gate and report aggregation
 
 **FR Category: Agentic Verification Before Manual Review -> `app/review_gate.py` + `app/reporting.py`**
@@ -598,7 +614,7 @@ CampfireSongbookBuilder/
 - `app/remediation_state.py` owns `data/review/` loaders and writers
 - `data/review/remediated_content.json` is the highest-priority current-state content layer for generation and scoring
 - `data/review/content_scores.json` stores current deterministic score state
-- `data/review/document_quality.json` stores artifact verification state
+- `data/review/document_quality.json` stores artifact verification state for Markdown, `.docx`, and PDF plus links to distinct generation/conversion failures where relevant
 - `data/review/audit/remediation_attempts.jsonl` stores append-only audit history
 
 **Scoring Boundary:**
@@ -610,6 +626,8 @@ CampfireSongbookBuilder/
 - `app/document_verification.py` evaluates generated artifacts only
 - It does not edit source content
 - It emits deterministic neatness findings and review-ready inputs
+- PDF verification uses deterministic rendered-output heuristics from local artifact evidence such as bytes, metadata, and text extraction outcomes rather than inheriting upstream `.docx` results
+- PDF conversion failure is not itself a verification result and must remain separately encoded for reporting and gate computation
 
 **Remediation Boundary:**
 - `app/remediation.py` owns backup-first transformation orchestration
@@ -635,7 +653,7 @@ CampfireSongbookBuilder/
 3. `app/cache.py` and existing fetch/generation modules
 4. `app/remediation_state.py` current-state overlay resolution
 5. `app/content_scoring.py`
-6. document generation modules
+6. document generation modules plus PDF conversion when requested
 7. `app/document_verification.py`
 8. `app/review_gate.py`
 9. `app/reporting.py`
@@ -646,14 +664,14 @@ CampfireSongbookBuilder/
 3. apply bounded remediation in `app/remediation.py`
 4. persist updated current-state content in `data/review/remediated_content.json`
 5. recompute score in `data/review/content_scores.json`
-6. rerun artifact verification where relevant
+6. rerun artifact verification where relevant, including regenerated PDF artifacts when the run requests PDF output
 7. append remediation history in `data/review/audit/remediation_attempts.jsonl`
 8. compute escalation or review-ready state
 
 ### Requirement-to-Structure Mapping
 
 **Neat Documents**
-- Runtime: `app/document_verification.py`
+- Runtime: `app/document_verification.py`, `app/pdf_generation.py`
 - State: `data/review/document_quality.json`
 - Tests: `tests/test_document_verification.py`
 
@@ -693,12 +711,13 @@ The project structure supports the architecture. The proposed `app/` modules and
 ### Requirements Coverage Validation ✅
 
 **Feature Coverage:**
-All five feature areas are architecturally supported:
+All six feature areas are architecturally supported:
 - document neatness evaluation
 - agentic verification before manual review
 - per-song quality scoring
 - backup-first direct remediation
 - audit and escalation controls
+- PDF artifact governance, reporting propagation, and remediation re-evaluation
 
 **Functional Requirements Coverage:**
 All functional requirement categories identified in project context are covered by specific modules, state files, and integration flows.

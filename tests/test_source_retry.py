@@ -96,6 +96,10 @@ class TestSourceRetry(unittest.TestCase):
             save_quality_status(quality_path, [clean_status])
 
             with patch.object(document_generation, "QUALITY_STATUS_PATH", quality_path), patch.object(
+                document_generation,
+                "CONTENT_SCORES_PATH",
+                quality_path.with_name("content_scores.json"),
+            ), patch.object(
                 document_generation, "sort_songs", return_value=song_list
             ), patch.object(
                 document_generation, "jsonl_load_entry", return_value="First line\nSecond line"
@@ -138,6 +142,10 @@ class TestSourceRetry(unittest.TestCase):
             }
 
             with patch.object(document_generation, "QUALITY_STATUS_PATH", quality_path), patch.object(
+                document_generation,
+                "CONTENT_SCORES_PATH",
+                quality_path.with_name("content_scores.json"),
+            ), patch.object(
                 document_generation, "sort_songs", return_value=song_list
             ), patch.object(
                 document_generation, "jsonl_load_entry", return_value="<div>Verse</div>"
@@ -192,6 +200,10 @@ class TestSourceRetry(unittest.TestCase):
                 return {"version": 1, "updated_at": updated_at, "entries": {}}
 
             with patch.object(document_generation, "QUALITY_STATUS_PATH", quality_path), patch.object(
+                document_generation,
+                "CONTENT_SCORES_PATH",
+                quality_path.with_name("content_scores.json"),
+            ), patch.object(
                 document_generation, "sort_songs", return_value=song_list
             ), patch.object(
                 document_generation, "jsonl_load_entry", return_value=None

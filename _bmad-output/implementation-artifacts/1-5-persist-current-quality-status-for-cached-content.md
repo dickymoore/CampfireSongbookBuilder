@@ -1,6 +1,6 @@
 # Story 1.5: Persist Current Quality Status for Cached Content
 
-Status: done
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -97,7 +97,7 @@ Validation error example:
 
 ### Agent Model Used
 
-TBD
+GPT-5.2 (Codex CLI)
 
 ### Debug Log References
 
@@ -112,6 +112,7 @@ TBD
 - Resolved review finding: missing `entries` now reports a validation error instead of loading as empty state.
 - Resolved review finding: nested `content_type` must match the enclosing entry key before a record is accepted.
 - Verified the full `unittest` suite passes from the repository root.
+- Revalidated on 2026-05-27: `python3 -m unittest discover -s tests -p 'test_*.py'` (133 tests, OK).
 
 ### File List
 
@@ -124,3 +125,4 @@ TBD
 
 - 2026-05-19: Implemented quality-status persistence and regression tests for story 1.5.
 - 2026-05-19: Addressed code review findings - 2 items resolved (Date: 2026-05-19)
+- 2026-05-27: Revalidated test suite and set story status to review.

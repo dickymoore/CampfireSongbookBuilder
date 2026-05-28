@@ -1,0 +1,46 @@
+{
+  "entries": {
+    "data/output/Chords_Document.docx": {
+      "artifact_path": "data/output/Chords_Document.docx",
+      "artifact_type": "docx",
+      "verification_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-05-23T22:40:27+01:00"
+    },
+    "data/output/Chords_Document.md": {
+      "artifact_path": "data/output/Chords_Document.md",
+      "artifact_type": "markdown",
+      "verification_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-05-23T22:40:27+01:00"
+    },
+    "data/output/Lyrics_Document.docx": {
+      "artifact_path": "data/output/Lyrics_Document.docx",
+      "artifact_type": "docx",
+      "verification_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-05-23T22:40:27+01:00"
+    },
+    "data/output/Lyrics_Document.md": {
+      "artifact_path": "data/output/Lyrics_Document.md",
+      "artifact_type": "markdown",
+      "verification_reasons": [
+        "print_hostile_structure",
+        "excessive_whitespace"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-05-23T22:40:27+01:00"
+    }
+  },
+  "updated_at": "2026-05-23T22:40:27+01:00",
+  "version": 1
+}

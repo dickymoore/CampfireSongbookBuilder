@@ -6,6 +6,7 @@ from pathlib import Path
 from docx import Document
 
 from app.content_models import derive_song_key
+from app.content_scoring import compose_content_score
 from app.document_verification import (
     DEFAULT_DOCUMENT_QUALITY_PATH,
     evaluate_document_artifact,
@@ -21,10 +22,13 @@ from app.document_formatting import (
 )
 from app.generation_filtering import build_current_content_hashes, evaluate_cached_content
 from app.review_state import (
+    DEFAULT_CONTENT_SCORES_PATH,
     DEFAULT_QUALITY_STATUS_PATH,
     DEFAULT_REVIEW_DECISIONS_PATH,
+    load_content_scores,
     load_quality_status,
     load_review_decisions,
+    save_content_scores,
 )
 from app.pdf_generation import convert_document_to_pdf
 from app.review_gate import compute_review_gate_decisions
@@ -37,6 +41,7 @@ logger = logging.getLogger(__name__)
 QUALITY_STATUS_PATH = DEFAULT_QUALITY_STATUS_PATH
 REVIEW_DECISIONS_PATH = DEFAULT_REVIEW_DECISIONS_PATH
 DOCUMENT_QUALITY_PATH = DEFAULT_DOCUMENT_QUALITY_PATH
+CONTENT_SCORES_PATH = DEFAULT_CONTENT_SCORES_PATH
 DEFAULT_REPORT_SOURCE = "generate_from_cache"
 
 
@@ -118,6 +123,13 @@ def _save_document_verification_records(records):
     )
 
 
+def _flatten_content_score_records(state):
+    records = []
+    for song_entries in state.get("entries", {}).values():
+        records.extend(song_entries.values())
+    return records
+
+
 def create_document_from_cache(
     song_list,
     lyrics_cache,
@@ -130,6 +142,7 @@ def create_document_from_cache(
 ):
     logger.debug("Running create_document_from_cache function")
 
+    generated_at = datetime.now().astimezone().isoformat(timespec="seconds")
     current_content_hashes = build_current_content_hashes(lyrics_cache, chords_cache)
     quality_status_state, quality_status_errors = load_quality_status(QUALITY_STATUS_PATH)
     if quality_status_errors:
@@ -170,6 +183,7 @@ def create_document_from_cache(
     pdf_outputs = []
     pdf_errors = []
     document_verification_records = []
+    content_score_records = []
 
     for song in songs_to_process:
         artist = _song_artist(song)
@@ -190,6 +204,16 @@ def create_document_from_cache(
                 quality_status_record=lyrics_quality_status,
                 review_decision_record=lyrics_review_decision,
             )
+            if generation_result.get("content_hash") is not None:
+                try:
+                    content_score_records.append(
+                        compose_content_score(
+                            generation_result.get("quality_status") or {},
+                            scored_at=generated_at,
+                        )
+                    )
+                except ValueError as exc:
+                    logger.warning("Failed to compute lyrics content score for %s: %s", cache_key, exc)
 
             report_included = generation_result["included"]
             report_reason = generation_result["reason"]
@@ -253,6 +277,16 @@ def create_document_from_cache(
                 quality_status_record=chords_quality_status,
                 review_decision_record=chords_review_decision,
             )
+            if generation_result.get("content_hash") is not None:
+                try:
+                    content_score_records.append(
+                        compose_content_score(
+                            generation_result.get("quality_status") or {},
+                            scored_at=generated_at,
+                        )
+                    )
+                except ValueError as exc:
+                    logger.warning("Failed to compute chords content score for %s: %s", cache_key, exc)
             report_entries.append(_build_report_entry(song, "chords", generation_result))
             if selection_records is not None and generation_result["quality"] == "missing":
                 selection_issues.append(
@@ -342,8 +376,35 @@ def create_document_from_cache(
         _save_document_verification_records(document_verification_records)
     review_gate_decisions = compute_review_gate_decisions(document_verification_records)
 
+    if content_score_records:
+        score_state, score_errors = load_content_scores(
+            CONTENT_SCORES_PATH,
+            current_content_hashes=current_content_hashes,
+        )
+        if score_errors:
+            logger.warning(
+                "Content scores load reported %d recoverable issue(s).",
+                len(score_errors),
+            )
+        existing_score_records = _flatten_content_score_records(score_state)
+        overwrite_keys = {
+            (record.get("song_key"), record.get("content_type"))
+            for record in content_score_records
+        }
+        merged_score_records = [
+            record
+            for record in existing_score_records
+            if (record.get("song_key"), record.get("content_type")) not in overwrite_keys
+        ]
+        merged_score_records.extend(content_score_records)
+        save_content_scores(
+            CONTENT_SCORES_PATH,
+            merged_score_records,
+            updated_at=generated_at,
+        )
+
     return {
-        "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "generated_at": generated_at,
         "report_type": "quality_run",
         "source": report_source or DEFAULT_REPORT_SOURCE,
         "entries": report_entries,
@@ -352,4 +413,5 @@ def create_document_from_cache(
         "pdf_errors": pdf_errors,
         "document_verification": document_verification_records,
         "review_gate_decisions": review_gate_decisions,
+        "content_scores": content_score_records,
     }

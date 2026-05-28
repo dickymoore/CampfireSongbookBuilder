@@ -5,3 +5,5 @@ Execute the BMAD create-story workflow for story {{story_id}}.
 Story ID: {{story_id}}
 
 #YOLO - Do NOT wait for user input.
+
+{{extra_instruction}}

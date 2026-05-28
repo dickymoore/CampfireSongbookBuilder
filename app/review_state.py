@@ -516,7 +516,14 @@ def _validate_review_decision_record(
     return validated_decision
 
 
-def _validate_content_score_record(file_path, outer_song_key, content_type_key, record, errors):
+def _validate_content_score_record(
+    file_path,
+    outer_song_key,
+    content_type_key,
+    record,
+    errors,
+    current_content_hash=None,
+):
     record_field_base = "entries['{}'].{}".format(outer_song_key, content_type_key)
 
     if not isinstance(record, dict):
@@ -606,6 +613,23 @@ def _validate_content_score_record(file_path, outer_song_key, content_type_key, 
                 )
             )
             validated_content_hash = None
+
+    if (
+        current_content_hash is not None
+        and validated_content_hash is not None
+        and validated_content_hash != current_content_hash
+    ):
+        errors.append(
+            _validation_error(
+                file_path,
+                "{}.content_hash".format(record_field_base),
+                "content score is stale for current content hash {}; got {!r}".format(
+                    current_content_hash,
+                    validated_content_hash,
+                ),
+            )
+        )
+        return None
 
     quality_score = record.get("quality_score")
     try:
@@ -975,7 +999,7 @@ def load_review_decisions(file_path=DEFAULT_REVIEW_DECISIONS_PATH, current_conte
     return state, errors + state_errors
 
 
-def load_content_scores(file_path=DEFAULT_CONTENT_SCORES_PATH):
+def load_content_scores(file_path=DEFAULT_CONTENT_SCORES_PATH, current_content_hashes=None):
     file_path = Path(file_path)
     document, errors = _load_json_document(file_path)
 
@@ -1063,12 +1087,19 @@ def load_content_scores(file_path=DEFAULT_CONTENT_SCORES_PATH):
                 )
                 continue
 
+            current_content_hash = None
+            if isinstance(current_content_hashes, dict):
+                current_song_hashes = current_content_hashes.get(outer_song_key, {})
+                if isinstance(current_song_hashes, dict):
+                    current_content_hash = current_song_hashes.get(content_type_key)
+
             validated_record = _validate_content_score_record(
                 file_path,
                 outer_song_key,
                 content_type_key,
                 record,
                 state_errors,
+                current_content_hash=current_content_hash,
             )
             if validated_record is not None:
                 validated_song_entries[content_type_key] = validated_record

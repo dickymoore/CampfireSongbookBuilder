@@ -1054,11 +1054,14 @@ run_payload() {{
 }}
 
 set +e
-run_payload &
-child_pid=$!
+# Run in the foreground so interactive CLIs (notably `claude`, which uses Ink)
+# see a real TTY on stdin. We still track a "childPid" for monitoring by using
+# the runner pid; this keeps heartbeat/status checks meaningful while the
+# command is executing.
+child_pid="$runner_pid"
 started_at="$(now_iso)"
 write_state "running" "" "" "" "$runner_pid" "$child_pid" "$started_at" ""
-wait "$child_pid"
+run_payload
 exit_code=$?
 set -e
 

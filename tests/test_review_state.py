@@ -362,6 +362,37 @@ class TestReviewState(unittest.TestCase):
             self.assertTrue(target_path.parent.exists())
             self.assertTrue(target_path.parent.parent.exists())
 
+    def test_load_content_scores_reports_stale_hash_and_ignores_entry(self):
+        lyric_score = self._build_content_score(
+            "The Campfire Trio",
+            "Trail Song",
+            "lyrics",
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            82,
+            score_reasons=["missing_structure_signal"],
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            target_path = Path(tmp_dir) / "data" / "review" / "content_scores.json"
+            save_content_scores(target_path, [lyric_score])
+
+            state, errors = load_content_scores(
+                target_path,
+                current_content_hashes={
+                    "The Campfire Trio - Trail Song": {
+                        "lyrics": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                    }
+                },
+            )
+
+            self.assertEqual(state["entries"], {})
+            self.assertEqual(len(errors), 1)
+            self.assertEqual(
+                errors[0]["field"],
+                "entries['The Campfire Trio - Trail Song'].lyrics.content_hash",
+            )
+            self.assertIn("stale", errors[0]["reason"])
+
     def test_save_and_load_review_decisions_round_trip(self):
         lyric_decision = self._build_review_decision(
             "The Campfire Trio - Trail Song",
