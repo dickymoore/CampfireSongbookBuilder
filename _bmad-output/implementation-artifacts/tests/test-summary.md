@@ -136,3 +136,45 @@
 
 - `python3 -m unittest tests.test_e2e_story_3_1_invalid_source_rows_generate_from_cache`
 - `python3 -m unittest discover -s tests -p 'test_*.py'`
+
+---
+
+## Story
+
+- Story `4.1`: Produce Inspectable PDF Verification Records
+- Source artifact: `_bmad-output/implementation-artifacts/4-1-produce-inspectable-pdf-verification-records.md`
+
+## Generated Tests
+
+### API Tests
+
+- Not applicable: story scope is a local Python CLI application with no API endpoints.
+
+### E2E / Integration Tests
+
+- [x] `tests/test_e2e_story_4_1_pdf_verification_records.py` - Converter success emits a persisted `pdf` verification record and includes it in the traceability report
+- [x] `tests/test_e2e_story_4_1_pdf_verification_records.py` - Converter failure records a generation/conversion error (`pdf_errors`) without emitting a `pdf` verification record
+
+## Gaps Auto-Applied
+
+- Added E2E coverage that exercises the full PDF record lifecycle across document generation, conversion outcome capture (`pdf_outputs`/`pdf_errors`), governed verification record persistence (`data/review/document_quality.json`), and traceability reporting.
+
+## Coverage
+
+- Story 4.1 targeted scenarios: 2/2 passing
+- Repository regression suite: 149/149 tests passing
+- API endpoints covered: N/A
+- UI workflows covered: N/A
+
+## Validation
+
+- [x] Tests use the existing `unittest` framework
+- [x] Happy path covered (PDF exists → verification record persisted + reported)
+- [x] Critical error case covered (conversion failure → `pdf_errors` only, no PDF verification record)
+- [x] Tests are independent and use no hardcoded waits
+- [x] Summary updated under implementation artifacts
+
+## Commands Run
+
+- `python3 -m unittest tests.test_e2e_story_4_1_pdf_verification_records`
+- `python3 -m unittest discover -s tests -p 'test_*.py'`

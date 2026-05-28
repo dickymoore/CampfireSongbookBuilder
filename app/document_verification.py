@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 DOCUMENT_VERIFICATION_VERSION = 1
 DEFAULT_DOCUMENT_QUALITY_PATH = Path("data/review/document_quality.json")
-ARTIFACT_TYPES = ("markdown", "docx")
+ARTIFACT_TYPES = ("markdown", "docx", "pdf")
 VERIFICATION_STATUSES = ("passed", "failed")
 NEATNESS_REASON_PASSED = "meets_neatness_thresholds"
 NEATNESS_REASON_EXCESSIVE_WHITESPACE = "excessive_whitespace"
@@ -29,6 +29,8 @@ MIN_AVERAGE_BODY_LINES_PER_SONG = 2.0
 SHORT_SONG_BLOCK_MAX_LINES = 1
 MIN_FRAGMENTED_BLOCKS = 2
 MIN_FRAGMENTED_BLOCK_RATIO = 0.5
+PDF_REASON_MISSING = "missing_pdf"
+PDF_REASON_EMPTY = "empty_pdf"
 
 
 def _validation_error(file_path, field, reason):
@@ -253,18 +255,44 @@ def evaluate_docx_artifact_neatness(document):
     }
 
 
+def evaluate_pdf_artifact_neatness(pdf_path):
+    pdf_path = Path(pdf_path)
+    if not pdf_path.exists():
+        return {
+            "verification_status": "failed",
+            "verification_reasons": [PDF_REASON_MISSING],
+        }
+
+    if pdf_path.stat().st_size <= 0:
+        return {
+            "verification_status": "failed",
+            "verification_reasons": [PDF_REASON_EMPTY],
+        }
+
+    return {
+        "verification_status": "passed",
+        "verification_reasons": [NEATNESS_REASON_PASSED],
+    }
+
+
 def evaluate_document_artifact(artifact_path, artifact_type=None, verified_at=None):
     artifact_path = Path(artifact_path)
-    artifact_type_value = validate_artifact_type(
-        artifact_type if artifact_type is not None else artifact_path.suffix.lstrip(".")
-    )
+    if artifact_type is None:
+        extension = artifact_path.suffix.lstrip(".").lower()
+        artifact_type = "markdown" if extension == "md" else extension
+    elif isinstance(artifact_type, str):
+        artifact_type = artifact_type.lower()
+
+    artifact_type_value = validate_artifact_type(artifact_type)
 
     if artifact_type_value == "markdown":
         evaluation = evaluate_markdown_artifact_neatness(
             artifact_path.read_text(encoding="utf-8")
         )
-    else:
+    elif artifact_type_value == "docx":
         evaluation = evaluate_docx_artifact_neatness(Document(artifact_path))
+    else:
+        evaluation = evaluate_pdf_artifact_neatness(artifact_path)
 
     return build_document_verification_record(
         artifact_path=str(artifact_path),

@@ -7,6 +7,7 @@ from app.document_verification import (
     build_document_verification_record,
     evaluate_document_artifact,
     evaluate_markdown_artifact_neatness,
+    evaluate_pdf_artifact_neatness,
     load_document_verification,
     save_document_verification,
 )
@@ -47,11 +48,17 @@ class TestDocumentVerification(unittest.TestCase):
             "passed",
             verification_reasons=[],
         )
+        pdf_record = self._build_record(
+            "data/output/Lyrics_Document.pdf",
+            "pdf",
+            "passed",
+            verification_reasons=[],
+        )
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             target_path = Path(tmp_dir) / "data" / "review" / "document_quality.json"
 
-            save_document_verification(target_path, [markdown_record, docx_record])
+            save_document_verification(target_path, [markdown_record, docx_record, pdf_record])
 
             self.assertTrue(target_path.exists())
             self.assertTrue(target_path.parent.exists())
@@ -67,6 +74,10 @@ class TestDocumentVerification(unittest.TestCase):
             self.assertEqual(
                 state["entries"]["data/output/Lyrics_Document.docx"],
                 docx_record,
+            )
+            self.assertEqual(
+                state["entries"]["data/output/Lyrics_Document.pdf"],
+                pdf_record,
             )
 
     def test_load_missing_file_returns_empty_state(self):
@@ -297,6 +308,53 @@ class TestDocumentVerification(unittest.TestCase):
                 record["verification_reasons"],
                 ["meets_neatness_thresholds"],
             )
+
+    def test_evaluate_pdf_artifact_neatness_passes_non_empty_files(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "lyrics.pdf"
+            pdf_path.write_bytes(b"%PDF-FAKE\ncontent\n")
+
+            evaluation = evaluate_pdf_artifact_neatness(pdf_path)
+
+            self.assertEqual(evaluation["verification_status"], "passed")
+            self.assertEqual(
+                evaluation["verification_reasons"],
+                ["meets_neatness_thresholds"],
+            )
+
+    def test_evaluate_document_artifact_accepts_md_extension(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            markdown_path = Path(tmp_dir) / "lyrics.md"
+            markdown_path.write_text(
+                "\n".join(
+                    [
+                        "# Trail Song by The Campfire Trio",
+                        "",
+                        "```text",
+                        "First line",
+                        "Second line",
+                        "```",
+                        "",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            record = evaluate_document_artifact(markdown_path)
+
+            self.assertEqual(record["artifact_type"], "markdown")
+            self.assertEqual(record["verification_status"], "passed")
+
+    def test_evaluate_document_artifact_accepts_pdf_extension(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "lyrics.pdf"
+            pdf_path.write_text("pdf", encoding="utf-8")
+
+            record = evaluate_document_artifact(pdf_path)
+
+            self.assertEqual(record["artifact_type"], "pdf")
+            self.assertEqual(record["verification_status"], "passed")
 
 
 if __name__ == "__main__":

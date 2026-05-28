@@ -338,6 +338,9 @@ def create_document_from_cache(
             lyrics_pdf_path, lyrics_pdf_error = convert_document_to_pdf(lyrics_output)
             if lyrics_pdf_path is not None:
                 pdf_outputs.append(str(lyrics_pdf_path))
+                document_verification_records.append(
+                    evaluate_document_artifact(lyrics_pdf_path, artifact_type="pdf")
+                )
             if lyrics_pdf_error is not None:
                 pdf_errors.append(
                     {
@@ -363,6 +366,9 @@ def create_document_from_cache(
             chords_pdf_path, chords_pdf_error = convert_document_to_pdf(chords_output)
             if chords_pdf_path is not None:
                 pdf_outputs.append(str(chords_pdf_path))
+                document_verification_records.append(
+                    evaluate_document_artifact(chords_pdf_path, artifact_type="pdf")
+                )
             if chords_pdf_error is not None:
                 pdf_errors.append(
                     {
