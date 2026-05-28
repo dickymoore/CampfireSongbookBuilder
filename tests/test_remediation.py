@@ -102,6 +102,7 @@ class TestRemediation(unittest.TestCase):
     def test_run_bounded_remediation_refuses_out_of_scope_candidate(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace_root = Path(tmp_dir)
+            backups_dir = workspace_root / "data" / "review" / "backups"
             audit_path = workspace_root / "data" / "review" / "audit" / "remediation_attempts.jsonl"
             runner_calls = []
 
@@ -116,6 +117,7 @@ class TestRemediation(unittest.TestCase):
                 "Unknown words",
                 self._score(10, "missing_lyrics"),
                 workspace_root=workspace_root,
+                backups_dir=backups_dir,
                 audit_path=audit_path,
                 runner=runner,
             )
@@ -138,6 +140,7 @@ class TestRemediation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace_root = Path(tmp_dir)
             remediated_content_path = workspace_root / "data" / "review" / "remediated_content.json"
+            backups_dir = workspace_root / "data" / "review" / "backups"
             audit_path = workspace_root / "data" / "review" / "audit" / "remediation_attempts.jsonl"
 
             def runner(command, input=None, check=None, capture_output=None, text=None):
@@ -151,6 +154,7 @@ class TestRemediation(unittest.TestCase):
                 self._score(20, "duplicate_block"),
                 workspace_root=workspace_root,
                 remediated_content_path=remediated_content_path,
+                backups_dir=backups_dir,
                 audit_path=audit_path,
                 runner=runner,
             )
@@ -175,6 +179,7 @@ class TestRemediation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace_root = Path(tmp_dir)
             remediated_content_path = workspace_root / "data" / "review" / "remediated_content.json"
+            backups_dir = workspace_root / "data" / "review" / "backups"
             audit_path = workspace_root / "data" / "review" / "audit" / "remediation_attempts.jsonl"
             quality_status_path = workspace_root / "data" / "review" / "quality_status.json"
             content_scores_path = workspace_root / "data" / "review" / "content_scores.json"
@@ -192,6 +197,7 @@ class TestRemediation(unittest.TestCase):
                 self._score(20, "duplicate_block"),
                 workspace_root=workspace_root,
                 remediated_content_path=remediated_content_path,
+                backups_dir=backups_dir,
                 audit_path=audit_path,
                 quality_status_path=quality_status_path,
                 content_scores_path=content_scores_path,

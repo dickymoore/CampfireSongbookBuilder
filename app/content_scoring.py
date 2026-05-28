@@ -150,6 +150,43 @@ def _penalty_for_signal(content_type, signal):
     return _DEFAULT_SEVERITY_PENALTIES.get(severity, 0)
 
 
+def _compose_score_reasons(content_type, quality, signals):
+    """Build stable, machine-readable score reason tokens.
+
+    Contract (v1):
+      - `score_reasons` is a list of non-empty strings.
+      - The first entry is `quality:<quality>` when quality is not `clean`.
+      - Remaining entries are `signal:<signal_code>` tokens for signals that
+        materially contribute to the score (i.e., signals with a non-zero penalty),
+        ordered deterministically by descending penalty then signal code.
+    """
+
+    score_reasons = []
+    if quality != "clean":
+        score_reasons.append("quality:{}".format(quality))
+
+    material_penalties_by_code = {}
+    for signal in signals or []:
+        code = signal.get("code")
+        if not code:
+            continue
+        penalty = _penalty_for_signal(content_type, signal)
+        if penalty <= 0:
+            continue
+        previous = material_penalties_by_code.get(code)
+        if previous is None or penalty > previous:
+            material_penalties_by_code[code] = penalty
+
+    ordered_codes = sorted(
+        material_penalties_by_code.items(),
+        key=lambda item: (-item[1], item[0]),
+    )
+    for code, _ in ordered_codes:
+        score_reasons.append("signal:{}".format(code))
+
+    return score_reasons
+
+
 def compose_content_score(quality_status_record, scored_at=None):
     validated_record = _validate_quality_status_record(quality_status_record)
     content_type = validated_record["content_type"]
@@ -167,11 +204,7 @@ def compose_content_score(quality_status_record, scored_at=None):
         if quality_score > 100:
             quality_score = 100
 
-    score_reasons = []
-    if quality != "clean":
-        score_reasons.append("quality:{}".format(quality))
-    for signal in signals:
-        score_reasons.append("signal:{}".format(signal["code"]))
+    score_reasons = _compose_score_reasons(content_type, quality, signals)
 
     return build_content_score(
         validated_record["artist"],

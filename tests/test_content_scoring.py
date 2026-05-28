@@ -30,7 +30,7 @@ class TestContentScoring(unittest.TestCase):
             "lyrics",
             "sha256:1111111111111111111111111111111111111111111111111111111111111111",
             82,
-            score_reasons=["missing_structure_signal"],
+            score_reasons=["signal:missing_structure_signal"],
             scored_at="2026-05-23T19:00:00+01:00",
         )
 
@@ -38,7 +38,7 @@ class TestContentScoring(unittest.TestCase):
         self.assertEqual(score["quality_score"], 82)
         self.assertEqual(score["quality_band"], "reviewable")
         self.assertEqual(score["score_version"], SCORE_VERSION_V1)
-        self.assertEqual(score["score_reasons"], ["missing_structure_signal"])
+        self.assertEqual(score["score_reasons"], ["signal:missing_structure_signal"])
 
     def test_quality_band_for_score_uses_v1_thresholds(self):
         self.assertEqual(quality_band_for_score(100), "clean")
@@ -214,6 +214,50 @@ class TestContentScoring(unittest.TestCase):
         )
 
         self.assertEqual(first, second)
+
+    def test_compose_content_score_orders_score_reasons_deterministically(self):
+        html_signal = build_quality_signal(
+            "html_residue",
+            "warning",
+            "HTML residue was detected in the source text.",
+            "lyrics",
+        )
+        confidence_signal = build_quality_signal(
+            "low_confidence_match",
+            "warning",
+            "Source artist does not match the requested song.",
+            "lyrics",
+        )
+
+        status_a = self._build_quality_status(
+            "The Campfire Trio",
+            "Trail Song",
+            "lyrics",
+            "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "questionable",
+            signals=[html_signal, confidence_signal],
+        )
+        status_b = self._build_quality_status(
+            "The Campfire Trio",
+            "Trail Song",
+            "lyrics",
+            "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            "questionable",
+            signals=[confidence_signal, html_signal, html_signal],
+        )
+
+        score_a = compose_content_score(status_a)
+        score_b = compose_content_score(status_b)
+
+        self.assertEqual(
+            score_a["score_reasons"],
+            [
+                "quality:questionable",
+                "signal:low_confidence_match",
+                "signal:html_residue",
+            ],
+        )
+        self.assertEqual(score_a["score_reasons"], score_b["score_reasons"])
 
     def test_prioritize_content_scores_orders_worst_first_and_keeps_content_types_distinct(self):
         scores = [
