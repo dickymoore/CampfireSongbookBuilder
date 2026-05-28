@@ -407,6 +407,7 @@ def reevaluate_remediated_content(
     )
 
     refreshed_verification_records = []
+    missing_artifact_paths = []
     if artifact_paths:
         document_verification_state, _ = load_document_verification(document_quality_path)
         merged_records = _flatten_state_records(document_verification_state)
@@ -414,6 +415,7 @@ def reevaluate_remediated_content(
         for artifact_path in artifact_paths:
             path = Path(artifact_path)
             if not path.exists():
+                missing_artifact_paths.append(str(path))
                 continue
             refreshed_record = evaluate_document_artifact(path)
             refreshed_verification_records.append(refreshed_record)
@@ -437,11 +439,12 @@ def reevaluate_remediated_content(
     score_improved = (
         isinstance(previous_quality_score, int) and current_quality_score > previous_quality_score
     )
-    verification_passed = all(
-        record.get("verification_status") == "passed"
-        for record in refreshed_verification_records
-    )
-    if not refreshed_verification_records:
+    if artifact_paths:
+        verification_passed = (not missing_artifact_paths) and all(
+            record.get("verification_status") == "passed"
+            for record in refreshed_verification_records
+        )
+    else:
         verification_passed = True
 
     evaluation_outcome = (
@@ -486,6 +489,8 @@ def reevaluate_remediated_content(
         "review_gate_decisions": review_gate_decisions,
         "unresolved_reasons": unresolved_reasons,
     }
+    if missing_artifact_paths:
+        details["missing_artifact_paths"] = missing_artifact_paths
     if escalation_category is not None:
         details["escalation_category"] = escalation_category
         details["escalation_reason"] = escalation_reason

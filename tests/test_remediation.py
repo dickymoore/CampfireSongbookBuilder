@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from app.document_verification import load_document_verification
 from app.remediation import count_remediation_attempts, run_bounded_remediation
 from app.remediation_state import load_remediated_content, load_remediation_audit_records, record_remediation_audit
 from app.review_state import load_content_scores, load_quality_status
@@ -22,6 +23,12 @@ class TestRemediation(unittest.TestCase):
             "score_reasons": ["signal:{}".format(code) for code in signal_codes],
             "scored_at": "2026-05-23T19:30:00+01:00",
         }
+
+    def _write_artifact(self, path, text):
+        artifact_path = Path(path)
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        artifact_path.write_text(text, encoding="utf-8")
+        return artifact_path
 
     def test_run_bounded_remediation_routes_allowed_candidate_through_codex_exec(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -109,6 +116,166 @@ class TestRemediation(unittest.TestCase):
             )
             for record in audit_records:
                 self.assertEqual(record["pre_change_reference"], backup_reference)
+
+    def test_run_bounded_remediation_persists_document_verification_when_artifacts_pass(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace_root = Path(tmp_dir)
+            remediated_content_path = workspace_root / "data" / "review" / "remediated_content.json"
+            backups_dir = workspace_root / "data" / "review" / "backups"
+            audit_path = workspace_root / "data" / "review" / "audit" / "remediation_attempts.jsonl"
+            quality_status_path = workspace_root / "data" / "review" / "quality_status.json"
+            content_scores_path = workspace_root / "data" / "review" / "content_scores.json"
+            document_quality_path = workspace_root / "data" / "review" / "document_quality.json"
+            artifact_path = self._write_artifact(
+                workspace_root / "data" / "output" / "lyrics.markdown",
+                "# Trail Song by The Campfire Trio\nVerse 1\nChorus\n",
+            )
+
+            def runner(command, input=None, check=None, capture_output=None, text=None):
+                output_path = Path(command[command.index("-o") + 1])
+                output_path.write_text("Verse 1\nChorus", encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            result = run_bounded_remediation(
+                "The Campfire Trio",
+                "Trail Song",
+                "lyrics",
+                "Verse 1\n\n\n<div>junk</div>\nVerse 1",
+                self._score(25, "html_residue", "duplicate_block"),
+                workspace_root=workspace_root,
+                remediated_content_path=remediated_content_path,
+                backups_dir=backups_dir,
+                audit_path=audit_path,
+                quality_status_path=quality_status_path,
+                content_scores_path=content_scores_path,
+                document_quality_path=document_quality_path,
+                artifact_paths=[str(artifact_path)],
+                runner=runner,
+            )
+
+            self.assertEqual(result["status"], "success")
+            self.assertFalse(result["manual_review_required"])
+            self.assertEqual(result["post_remediation_evaluation"]["status"], "resolved")
+            self.assertTrue(result["post_remediation_evaluation"]["score_improved"])
+
+            verification_records = result["post_remediation_evaluation"]["document_verification"]
+            self.assertEqual(len(verification_records), 1)
+            self.assertEqual(verification_records[0]["verification_status"], "passed")
+
+            saved_state, errors = load_document_verification(document_quality_path)
+            self.assertEqual(errors, [])
+            self.assertIn(str(artifact_path), saved_state["entries"])
+
+    def test_post_remediation_verification_failure_keeps_candidate_unresolved(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace_root = Path(tmp_dir)
+            remediated_content_path = workspace_root / "data" / "review" / "remediated_content.json"
+            backups_dir = workspace_root / "data" / "review" / "backups"
+            audit_path = workspace_root / "data" / "review" / "audit" / "remediation_attempts.jsonl"
+            quality_status_path = workspace_root / "data" / "review" / "quality_status.json"
+            content_scores_path = workspace_root / "data" / "review" / "content_scores.json"
+            document_quality_path = workspace_root / "data" / "review" / "document_quality.json"
+            artifact_path = self._write_artifact(
+                workspace_root / "data" / "output" / "lyrics.markdown",
+                "No headings so neatness verification fails.\n",
+            )
+
+            def runner(command, input=None, check=None, capture_output=None, text=None):
+                output_path = Path(command[command.index("-o") + 1])
+                output_path.write_text("Verse 1\nChorus", encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            result = run_bounded_remediation(
+                "The Campfire Trio",
+                "Trail Song",
+                "lyrics",
+                "Verse 1\n\n\n<div>junk</div>\nVerse 1",
+                self._score(25, "html_residue", "duplicate_block"),
+                workspace_root=workspace_root,
+                remediated_content_path=remediated_content_path,
+                backups_dir=backups_dir,
+                audit_path=audit_path,
+                quality_status_path=quality_status_path,
+                content_scores_path=content_scores_path,
+                document_quality_path=document_quality_path,
+                artifact_paths=[str(artifact_path)],
+                runner=runner,
+            )
+
+            self.assertEqual(result["status"], "success")
+            self.assertTrue(result["manual_review_required"])
+            self.assertEqual(result["post_remediation_evaluation"]["status"], "unresolved")
+            self.assertEqual(result["escalation_category"], "verification_failed")
+            self.assertEqual(
+                result["post_remediation_evaluation"]["unresolved_reasons"],
+                ["verification_failed"],
+            )
+            quality_score = result["post_remediation_evaluation"]["content_score"]["quality_score"]
+            self.assertGreaterEqual(quality_score, 60)
+
+            audit_records, audit_errors = load_remediation_audit_records(audit_path)
+            self.assertEqual(audit_errors, [])
+            self.assertEqual(
+                [record["outcome"] for record in audit_records],
+                ["allowed", "attempted", "success", "unresolved"],
+            )
+            self.assertEqual(
+                audit_records[-1]["details"]["unresolved_reasons"],
+                ["verification_failed"],
+            )
+
+    def test_post_remediation_missing_artifact_paths_keep_candidate_unresolved(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace_root = Path(tmp_dir)
+            remediated_content_path = workspace_root / "data" / "review" / "remediated_content.json"
+            backups_dir = workspace_root / "data" / "review" / "backups"
+            audit_path = workspace_root / "data" / "review" / "audit" / "remediation_attempts.jsonl"
+            quality_status_path = workspace_root / "data" / "review" / "quality_status.json"
+            content_scores_path = workspace_root / "data" / "review" / "content_scores.json"
+            document_quality_path = workspace_root / "data" / "review" / "document_quality.json"
+            missing_artifact_path = workspace_root / "data" / "output" / "lyrics.markdown"
+
+            def runner(command, input=None, check=None, capture_output=None, text=None):
+                output_path = Path(command[command.index("-o") + 1])
+                output_path.write_text("Verse 1\nChorus", encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            result = run_bounded_remediation(
+                "The Campfire Trio",
+                "Trail Song",
+                "lyrics",
+                "Verse 1\n\n\n<div>junk</div>\nVerse 1",
+                self._score(25, "html_residue", "duplicate_block"),
+                workspace_root=workspace_root,
+                remediated_content_path=remediated_content_path,
+                backups_dir=backups_dir,
+                audit_path=audit_path,
+                quality_status_path=quality_status_path,
+                content_scores_path=content_scores_path,
+                document_quality_path=document_quality_path,
+                artifact_paths=[str(missing_artifact_path)],
+                runner=runner,
+            )
+
+            self.assertEqual(result["status"], "success")
+            self.assertTrue(result["manual_review_required"])
+            self.assertEqual(result["post_remediation_evaluation"]["status"], "unresolved")
+            self.assertEqual(result["escalation_category"], "verification_failed")
+            self.assertEqual(
+                result["post_remediation_evaluation"]["unresolved_reasons"],
+                ["verification_failed"],
+            )
+
+            audit_records, audit_errors = load_remediation_audit_records(audit_path)
+            self.assertEqual(audit_errors, [])
+            self.assertEqual(
+                [record["outcome"] for record in audit_records],
+                ["allowed", "attempted", "success", "unresolved"],
+            )
+            self.assertEqual(
+                audit_records[-1]["details"]["missing_artifact_paths"],
+                [str(missing_artifact_path)],
+            )
 
     def test_run_bounded_remediation_refuses_out_of_scope_candidate(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
