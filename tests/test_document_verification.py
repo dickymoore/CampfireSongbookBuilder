@@ -3,6 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from tests.pdf_fixtures import write_minimal_pdf
+
 from app.document_verification import (
     build_document_verification_record,
     evaluate_document_artifact,
@@ -312,7 +314,7 @@ class TestDocumentVerification(unittest.TestCase):
     def test_evaluate_pdf_artifact_neatness_passes_non_empty_files(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             pdf_path = Path(tmp_dir) / "lyrics.pdf"
-            pdf_path.write_bytes(b"%PDF-FAKE\ncontent\n")
+            write_minimal_pdf(pdf_path, ["x" * 80])
 
             evaluation = evaluate_pdf_artifact_neatness(pdf_path)
 
@@ -349,12 +351,42 @@ class TestDocumentVerification(unittest.TestCase):
     def test_evaluate_document_artifact_accepts_pdf_extension(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             pdf_path = Path(tmp_dir) / "lyrics.pdf"
-            pdf_path.write_text("pdf", encoding="utf-8")
+            write_minimal_pdf(pdf_path, ["x" * 80])
 
             record = evaluate_document_artifact(pdf_path)
 
             self.assertEqual(record["artifact_type"], "pdf")
             self.assertEqual(record["verification_status"], "passed")
+
+    def test_evaluate_pdf_artifact_neatness_reports_parse_failure_for_unreadable_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "lyrics.pdf"
+            pdf_path.write_bytes(b"%PDF-FAKE\ncontent\n")
+
+            evaluation = evaluate_pdf_artifact_neatness(pdf_path)
+
+            self.assertEqual(evaluation["verification_status"], "failed")
+            self.assertIn("pdf_parse_failed", evaluation["verification_reasons"])
+
+    def test_evaluate_pdf_artifact_neatness_reports_sparse_pages_ratio(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "lyrics.pdf"
+            write_minimal_pdf(pdf_path, ["x" * 80, "", ""])
+
+            evaluation = evaluate_pdf_artifact_neatness(pdf_path)
+
+            self.assertEqual(evaluation["verification_status"], "failed")
+            self.assertIn("sparse_pages", evaluation["verification_reasons"])
+
+    def test_evaluate_pdf_artifact_neatness_reports_text_extraction_failure_when_no_pages_have_text(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "lyrics.pdf"
+            write_minimal_pdf(pdf_path, [""])
+
+            evaluation = evaluate_pdf_artifact_neatness(pdf_path)
+
+            self.assertEqual(evaluation["verification_status"], "failed")
+            self.assertIn("text_extraction_failed", evaluation["verification_reasons"])
 
 
 if __name__ == "__main__":

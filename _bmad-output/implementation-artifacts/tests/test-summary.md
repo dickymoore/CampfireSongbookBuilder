@@ -178,3 +178,45 @@
 
 - `python3 -m unittest tests.test_e2e_story_4_1_pdf_verification_records`
 - `python3 -m unittest discover -s tests -p 'test_*.py'`
+
+---
+
+## Story
+
+- Story `4.2`: Evaluate PDF Neatness with Deterministic Layout Heuristics
+- Source artifact: `_bmad-output/implementation-artifacts/4-2-evaluate-pdf-neatness-with-deterministic-layout-heuristics.md`
+
+## Generated Tests
+
+### API Tests
+
+- Not applicable: story scope is a local Python CLI application with no API endpoints.
+
+### E2E / Integration Tests
+
+- [x] `tests/test_e2e_story_4_2_pdf_neatness_heuristics.py` - Sparse pages PDF emits a failing verification record with reason codes persisted
+- [x] `tests/test_e2e_story_4_2_pdf_neatness_heuristics.py` - PDFs with no extractable text emit all applicable reasons in deterministic order
+
+## Gaps Auto-Applied
+
+- Added missing E2E coverage for Story 4.2 failure heuristics to ensure PDF neatness reasons are recorded and persisted via the document generation flow.
+
+## Coverage
+
+- Story 4.2 targeted scenarios: 2/2 passing
+- Repository regression suite: 154/154 tests passing
+- API endpoints covered: N/A
+- UI workflows covered: N/A
+
+## Validation
+
+- [x] Tests use the existing `unittest` framework
+- [x] Happy path covered (see Story 4.1 PDF verification record success case)
+- [x] Critical error cases covered (sparse pages; extraction failure)
+- [x] Tests are independent and use no hardcoded waits
+- [x] Summary updated under implementation artifacts
+
+## Commands Run
+
+- `python3 -m unittest tests.test_e2e_story_4_2_pdf_neatness_heuristics`
+- `python3 -m unittest discover -s tests -p 'test_*.py'`

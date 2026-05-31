@@ -7,6 +7,7 @@ from app.content_models import build_favourite_record, build_review_decision, co
 from app.document_verification import load_document_verification
 from app.review_state import load_content_scores, save_review_decisions
 from tests.docx_stub import install_docx_stub
+from tests.pdf_fixtures import write_minimal_pdf
 
 install_docx_stub()
 
@@ -294,7 +295,7 @@ class TestDocumentCreation(unittest.TestCase):
 
             def fake_convert(docx_path, pdf_path=None, runner=None, which=None):  # noqa: ARG001
                 target_path = Path(docx_path).with_suffix(".pdf")
-                target_path.write_text("pdf", encoding="utf-8")
+                write_minimal_pdf(target_path, "x" * 80)
                 return target_path, None
 
             with patch("app.document_creation.convert_document_to_pdf", side_effect=fake_convert):

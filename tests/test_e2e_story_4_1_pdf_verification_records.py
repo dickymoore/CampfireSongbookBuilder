@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from tests.docx_stub import install_docx_stub
+from tests.pdf_fixtures import write_minimal_pdf
 
 install_docx_stub()
 
@@ -85,7 +86,7 @@ class TestE2EStory41PdfVerificationRecords(unittest.TestCase):
 
             expected_pdf_path = tmp_path / "data" / "output" / "Lyrics_Document.pdf"
             expected_pdf_path.parent.mkdir(parents=True, exist_ok=True)
-            expected_pdf_path.write_text("pdf", encoding="utf-8")
+            write_minimal_pdf(expected_pdf_path, "x" * 80)
 
             outputs = self._run_document_generation(tmp_path, (expected_pdf_path, None))
 

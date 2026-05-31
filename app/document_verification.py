@@ -1,6 +1,9 @@
 import json
 import logging
+import warnings
+from contextlib import redirect_stderr
 from datetime import datetime
+from io import BytesIO, StringIO
 from pathlib import Path
 
 try:
@@ -13,6 +16,13 @@ except ModuleNotFoundError:  # pragma: no cover - exercised in test environments
 
 
 logger = logging.getLogger(__name__)
+
+try:
+    from pypdf import PdfReader
+    from pypdf.errors import PdfReadWarning
+except ModuleNotFoundError:  # pragma: no cover - exercised in minimal environments
+    PdfReader = None
+    PdfReadWarning = None
 
 DOCUMENT_VERIFICATION_VERSION = 1
 DEFAULT_DOCUMENT_QUALITY_PATH = Path("data/review/document_quality.json")
@@ -31,6 +41,15 @@ MIN_FRAGMENTED_BLOCKS = 2
 MIN_FRAGMENTED_BLOCK_RATIO = 0.5
 PDF_REASON_MISSING = "missing_pdf"
 PDF_REASON_EMPTY = "empty_pdf"
+PDF_REASON_PARSE_FAILED = "pdf_parse_failed"
+PDF_REASON_EXCESSIVE_PAGE_COUNT = "excessive_page_count"
+PDF_REASON_SPARSE_PAGES = "sparse_pages"
+PDF_REASON_TEXT_EXTRACTION_FAILED = "text_extraction_failed"
+
+PDF_MAX_PAGE_COUNT = 500
+PDF_MIN_EXTRACTED_TEXT_CHARS_PER_PAGE = 30
+PDF_MAX_SPARSE_PAGE_RATIO = 0.6
+PDF_MAX_TEXT_EXTRACTION_FAILURE_RATIO = 0.2
 
 
 def _validation_error(file_path, field, reason):
@@ -269,9 +288,92 @@ def evaluate_pdf_artifact_neatness(pdf_path):
             "verification_reasons": [PDF_REASON_EMPTY],
         }
 
+    if PdfReader is None:
+        logger.warning("pypdf is not installed; cannot evaluate PDF neatness for %s", pdf_path)
+        return {
+            "verification_status": "failed",
+            "verification_reasons": [PDF_REASON_PARSE_FAILED],
+        }
+
+    try:
+        pdf_bytes = pdf_path.read_bytes()
+    except OSError as exc:
+        logger.warning("Failed to read PDF bytes for %s: %s", pdf_path, exc)
+        return {
+            "verification_status": "failed",
+            "verification_reasons": [PDF_REASON_PARSE_FAILED],
+        }
+
+    pypdf_logger = logging.getLogger("pypdf")
+    pypdf_original_level = pypdf_logger.level
+    pypdf_logger.setLevel(logging.ERROR)
+    try:
+        with warnings.catch_warnings():
+            if PdfReadWarning is not None:
+                warnings.simplefilter("ignore", category=PdfReadWarning)
+            with redirect_stderr(StringIO()):
+                reader = PdfReader(BytesIO(pdf_bytes), strict=False)
+        pages = list(reader.pages)
+    except Exception as exc:  # noqa: BLE001 - treat unreadable PDFs as deterministic failures
+        logger.info("PDF parse failed for %s: %s", pdf_path, exc)
+        return {
+            "verification_status": "failed",
+            "verification_reasons": [PDF_REASON_PARSE_FAILED],
+        }
+    finally:
+        pypdf_logger.setLevel(pypdf_original_level)
+
+    if not pages:
+        return {
+            "verification_status": "failed",
+            "verification_reasons": [PDF_REASON_TEXT_EXTRACTION_FAILED, PDF_REASON_SPARSE_PAGES],
+        }
+
+    total_pages = len(pages)
+    sparse_pages = 0
+    extraction_failures = 0
+    pages_with_any_text = 0
+
+    for page in pages:
+        try:
+            extracted_text = page.extract_text()
+        except Exception:  # noqa: BLE001 - pypdf may throw for malformed content
+            extraction_failures += 1
+            sparse_pages += 1
+            continue
+
+        extracted_text = extracted_text or ""
+        extracted_text = extracted_text.strip()
+        if extracted_text:
+            pages_with_any_text += 1
+
+        if len(extracted_text) < PDF_MIN_EXTRACTED_TEXT_CHARS_PER_PAGE:
+            sparse_pages += 1
+
+    reasons = []
+    if total_pages > PDF_MAX_PAGE_COUNT:
+        reasons.append(PDF_REASON_EXCESSIVE_PAGE_COUNT)
+
+    if pages_with_any_text == 0:
+        reasons.append(PDF_REASON_TEXT_EXTRACTION_FAILED)
+    else:
+        extraction_failure_ratio = extraction_failures / float(total_pages)
+        if extraction_failure_ratio > PDF_MAX_TEXT_EXTRACTION_FAILURE_RATIO:
+            reasons.append(PDF_REASON_TEXT_EXTRACTION_FAILED)
+
+    sparse_ratio = sparse_pages / float(total_pages)
+    if sparse_ratio > PDF_MAX_SPARSE_PAGE_RATIO:
+        reasons.append(PDF_REASON_SPARSE_PAGES)
+
+    if not reasons:
+        return {
+            "verification_status": "passed",
+            "verification_reasons": [NEATNESS_REASON_PASSED],
+        }
+
     return {
-        "verification_status": "passed",
-        "verification_reasons": [NEATNESS_REASON_PASSED],
+        "verification_status": "failed",
+        "verification_reasons": reasons,
     }
 
 
