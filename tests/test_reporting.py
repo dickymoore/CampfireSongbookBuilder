@@ -245,6 +245,106 @@ class TestReporting(unittest.TestCase):
         self.assertEqual(report["pdf_outputs"], pdf_outputs)
         self.assertEqual(report["pdf_errors"], pdf_errors)
 
+    def test_build_traceable_quality_report_surfaces_pdf_generation_failures_in_manual_review_gate(self):
+        generation_results = []
+        pdf_errors = [
+            {
+                "source": "/tmp/output/lyrics.docx",
+                "target": "/tmp/output/lyrics.pdf",
+                "reason": "converter missing",
+            }
+        ]
+
+        report = build_traceable_quality_report(
+            generation_results,
+            source="generate_from_selection",
+            generated_at="2026-05-19T15:14:19+01:00",
+            pdf_errors=pdf_errors,
+        )
+
+        manual_gate = report["manual_review_gate"]
+        self.assertEqual(manual_gate["ready_count"], 0)
+        self.assertEqual(manual_gate["blocked_count"], 1)
+        self.assertEqual(manual_gate["generation_failure_count"], 1)
+        self.assertEqual(manual_gate["blocked_artifacts"], [])
+        self.assertEqual(len(manual_gate["generation_failures"]), 1)
+        self.assertEqual(manual_gate["generation_failures"][0]["artifact_type"], "pdf")
+        self.assertEqual(manual_gate["generation_failures"][0]["artifact_path"], "/tmp/output/lyrics.pdf")
+        self.assertEqual(manual_gate["generation_failures"][0]["blocking_stage"], "pdf_generation")
+        self.assertEqual(manual_gate["generation_failures"][0]["generation_reason"], "converter missing")
+        self.assertIsNone(manual_gate["generation_failures"][0].get("verification_status"))
+
+    def test_build_traceable_quality_report_sorts_pdf_generation_failures_deterministically(self):
+        generation_results = []
+        pdf_errors = [
+            {
+                "source": "/tmp/output/z.docx",
+                "target": "/tmp/output/z.pdf",
+                "reason": "converter missing",
+            },
+            {
+                "source": "/tmp/output/c.docx",
+                "target": "/tmp/output/a.pdf",
+                "reason": "converter missing",
+            },
+            {
+                "source": "/tmp/output/b.docx",
+                "target": "/tmp/output/a.pdf",
+                "reason": "converter missing",
+            },
+        ]
+
+        report = build_traceable_quality_report(
+            generation_results,
+            source="generate_from_selection",
+            generated_at="2026-05-19T15:14:19+01:00",
+            pdf_errors=pdf_errors,
+        )
+
+        failures = report["manual_review_gate"]["generation_failures"]
+        self.assertEqual(len(failures), 3)
+        self.assertEqual(
+            [(item.get("artifact_path"), item.get("generation_source")) for item in failures],
+            [
+                ("/tmp/output/a.pdf", "/tmp/output/b.docx"),
+                ("/tmp/output/a.pdf", "/tmp/output/c.docx"),
+                ("/tmp/output/z.pdf", "/tmp/output/z.docx"),
+            ],
+        )
+
+    def test_build_traceable_quality_report_skips_pdf_generation_failure_when_gate_decision_exists(self):
+        generation_results = []
+        pdf_errors = [
+            {
+                "source": "/tmp/output/lyrics.docx",
+                "target": "/tmp/output/lyrics.pdf",
+                "reason": "converter missing",
+            }
+        ]
+        review_gate_decisions = [
+            {
+                "artifact_path": "/tmp/output/lyrics.pdf",
+                "artifact_type": "pdf",
+                "review_ready": False,
+                "failure_reasons": ["overfull_pages"],
+                "computed_at": "2026-05-19T15:14:19+01:00",
+            }
+        ]
+
+        report = build_traceable_quality_report(
+            generation_results,
+            source="generate_from_selection",
+            generated_at="2026-05-19T15:14:19+01:00",
+            pdf_errors=pdf_errors,
+            review_gate_decisions=review_gate_decisions,
+        )
+
+        manual_gate = report["manual_review_gate"]
+        self.assertEqual(manual_gate["ready_count"], 0)
+        self.assertEqual(manual_gate["blocked_count"], 1)
+        self.assertEqual(manual_gate["generation_failure_count"], 0)
+        self.assertEqual(manual_gate["generation_failures"], [])
+
     def test_build_traceable_quality_report_preserves_source_attempt_errors(self):
         generation_results = [
             {

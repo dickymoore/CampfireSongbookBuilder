@@ -167,13 +167,24 @@ def _build_selection_issue_entry(record):
 
 
 def _artifact_key(record):
+    if not isinstance(record, dict):
+        return (None, None)
+
+    artifact_path = record.get("artifact_path")
+    if isinstance(artifact_path, Path):
+        artifact_path = str(artifact_path)
+
+    artifact_type = record.get("artifact_type")
+    if isinstance(artifact_type, str):
+        artifact_type = artifact_type.lower()
+
     return (
-        record.get("artifact_path"),
-        record.get("artifact_type"),
+        artifact_path,
+        artifact_type,
     )
 
 
-def _build_manual_review_gate(document_verification_rows, review_gate_rows):
+def _build_manual_review_gate(document_verification_rows, review_gate_rows, pdf_error_rows=None):
     verification_by_artifact = {
         _artifact_key(record): record
         for record in document_verification_rows
@@ -182,7 +193,9 @@ def _build_manual_review_gate(document_verification_rows, review_gate_rows):
 
     ready_artifacts = []
     blocked_artifacts = []
+    decided_artifacts = set()
     for decision in review_gate_rows:
+        decided_artifacts.add(_artifact_key(decision))
         verification_record = verification_by_artifact.get(_artifact_key(decision), {})
         gate_entry = {
             "artifact_path": decision.get("artifact_path"),
@@ -205,11 +218,45 @@ def _build_manual_review_gate(document_verification_rows, review_gate_rows):
         else:
             ready_artifacts.append(gate_entry)
 
+    generation_failures = []
+    for record in pdf_error_rows or []:
+        if not isinstance(record, dict):
+            continue
+
+        target = record.get("target")
+        if not target:
+            continue
+
+        artifact_key = (target, "pdf")
+        if artifact_key in decided_artifacts:
+            continue
+
+        generation_failures.append(
+            {
+                "artifact_path": target,
+                "artifact_type": "pdf",
+                "review_ready": False,
+                "blocked_from_manual_review": True,
+                "blocking_stage": "pdf_generation",
+                "generation_source": record.get("source"),
+                "generation_reason": record.get("reason"),
+            }
+        )
+
+    generation_failures.sort(
+        key=lambda item: (
+            item.get("artifact_path") or "",
+            item.get("generation_source") or "",
+        )
+    )
+
     return {
         "ready_count": len(ready_artifacts),
-        "blocked_count": len(blocked_artifacts),
+        "blocked_count": len(blocked_artifacts) + len(generation_failures),
+        "generation_failure_count": len(generation_failures),
         "ready_artifacts": ready_artifacts,
         "blocked_artifacts": blocked_artifacts,
+        "generation_failures": generation_failures,
     }
 
 
@@ -256,15 +303,19 @@ def build_traceable_quality_report(
         if isinstance(record, dict)
     ]
     pdf_output_rows = [str(path) for path in pdf_outputs or [] if path]
-    pdf_error_rows = [
-        {
-            "source": record.get("source"),
-            "target": record.get("target"),
-            "reason": record.get("reason"),
-        }
-        for record in pdf_errors or []
-        if isinstance(record, dict)
-    ]
+    pdf_error_rows = []
+    for record in pdf_errors or []:
+        if not isinstance(record, dict):
+            continue
+        source_value = record.get("source")
+        target_value = record.get("target")
+        pdf_error_rows.append(
+            {
+                "source": str(source_value) if source_value is not None else None,
+                "target": str(target_value) if target_value is not None else None,
+                "reason": record.get("reason"),
+            }
+        )
     document_verification_rows = [
         copy.deepcopy(record)
         for record in document_verification or []
@@ -283,6 +334,7 @@ def build_traceable_quality_report(
     manual_review_gate = _build_manual_review_gate(
         document_verification_rows,
         review_gate_rows,
+        pdf_error_rows,
     )
     priority_report = _build_priority_report(
         content_score_rows,

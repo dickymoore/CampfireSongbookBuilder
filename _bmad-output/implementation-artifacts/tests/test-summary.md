@@ -265,3 +265,49 @@
 
 - `python3 -m unittest tests.test_e2e_story_4_3_selection_generation`
 - `python3 -m unittest discover -s tests -p 'test_*.py'`
+
+---
+
+## Story
+
+- Story `4.4`: Propagate PDF Gate Outcomes Through Reporting and Re-Evaluation
+- Source artifact: `_bmad-output/implementation-artifacts/4-4-propagate-pdf-gate-outcomes-through-reporting-and-reevaluation.md`
+
+## Generated Tests
+
+### API Tests
+
+- Not applicable: story scope is a local Python CLI application with no API endpoints.
+
+### E2E / Integration Tests
+
+- [x] `tests/test_e2e_story_4_4_pdf_gate_propagation.py` - Converter failure surfaces as a manual-review blocker without emitting a PDF verification record
+- [x] `tests/test_e2e_story_4_4_pdf_gate_propagation.py` - Converter success + failing PDF verification blocks the PDF via document verification gating
+- [x] `tests/test_e2e_story_4_4_pdf_gate_propagation.py` - Converter success + passing PDF verification marks the PDF ready for manual review
+- [x] `tests/test_document_creation.py` - Removes stale persisted PDF verification entries when a run requests PDF output but conversion fails
+- [x] `tests/test_reporting.py` - Surfaces PDF conversion failures as machine-readable manual-review blockers via `manual_review_gate.generation_failures`
+- [x] `tests/test_reporting.py` - Enforces deterministic ordering for PDF generation failures and avoids duplicating failures when a gate decision exists
+
+## Gaps Auto-Applied
+
+- Added missing regression coverage for deterministic ordering and duplication avoidance in the PDF generation-failure manual-review surface.
+
+## Coverage
+
+- Story 4.4 targeted scenarios: 7/7 tests passing (3 E2E + 4 focused unit/integration)
+- Repository regression suite: 166/166 tests passing
+- API endpoints covered: N/A
+- UI workflows covered: N/A
+
+## Validation
+
+- [x] Tests use the existing `unittest` framework
+- [x] Happy path covered (PDF exists + passes verification → ready for manual review)
+- [x] Critical error cases covered (conversion failure; verification failure; stale-state cleanup)
+- [x] Tests are independent and use no hardcoded waits
+- [x] Summary updated under implementation artifacts
+
+## Commands Run
+
+- `python3 -m unittest tests.test_e2e_story_4_4_pdf_gate_propagation`
+- `python3 -m unittest discover -s tests -p 'test_*.py'`

@@ -362,6 +362,54 @@ class TestDocumentCreation(unittest.TestCase):
                 )
             )
 
+    def test_create_document_from_cache_removes_stale_pdf_verification_when_conversion_fails(self):
+        song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
+        lyrics_cache = {"The Campfire Trio - Trail Song": "First line\nSecond line"}
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            output_path = tmp_path / "lyrics.docx"
+            document_quality_path = tmp_path / "data" / "review" / "document_quality.json"
+
+            def fake_convert(docx_path, pdf_path=None, runner=None, which=None):  # noqa: ARG001
+                target_path = Path(docx_path).with_suffix(".pdf")
+                write_minimal_pdf(target_path, "x" * 80)
+                return target_path, None
+
+            with patch("app.document_creation.convert_document_to_pdf", side_effect=fake_convert):
+                self._run_create_document(
+                    tmp_path,
+                    song_list,
+                    lyrics_cache,
+                    {},
+                    lyrics_output=output_path,
+                    pdf_output=True,
+                )
+
+            state, errors = load_document_verification(document_quality_path)
+            self.assertEqual(errors, [])
+            self.assertIn(str(output_path.with_suffix(".pdf")), state["entries"])
+
+            with patch(
+                "app.document_creation.convert_document_to_pdf",
+                return_value=(None, "converter missing"),
+            ):
+                report_data = self._run_create_document(
+                    tmp_path,
+                    song_list,
+                    lyrics_cache,
+                    {},
+                    lyrics_output=output_path,
+                    pdf_output=True,
+                )
+
+            self.assertEqual(len(report_data["pdf_errors"]), 1)
+            self.assertEqual(report_data["pdf_errors"][0]["reason"], "converter missing")
+
+            state, errors = load_document_verification(document_quality_path)
+            self.assertEqual(errors, [])
+            self.assertNotIn(str(output_path.with_suffix(".pdf")), state["entries"])
+
     def test_create_document_from_cache_persists_document_verification_for_generated_artifacts(self):
         song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
         lyrics_cache = {"The Campfire Trio - Trail Song": "First line\nSecond line"}

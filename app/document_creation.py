@@ -105,7 +105,7 @@ def _write_markdown_document(output_path, lines):
     logger.info("Markdown document saved as %s.", target_path)
 
 
-def _save_document_verification_records(records):
+def _save_document_verification_records(records, remove_artifact_paths=None):
     state, errors = load_document_verification(DOCUMENT_QUALITY_PATH)
     if errors:
         logger.warning(
@@ -116,6 +116,11 @@ def _save_document_verification_records(records):
     merged_entries = dict(state.get("entries", {}))
     for record in records:
         merged_entries[record["artifact_path"]] = record
+
+    for artifact_path in remove_artifact_paths or []:
+        if not artifact_path:
+            continue
+        merged_entries.pop(str(artifact_path), None)
 
     save_document_verification(
         DOCUMENT_QUALITY_PATH,
@@ -183,6 +188,7 @@ def create_document_from_cache(
     pdf_outputs = []
     pdf_errors = []
     document_verification_records = []
+    remove_stale_verification_paths = []
     content_score_records = []
 
     for song in songs_to_process:
@@ -342,6 +348,9 @@ def create_document_from_cache(
                     evaluate_document_artifact(lyrics_pdf_path, artifact_type="pdf")
                 )
             if lyrics_pdf_error is not None:
+                remove_stale_verification_paths.append(
+                    str(Path(lyrics_output).with_suffix(".pdf"))
+                )
                 pdf_errors.append(
                     {
                         "source": lyrics_output,
@@ -370,6 +379,9 @@ def create_document_from_cache(
                     evaluate_document_artifact(chords_pdf_path, artifact_type="pdf")
                 )
             if chords_pdf_error is not None:
+                remove_stale_verification_paths.append(
+                    str(Path(chords_output).with_suffix(".pdf"))
+                )
                 pdf_errors.append(
                     {
                         "source": chords_output,
@@ -378,8 +390,11 @@ def create_document_from_cache(
                     }
                 )
 
-    if document_verification_records:
-        _save_document_verification_records(document_verification_records)
+    if document_verification_records or remove_stale_verification_paths:
+        _save_document_verification_records(
+            document_verification_records,
+            remove_artifact_paths=remove_stale_verification_paths,
+        )
     review_gate_decisions = compute_review_gate_decisions(document_verification_records)
 
     if content_score_records:

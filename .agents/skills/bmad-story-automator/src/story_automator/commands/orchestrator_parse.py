@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
+from pathlib import Path
 from typing import Any
 
 from story_automator.core.runtime_policy import PolicyError, load_runtime_policy, parser_runtime_config, step_contract
-from story_automator.core.utils import COMMAND_TIMEOUT_EXIT, extract_json_line, print_json, read_text, run_cmd, trim_lines
+from story_automator.core.utils import COMMAND_TIMEOUT_EXIT, extract_json_line, get_project_root, print_json, read_text, run_cmd, trim_lines
 
 
 def parse_output_action(args: list[str]) -> int:
@@ -41,13 +43,16 @@ def parse_output_action(args: list[str]) -> int:
         print_json({"status": "error", "reason": "parse_contract_invalid"})
         return 1
     prompt = _build_parse_prompt(contract, parse_contract, "\n".join(lines))
+    # Sub-agent calls need the repo-local Codex home so they pick up the right config/hooks.
+    # Users may override via env; otherwise default to {project_root}/.codex.
+    codex_home = os.environ.get("CODEX_HOME", "").strip() or str(Path(get_project_root()) / ".codex")
     result = run_cmd(
         str(parser_cfg["provider"]),
         "-p",
         "--model",
         str(parser_cfg["model"]),
         prompt,
-        env={"STORY_AUTOMATOR_CHILD": "true", "CLAUDECODE": ""},
+        env={"STORY_AUTOMATOR_CHILD": "true", "CLAUDECODE": "", "CODEX_HOME": codex_home},
         timeout=int(parser_cfg["timeoutSeconds"]),
     )
     if result.exit_code != 0:

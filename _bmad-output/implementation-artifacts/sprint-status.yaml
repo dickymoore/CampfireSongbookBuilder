@@ -1,5 +1,5 @@
 # generated: 2026-05-27T15:04:19+01:00
-# last_updated: 2026-05-31T14:09:00+01:00
+# last_updated: 2026-05-31T16:59:38+01:00
 # project: CampfireSongbookBuilder
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: '2026-05-27T15:04:19+01:00'
-last_updated: '2026-05-31T14:09:00+01:00'
+last_updated: '2026-05-31T16:59:38+01:00'
 project: CampfireSongbookBuilder
 project_key: NOKEY
 tracking_system: file-system
@@ -65,5 +65,5 @@ development_status:
   4-1-produce-inspectable-pdf-verification-records: done
   4-2-evaluate-pdf-neatness-with-deterministic-layout-heuristics: done
   4-3-gate-manual-review-on-pdf-verification-results: done
-  4-4-propagate-pdf-gate-outcomes-through-reporting-and-reevaluation: backlog
+  4-4-propagate-pdf-gate-outcomes-through-reporting-and-reevaluation: done
   epic-4-retrospective: optional
