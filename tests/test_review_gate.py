@@ -55,6 +55,42 @@ class TestReviewGate(unittest.TestCase):
         )
         self.assertEqual(decision["artifact_type"], "docx")
 
+    def test_compute_review_gate_decision_marks_passed_pdf_review_ready(self):
+        verification_record = build_document_verification_record(
+            artifact_path="data/output/Lyrics_Document.pdf",
+            artifact_type="pdf",
+            verification_status="passed",
+            verification_reasons=["meets_neatness_thresholds"],
+            verified_at="2026-05-22T17:02:00+01:00",
+        )
+
+        decision = compute_review_gate_decision(
+            verification_record,
+            computed_at="2026-05-22T17:03:00+01:00",
+        )
+
+        self.assertTrue(decision["review_ready"])
+        self.assertEqual(decision["failure_reasons"], [])
+        self.assertEqual(decision["artifact_type"], "pdf")
+
+    def test_compute_review_gate_decision_preserves_pdf_failure_reasons(self):
+        verification_record = build_document_verification_record(
+            artifact_path="data/output/Lyrics_Document.pdf",
+            artifact_type="pdf",
+            verification_status="failed",
+            verification_reasons=["pdf_parse_failed", "sparse_pages"],
+            verified_at="2026-05-22T17:02:00+01:00",
+        )
+
+        decision = compute_review_gate_decision(
+            verification_record,
+            computed_at="2026-05-22T17:03:00+01:00",
+        )
+
+        self.assertFalse(decision["review_ready"])
+        self.assertEqual(decision["failure_reasons"], ["pdf_parse_failed", "sparse_pages"])
+        self.assertEqual(decision["artifact_type"], "pdf")
+
     def test_compute_review_gate_decisions_preserves_input_order(self):
         records = [
             build_document_verification_record(
@@ -71,6 +107,13 @@ class TestReviewGate(unittest.TestCase):
                 verification_reasons=["sparse_layout"],
                 verified_at="2026-05-22T17:02:00+01:00",
             ),
+            build_document_verification_record(
+                artifact_path="data/output/Lyrics_Document.pdf",
+                artifact_type="pdf",
+                verification_status="passed",
+                verification_reasons=["meets_neatness_thresholds"],
+                verified_at="2026-05-22T17:02:00+01:00",
+            ),
         ]
 
         decisions = compute_review_gate_decisions(
@@ -83,6 +126,7 @@ class TestReviewGate(unittest.TestCase):
             [
                 "data/output/Lyrics_Document.md",
                 "data/output/Lyrics_Document.docx",
+                "data/output/Lyrics_Document.pdf",
             ],
         )
 
