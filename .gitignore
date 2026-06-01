@@ -138,6 +138,10 @@ _bmad/*.user.toml
 
 data/output/*
 data/config/config.json
+data/review/*
+data/manual_lyrics.json
+data/manual_chords.json
+data/manual_import.txt
 venv/*
 app/__pycache__
 .agents/.story-automator-active

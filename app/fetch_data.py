@@ -29,6 +29,21 @@ MANUAL_LYRICS_PATH = 'data/manual_lyrics.json'
 def get_manual_lyrics(song_title, artist_name):
     if not os.path.exists(MANUAL_LYRICS_PATH):
         return None
+
+
+# Helper: Load manual chords from file
+MANUAL_CHORDS_PATH = 'data/manual_chords.json'
+def get_manual_chords(song_title, artist_name):
+    if not os.path.exists(MANUAL_CHORDS_PATH):
+        return None
+    try:
+        with open(MANUAL_CHORDS_PATH, 'r', encoding='utf-8') as f:
+            manual = json.load(f)
+        key = f"{artist_name} - {song_title}"
+        return manual.get(key)
+    except Exception as e:
+        logger.error(f"Error loading manual chords: {e}")
+        return None
     try:
         with open(MANUAL_LYRICS_PATH, 'r', encoding='utf-8') as f:
             manual = json.load(f)
@@ -160,6 +175,10 @@ def get_lyrics_from_sources(song_title, artist_name, genius_client=None):
         for source_name, fetch_func in sources:
             try:
                 lyrics = fetch_func(title, artist)
+                if lyrics is None:
+                    # Manual sources (or future optional sources) can return None to indicate
+                    # "not configured" rather than an explicit not-found result.
+                    continue
                 tried_log.append(f"{source_name} ({artist} – {title})")
                 has_real_content = (
                     isinstance(lyrics, str)
@@ -494,6 +513,7 @@ def get_chords_from_sources(song_title, artist_name):
         (artist_name.split(',')[0], song_title),  # Try just the main artist
     ]
     sources = [
+        ("Manual", get_manual_chords),
         ("Chordie", get_chords_from_chordie),
         ("Ultimate Guitar", get_chords_from_ultimate_guitar),
         ("E-Chords", get_chords_from_echords),
@@ -504,6 +524,8 @@ def get_chords_from_sources(song_title, artist_name):
         for source_name, fetch_func in sources:
             try:
                 chords = fetch_func(title, artist)
+                if chords is None:
+                    continue
                 tried_log.append(f"{source_name} ({artist} – {title})")
                 has_real_content = (
                     isinstance(chords, str)

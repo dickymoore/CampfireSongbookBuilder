@@ -15,6 +15,7 @@ from app.reporting import (
 )
 from app.source_attempts import load_source_attempts
 from app.selection_state import load_named_selection
+from app.manual_import import parse_manual_import, write_manual_json
 # from app.cache import load_cache  # Remove this import, not needed with JSONL
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,6 +27,8 @@ CHORDS_CACHE_PATH = 'data/cache/chords_cache.jsonl'
 LYRICS_DOC_PATH = 'data/output/Lyrics_Document.docx'
 CHORDS_DOC_PATH = 'data/output/Chords_Document.docx'
 SELECTIONS_DIR = Path('data/selections')
+MANUAL_LYRICS_PATH = Path('data/manual_lyrics.json')
+MANUAL_CHORDS_PATH = Path('data/manual_chords.json')
 
 
 def _write_generation_report(report_data):
@@ -152,6 +155,10 @@ def main():
         '--selection',
         help='Restrict the run to a named selection from data/selections/<name>.json',
     )
+    parser.add_argument(
+        '--import-manual',
+        help='Parse a pasted manual import text file and write data/manual_lyrics.json and data/manual_chords.json',
+    )
     args = parser.parse_args()
 
     # Load config
@@ -174,6 +181,23 @@ def main():
 
     if args.test_api:
         test_genius_api(_lazy_genius_client())
+        return
+
+    if args.import_manual:
+        import_path = Path(args.import_manual)
+        if not import_path.exists():
+            logging.error("Manual import file not found: %s", import_path)
+            sys.exit(1)
+        entries = parse_manual_import(import_path.read_text(encoding="utf-8"))
+        write_manual_json(MANUAL_LYRICS_PATH, entries, "lyrics")
+        write_manual_json(MANUAL_CHORDS_PATH, entries, "chords")
+        logging.info(
+            "Wrote %d manual song entr%s to %s and %s.",
+            len(entries),
+            "y" if len(entries) == 1 else "ies",
+            MANUAL_LYRICS_PATH,
+            MANUAL_CHORDS_PATH,
+        )
         return
 
     # Load songs
