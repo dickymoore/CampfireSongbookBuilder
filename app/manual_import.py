@@ -39,11 +39,16 @@ def _looks_like_chords_header(header: str) -> bool:
 
 
 def _parse_artist_title(header: str) -> tuple[str | None, str | None]:
+    header = header.strip()
+    # Drop trailing parenthetical notes like "(add this to favourites too please)".
+    header = re.sub(r"\s*\([^)]*\)\s*$", "", header).strip()
+
     # Preferred: "Artist - Title"
     if " - " in header:
         artist, title = header.split(" - ", 1)
         artist = artist.strip()
         title = title.strip()
+        title = re.sub(r"\s+(lyrics|chords)\s*$", "", title, flags=re.IGNORECASE).strip()
         if artist and title:
             return artist, title
 
@@ -55,6 +60,17 @@ def _parse_artist_title(header: str) -> tuple[str | None, str | None]:
         title = title.strip()
         if artist and title:
             return artist, title
+
+    # Alternative: "Title by Artist"
+    if " by " in header.lower():
+        # split on last ' by ' to avoid titles that contain 'by'
+        parts = re.split(r"\s+by\s+", header, flags=re.IGNORECASE)
+        if len(parts) >= 2:
+            title = parts[0].strip()
+            artist = parts[1].strip()
+            title = re.sub(r"\s+(lyrics|chords)\s*$", "", title, flags=re.IGNORECASE).strip()
+            if artist and title:
+                return artist, title
 
     return None, None
 
@@ -86,7 +102,10 @@ def _is_chord_line(line: str) -> bool:
     if stripped.startswith("[") and stripped.endswith("]"):
         return False
     # Common chord characters: A-G, accidentals, digits, slash, parentheses, plus/minus, sus/add/maj/min, etc.
-    allowed = set("ABCDEFGabcdefg0123456789#b/()|:+- .%xX\t")
+    # Allow chord modifiers (maj/min/sus/add/dim/aug, etc). We keep this fairly
+    # permissive, then rely on token-level chord matching below to avoid treating
+    # lyric sentences as chord lines.
+    allowed = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#b/()|:+-_.%xX\t ")
     if any(ch not in allowed for ch in stripped):
         return False
     tokens = [t for t in re.split(r"\s+", stripped) if t and t != "|"]
@@ -103,20 +122,75 @@ def _is_chord_line(line: str) -> bool:
         if re.match(r"^[A-Ga-g](?:#|b)?(?:maj|min|m|sus|add|dim|aug)[0-9]*(?:/[A-Ga-g](?:#|b)?)?$", tok):
             chordish += 1
             continue
+    if chordish == 0:
+        return False
     return chordish / float(len(tokens)) >= 0.8
 
 
 def _extract_lyrics_from_chords(chords_text: str) -> str:
+    def _is_chord_token(tok: str) -> bool:
+        if tok in {"x", "X", "%"}:
+            return True
+        if re.match(
+            r"^[A-Ga-g](?:#|b)?[0-9]?(?:maj|min|m|sus|add|dim|aug)?[0-9]*(?:/[A-Ga-g](?:#|b)?)?$",
+            tok,
+        ):
+            return True
+        if re.match(
+            r"^[A-Ga-g](?:#|b)?(?:maj|min|m|sus|add|dim|aug)[0-9]*(?:/[A-Ga-g](?:#|b)?)?$",
+            tok,
+        ):
+            return True
+        return False
+
+    def _strip_leading_chords(line: str) -> str:
+        # Remove leading chord tokens from a line like: "Em Bm A So sweet"
+        tokens = [t for t in re.split(r"\s+", line.strip()) if t]
+        kept = []
+        stripping = True
+        removed = 0
+        for tok in tokens:
+            if stripping and _is_chord_token(tok):
+                removed += 1
+                continue
+            stripping = False
+            kept.append(tok)
+        return (" ".join(kept).strip(), removed)
+
     lines = _normalize_text(chords_text).splitlines()
     out = []
     for line in lines:
+        remainder, removed = _strip_leading_chords(line)
+        if removed >= 2:
+            # Inline chords like "Em Bm A So sweet" -> keep just the lyric part.
+            if remainder:
+                out.append(remainder)
+            continue
         if _is_chord_line(line):
+            # Pure chord line: drop it.
             continue
         # Drop obvious chord-section-only markers.
         if line.strip().lower() in {"intro", "verse", "chorus", "bridge", "interlude", "instrumental"}:
             continue
         out.append(line)
     return _normalize_text("\n".join(out))
+
+
+def _chord_line_stats(text: str) -> tuple[int, int, float]:
+    lines = _normalize_text(text).splitlines()
+    if not lines:
+        return 0, 0, 0.0
+    considered = 0
+    chordish = 0
+    for line in lines:
+        if line.strip() == "":
+            continue
+        considered += 1
+        if _is_chord_line(line):
+            chordish += 1
+    if considered == 0:
+        return 0, chordish, 0.0
+    return considered, chordish, chordish / float(considered)
 
 
 def parse_manual_import(text: str, known_songs: dict[str, tuple[str, str]] | None = None) -> list[ManualSongEntry]:
@@ -163,6 +237,15 @@ def parse_manual_import(text: str, known_songs: dict[str, tuple[str, str]] | Non
         bucket = merged.setdefault(key, {})
         normalized_body = _normalize_text(body)
         if _looks_like_chords_header(header):
+            bucket["chords"] = normalized_body
+            continue
+
+        # If the section looks like a chord sheet (lots of chord-only lines),
+        # treat it as chords; we'll extract lyrics from it later.
+        considered, chordish, fraction = _chord_line_stats(normalized_body)
+        # More permissive chord detection for real-world copy/pastes where
+        # chord headers and lyric lines are interleaved.
+        if chordish >= 3 and fraction >= 0.08:
             bucket["chords"] = normalized_body
         else:
             bucket["lyrics"] = normalized_body

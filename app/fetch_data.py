@@ -29,6 +29,21 @@ MANUAL_LYRICS_PATH = 'data/manual_lyrics.json'
 def get_manual_lyrics(song_title, artist_name):
     if not os.path.exists(MANUAL_LYRICS_PATH):
         return None
+    try:
+        with open(MANUAL_LYRICS_PATH, 'r', encoding='utf-8') as f:
+            manual = json.load(f)
+        key = f"{artist_name} - {song_title}"
+        if key in manual:
+            return manual.get(key)
+        # Fallback: case-insensitive match against the stored keys.
+        normalized_target = key.casefold()
+        for stored_key, value in manual.items():
+            if isinstance(stored_key, str) and stored_key.casefold() == normalized_target:
+                return value
+        return None
+    except Exception as e:
+        logger.error(f"Error loading manual lyrics: {e}")
+        return None
 
 
 # Helper: Load manual chords from file
@@ -40,17 +55,15 @@ def get_manual_chords(song_title, artist_name):
         with open(MANUAL_CHORDS_PATH, 'r', encoding='utf-8') as f:
             manual = json.load(f)
         key = f"{artist_name} - {song_title}"
-        return manual.get(key)
+        if key in manual:
+            return manual.get(key)
+        normalized_target = key.casefold()
+        for stored_key, value in manual.items():
+            if isinstance(stored_key, str) and stored_key.casefold() == normalized_target:
+                return value
+        return None
     except Exception as e:
         logger.error(f"Error loading manual chords: {e}")
-        return None
-    try:
-        with open(MANUAL_LYRICS_PATH, 'r', encoding='utf-8') as f:
-            manual = json.load(f)
-        key = f"{artist_name} - {song_title}"
-        return manual.get(key)
-    except Exception as e:
-        logger.error(f"Error loading manual lyrics: {e}")
         return None
 
 # AZLyrics scraper
@@ -165,11 +178,13 @@ def get_lyrics_from_sources(song_title, artist_name, genius_client=None):
         (artist_name, strip_punct(song_title)),
         (strip_the(artist_name), strip_punct(song_title)),
     ]
+    # Manual-first prevents unnecessary network traffic when the user has provided
+    # their own local lyrics overrides.
     sources = [
+        ("Manual", get_manual_lyrics),
         ("Genius", lambda t, a: get_lyrics_from_genius(t, a, genius_client)),
         ("Lyrics.ovh", get_lyrics_from_lyrics_ovh),
         ("AZLyrics", get_lyrics_from_azlyrics),
-        ("Manual", get_manual_lyrics),
     ]
     for artist, title in queries:
         for source_name, fetch_func in sources:
@@ -195,6 +210,26 @@ def get_lyrics_from_sources(song_title, artist_name, genius_client=None):
                         "source_title": title,
                     }
                 )
+                if source_name == "Manual" and has_real_content:
+                    # If the user provided manual lyrics, trust them as the desired input and
+                    # avoid continuing to network sources. Treat as clean so downstream
+                    # generation includes it by default.
+                    candidate_quality = {
+                        "quality": "clean",
+                        "signals": [],
+                        "summary": {"manual_override": True},
+                    }
+                    record_source_attempt(
+                        artist_name,
+                        song_title,
+                        "lyrics",
+                        source_name,
+                        "candidate",
+                        retrieved_at=datetime.now().astimezone().isoformat(timespec="seconds"),
+                        file_path=SOURCE_ATTEMPTS_PATH,
+                    )
+                    logger.info(f"Lyrics found for {artist} – {title} from {source_name}")
+                    return lyrics, source_name, tried_log, candidate_quality
                 if merged_quality_result is None:
                     merged_quality_result = candidate_quality
                 else:
@@ -542,6 +577,23 @@ def get_chords_from_sources(song_title, artist_name):
                         "source_title": title,
                     }
                 )
+                if source_name == "Manual" and has_real_content:
+                    candidate_quality = {
+                        "quality": "clean",
+                        "signals": [],
+                        "summary": {"manual_override": True},
+                    }
+                    record_source_attempt(
+                        artist_name,
+                        song_title,
+                        "chords",
+                        source_name,
+                        "candidate",
+                        retrieved_at=datetime.now().astimezone().isoformat(timespec="seconds"),
+                        file_path=SOURCE_ATTEMPTS_PATH,
+                    )
+                    logger.info(f"Chords found for {artist} – {title} from {source_name}")
+                    return chords, source_name, tried_log, candidate_quality
                 if merged_quality_result is None:
                     merged_quality_result = candidate_quality
                 else:

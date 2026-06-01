@@ -3,7 +3,12 @@ from datetime import datetime
 
 from app.content_models import build_quality_status, compute_content_hash, derive_song_key
 from app.content_scoring import compose_content_score
-from app.fetch_data import get_lyrics_from_sources, get_chords_from_sources
+from app.fetch_data import (
+    get_chords_from_sources,
+    get_lyrics_from_sources,
+    get_manual_chords,
+    get_manual_lyrics,
+)
 from app.cache import jsonl_save_entry, jsonl_load_entry, jsonl_load_all
 from app.document_formatting import sort_songs
 from app.quality_assessment import assess_candidate_quality
@@ -135,6 +140,22 @@ def cache_lyrics(song_list, genius_client):
         artist = song['Artist']
         title = song['Title']
         found = False
+
+        # Manual overrides are authoritative: always refresh cache + quality state
+        # even if an older cached entry was previously marked clean.
+        manual = get_manual_lyrics(title, artist)
+        if isinstance(manual, str) and manual.strip() and manual != "Lyrics not found.":
+            jsonl_save_entry('data/cache/lyrics_cache.jsonl', artist, title, manual, 'lyrics')
+            _save_quality_status_record(
+                artist,
+                title,
+                "lyrics",
+                manual,
+                {"quality": "clean", "signals": [], "summary": {"manual_override": True}},
+            )
+            found = True
+            continue
+
         cached = jsonl_load_entry('data/cache/lyrics_cache.jsonl', artist, title, 'lyrics')
         cached_quality_status = _load_quality_status_record(artist, title, "lyrics")
         if cached and cached != "Lyrics not found.":
@@ -190,6 +211,20 @@ def cache_chords(song_list):
         artist = song['Artist']
         title = song['Title']
         found = False
+
+        manual = get_manual_chords(title, artist)
+        if isinstance(manual, str) and manual.strip() and manual != "Chords not found.":
+            jsonl_save_entry('data/cache/chords_cache.jsonl', artist, title, manual, 'chords')
+            _save_quality_status_record(
+                artist,
+                title,
+                "chords",
+                manual,
+                {"quality": "clean", "signals": [], "summary": {"manual_override": True}},
+            )
+            found = True
+            continue
+
         cached = jsonl_load_entry('data/cache/chords_cache.jsonl', artist, title, 'chords')
         cached_quality_status = _load_quality_status_record(artist, title, "chords")
         if cached and cached != "Chords not found.":

@@ -1,5 +1,5 @@
 # generated: 2026-05-27T15:04:19+01:00
-# last_updated: 2026-06-01T09:16:35+01:00
+# last_updated: 2026-06-01T09:20:15+01:00
 # project: CampfireSongbookBuilder
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: '2026-05-27T15:04:19+01:00'
-last_updated: '2026-06-01T09:16:35+01:00'
+last_updated: '2026-06-01T09:20:15+01:00'
 project: CampfireSongbookBuilder
 project_key: NOKEY
 tracking_system: file-system
@@ -46,6 +46,7 @@ development_status:
   1-2-evaluate-artifact-neatness-with-deterministic-heuristics: done
   1-3-compute-review-ready-gate-decisions: done
   1-4-gate-manual-review-and-reporting-on-verification-results: done
+  1-5-persist-current-quality-status-for-cached-content: done
   1-5-refresh-artifact-gates-after-regeneration-or-reverification: done
   epic-1-retrospective: optional
   epic-2: in-progress

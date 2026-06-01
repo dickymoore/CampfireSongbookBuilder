@@ -88,6 +88,7 @@ GPT-5.2 (Codex CLI)
 - Added `app/review_gate_state.py` to persist current-state artifact review-gate decisions and refresh them alongside verification.
 - Updated generation + remediation pipelines to use the shared refresh helpers (including removing stale PDF gate state on conversion failure).
 - Added regression tests for replace-not-append, removals, and PDF identity separation.
+- Senior developer review follow-up: standardized refresh timestamps and added refresh non-collision regression coverage for multi-type review-gate state.
 
 ### File List
 
@@ -100,8 +101,30 @@ GPT-5.2 (Codex CLI)
 - `_bmad-output/implementation-artifacts/1-5-refresh-artifact-gates-after-regeneration-or-reverification.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
+## Senior Developer Review (AI)
+
+Reviewer: Dicky on 2026-06-01
+
+### Scope
+
+- Reviewed story claims vs implementation for: `app/document_creation.py`, `app/document_verification.py`, `app/remediation.py`, `app/review_gate_state.py`, `tests/test_document_verification.py`, `tests/test_review_gate_state.py`.
+- Git discrepancy noted: `_bmad-output/story-automator/orchestration-1-20260527-163528.md` changed but is non-source; excluded from code review per workflow rules.
+- Docs lookup note: MCP/web search not available in this environment; relied on in-repo docs (`docs/development-guide.md`, `docs/architecture.md`) and the codebase itself.
+
+### Findings
+
+- CRITICAL: Refresh path did not guarantee consistent timestamping across verification + gate refresh in remediation, making "freshness" harder to reason about downstream.
+- HIGH: Generation verification `verified_at` timestamps were per-call rather than aligned to the run timestamp, increasing needless churn and weakening determinism when callers supply explicit timestamps.
+- MEDIUM: Review-gate state had coverage for multi-type identity separation on save/load, but lacked a refresh-specific regression proving a refresh of one type does not remove another.
+
+### Fixes Applied
+
+- Standardized `verified_at` for document verification records during a single generation run (`app/document_creation.py`).
+- Standardized `updated_at` and `verified_at` markers during remediation refresh (`app/remediation.py`).
+- Added refresh non-collision regression coverage for multi-type review-gate decisions (`tests/test_review_gate_state.py`).
+
 ## Change Log
 
 - 2026-05-31: Implemented refresh semantics for artifact verification + review-gate current-state and added regression tests.
 - 2026-05-31: Updated sprint-status tracking for Story 1.5 to `review`.
-- 2026-06-01: Code review complete; story marked done.
+- 2026-06-01: Senior developer review complete; story marked done (standardized refresh timestamps; added refresh non-collision regression coverage).

@@ -1,24 +1,54 @@
 import re
 
+
+def _normalize_line_endings(text):
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def remove_contributors_and_embeds(lyrics):
     """Remove the Contributors, Embed sections, and unwanted advertisements from the lyrics."""
+    lyrics = _normalize_line_endings(lyrics)
     lyrics = re.sub(r'^.*Contributors', '', lyrics, flags=re.DOTALL)
     lyrics = re.sub(r'Embed\s*$', '', lyrics, flags=re.MULTILINE)
     return lyrics
 
 def remove_unwanted_phrases(lyrics):
-    """Remove unwanted phrases and advertisements from the lyrics without removing the entire line."""
-    patterns_to_remove = [
-        r'You might also like.*?',
-        r'See .*? LiveGet tickets as low as \$\d+',
-        r'.*? Lyrics'
-    ]
+    """Remove common scraped lyric ads / cross-promo blocks."""
+    lyrics = _normalize_line_endings(lyrics)
 
-    # Remove each pattern, but only the matched part, not the entire line
-    for pattern in patterns_to_remove:
-        lyrics = re.sub(pattern, '', lyrics, flags=re.MULTILINE)
+    lines = lyrics.split("\n")
+    out = []
+    skip_mode = None
 
-    return lyrics
+    for line in lines:
+        stripped = line.strip()
+        lower = stripped.lower()
+
+        # Start of common promo blocks.
+        if lower == "you might also like":
+            skip_mode = "you_might_also_like"
+            continue
+        if lower.startswith("see ") and " live" in lower:
+            skip_mode = "tickets"
+            continue
+        if lower.startswith("get tickets as low as"):
+            skip_mode = "tickets"
+            continue
+
+        # End promo blocks at the next explicit section marker or a blank line run.
+        if skip_mode:
+            if stripped == "" or (stripped.startswith("[") and stripped.endswith("]")):
+                skip_mode = None
+                out.append(line if stripped == "" else stripped)
+            continue
+
+        # Remove isolated footer-y lines.
+        if lower.endswith(" lyrics") and len(stripped.split()) <= 4:
+            continue
+
+        out.append(line)
+
+    return "\n".join(out)
 
 def clean_lyrics(lyrics):
     """Clean the lyrics by removing contributors, embeds, and unwanted phrases."""
@@ -26,6 +56,9 @@ def clean_lyrics(lyrics):
         return ''
     lyrics = remove_contributors_and_embeds(lyrics)
     lyrics = remove_unwanted_phrases(lyrics)
+    # Collapse excessive blank lines.
+    lyrics = _normalize_line_endings(lyrics)
+    lyrics = re.sub(r"\n{3,}", "\n\n", lyrics).strip() + "\n"
     return lyrics
 
 MARKUP_TAGS = [
@@ -39,6 +72,7 @@ def clean_chords(chords):
     """Clean the chords by removing unnecessary introductory lines, email headers, and only markup tags like [ch], [tab], etc. (not chords like [G])."""
     if chords is None or not isinstance(chords, str):
         return ''
+    chords = _normalize_line_endings(chords)
     # Remove lines starting with {t:...} and {st:...}
     chords = re.sub(r'{t:.*?}\n', '', chords)
     chords = re.sub(r'{st:.*?}\n', '', chords)
@@ -54,8 +88,17 @@ def clean_chords(chords):
     pattern = r'\[(' + '|'.join(re.escape(tag) for tag in MARKUP_TAGS) + r')\]'
     chords = re.sub(pattern, '', chords, flags=re.IGNORECASE)
 
-    # Remove extra newlines and spaces
-    chords = re.sub(r'\n\s*\n', '\n', chords)
-    chords = re.sub(r'\s+\n', '\n', chords)
+    # Normalize whitespace without destroying chord/lyric separation.
+    lines = [line.rstrip() for line in chords.split("\n")]
+    out = []
+    blank_run = 0
+    for line in lines:
+        if line.strip() == "":
+            blank_run += 1
+            if blank_run <= 2:
+                out.append("")
+            continue
+        blank_run = 0
+        out.append(line)
 
-    return chords
+    return "\n".join(out).strip() + "\n"
