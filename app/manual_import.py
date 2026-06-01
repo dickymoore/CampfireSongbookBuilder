@@ -59,6 +59,24 @@ def _parse_artist_title(header: str) -> tuple[str | None, str | None]:
     return None, None
 
 
+def _normalize_title(title: str) -> str:
+    title = title.strip().lower()
+    title = re.sub(r"\s+", " ", title)
+    # Drop punctuation for fuzzy matching.
+    title = re.sub(r"[^a-z0-9 ]", "", title)
+    return title.strip()
+
+
+def _infer_artist_title(header: str, known_songs: dict[str, tuple[str, str]]) -> tuple[str | None, str | None]:
+    """
+    Infer (artist, title) from a header that only contains a title, using a map of
+    normalized_title -> (artist, title).
+    """
+    header = re.sub(r"\s+(lyrics|chords)\s*$", "", header, flags=re.IGNORECASE).strip()
+    normalized = _normalize_title(header)
+    return known_songs.get(normalized, (None, None))
+
+
 def _is_chord_line(line: str) -> bool:
     # Heuristic: a line made mostly of chord tokens and separators.
     # This lets us extract lyrics from chord sheets that interleave chords+lyrics.
@@ -101,7 +119,7 @@ def _extract_lyrics_from_chords(chords_text: str) -> str:
     return _normalize_text("\n".join(out))
 
 
-def parse_manual_import(text: str) -> list[ManualSongEntry]:
+def parse_manual_import(text: str, known_songs: dict[str, tuple[str, str]] | None = None) -> list[ManualSongEntry]:
     """
     Parse a human-pasted manual import blob.
 
@@ -137,8 +155,9 @@ def parse_manual_import(text: str) -> list[ManualSongEntry]:
     merged: dict[tuple[str, str], dict[str, str]] = {}
     for header, body in sections:
         artist, title = _parse_artist_title(header)
+        if (artist is None or title is None) and known_songs:
+            artist, title = _infer_artist_title(header, known_songs)
         if artist is None or title is None:
-            # Skip unknown headers; caller can adjust format and retry.
             continue
         key = (artist, title)
         bucket = merged.setdefault(key, {})

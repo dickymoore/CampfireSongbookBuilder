@@ -189,7 +189,29 @@ def main():
         if not import_path.exists():
             logging.error("Manual import file not found: %s", import_path)
             sys.exit(1)
-        entries = parse_manual_import(import_path.read_text(encoding="utf-8"))
+        # Allow headers like "# Toxic chords" by inferring the artist from the source list.
+        known_songs = {}
+        try:
+            songs, _ = load_songs(SONGS_CSV_PATH)
+            for song in songs:
+                artist = song.get("Artist")
+                title = song.get("Title")
+                if isinstance(artist, str) and isinstance(title, str):
+                    key = (title.lower().strip())
+                    # manual_import normalizes punctuation + whitespace, so do the same here:
+                    import re
+
+                    norm = re.sub(r"\\s+", " ", key)
+                    norm = re.sub(r"[^a-z0-9 ]", "", norm).strip()
+                    if norm and norm not in known_songs:
+                        known_songs[norm] = (artist, title)
+        except Exception:
+            known_songs = {}
+
+        entries = parse_manual_import(
+            import_path.read_text(encoding="utf-8"),
+            known_songs=known_songs or None,
+        )
         write_manual_json(MANUAL_LYRICS_PATH, entries, "lyrics")
         write_manual_json(MANUAL_CHORDS_PATH, entries, "chords")
         logging.info(
