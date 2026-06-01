@@ -49,8 +49,50 @@ def convert_document_to_pdf(docx_path, pdf_path=None, runner=subprocess.run, whi
     try:
         runner(command, check=True, capture_output=True, text=True)
     except Exception as exc:
-        logger.warning("PDF conversion failed for %s: %s", source_path, exc)
-        return None, str(exc)
+        # Pandoc's default PDF engine usually relies on a TeX distribution (pdflatex).
+        # If that's missing, fall back to a deterministic "docx -> tex -> tectonic" flow
+        # when tectonic is installed.
+        if converter == "pandoc":
+            tectonic = which("tectonic")
+            if tectonic:
+                try:
+                    tex_path = target_path.with_suffix(".tex")
+                    runner(
+                        [
+                            "pandoc",
+                            "-s",
+                            str(source_path),
+                            "-o",
+                            str(tex_path),
+                        ],
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                    )
+                    runner(
+                        [
+                            "tectonic",
+                            str(tex_path),
+                            "--outdir",
+                            str(target_path.parent),
+                        ],
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                    )
+                except Exception as fallback_exc:
+                    logger.warning(
+                        "PDF conversion failed for %s via pandoc/tectonic fallback: %s",
+                        source_path,
+                        fallback_exc,
+                    )
+                    return None, str(fallback_exc)
+            else:
+                logger.warning("PDF conversion failed for %s: %s", source_path, exc)
+                return None, str(exc)
+        else:
+            logger.warning("PDF conversion failed for %s: %s", source_path, exc)
+            return None, str(exc)
 
     if expected_generated_path.exists() and expected_generated_path != target_path:
         if target_path.exists():
