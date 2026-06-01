@@ -144,6 +144,7 @@ def main():
     parser.add_argument('--lyrics-only', action='store_true', help='Generate document for lyrics only')
     parser.add_argument('--chords-only', action='store_true', help='Generate document for chords only')
     parser.add_argument('--generate-from-cache', action='store_true', help='Generate documents from cache only')
+    parser.add_argument('--pdf', action='store_true', help='Also generate PDFs when producing DOCX outputs (requires pandoc or LibreOffice)')
     parser.add_argument('--test-api', action='store_true', help='Test the Genius API key')
     parser.add_argument('--cache-only', action='store_true', help='Fetch and cache all lyrics and chords, but do not generate documents')
     parser.add_argument(
@@ -273,6 +274,7 @@ def main():
             chords_output,
             selection_records=selection_records,
             report_source="generate_from_selection" if args.selection else "generate_from_cache",
+            pdf_output=bool(args.pdf),
         )
         report_data["source"] = "generate_from_selection" if args.selection else "generate_from_cache"
         report_data["invalid_song_rows"] = invalid_song_rows
