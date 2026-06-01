@@ -11,6 +11,7 @@ from app.document_verification import (
     evaluate_markdown_artifact_neatness,
     evaluate_pdf_artifact_neatness,
     load_document_verification,
+    refresh_document_verification_state,
     save_document_verification,
 )
 from tests.docx_stub import install_docx_stub
@@ -217,6 +218,63 @@ class TestDocumentVerification(unittest.TestCase):
             self.assertEqual(len(state["entries"]), 2)
             self.assertIn("data/output/Lyrics_Document.docx", state["entries"])
             self.assertIn("data/output/Lyrics_Document.md", state["entries"])
+
+    def test_refresh_replaces_existing_verification_record_for_same_identity(self):
+        original_record = self._build_record(
+            "data/output/Lyrics_Document.md",
+            "markdown",
+            "failed",
+            verification_reasons=["original"],
+            verified_at="2026-05-21T16:00:00+01:00",
+        )
+        refreshed_record = self._build_record(
+            "data/output/Lyrics_Document.md",
+            "markdown",
+            "passed",
+            verification_reasons=[],
+            verified_at="2026-05-21T17:00:00+01:00",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            target_path = Path(tmp_dir) / "data" / "review" / "document_quality.json"
+            save_document_verification(target_path, [original_record])
+
+            refresh_document_verification_state(
+                target_path,
+                [refreshed_record],
+                updated_at="2026-05-21T17:00:00+01:00",
+            )
+
+            state, errors = load_document_verification(target_path)
+
+            self.assertEqual(errors, [])
+            self.assertEqual(state["entries"], {"data/output/Lyrics_Document.md": refreshed_record})
+            self.assertEqual(state["updated_at"], "2026-05-21T17:00:00+01:00")
+
+    def test_refresh_can_remove_stale_verification_records(self):
+        record = self._build_record(
+            "data/output/Lyrics_Document.md",
+            "markdown",
+            "passed",
+            verification_reasons=[],
+            verified_at="2026-05-21T16:00:00+01:00",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            target_path = Path(tmp_dir) / "data" / "review" / "document_quality.json"
+            save_document_verification(target_path, [record])
+
+            refresh_document_verification_state(
+                target_path,
+                [],
+                remove_artifact_paths=["data/output/Lyrics_Document.md"],
+                updated_at="2026-05-21T17:00:00+01:00",
+            )
+
+            state, errors = load_document_verification(target_path)
+
+            self.assertEqual(errors, [])
+            self.assertEqual(state["entries"], {})
 
     def test_evaluate_markdown_artifact_neatness_passes_clean_song_blocks(self):
         evaluation = evaluate_markdown_artifact_neatness(

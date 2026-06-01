@@ -1,6 +1,6 @@
 # Story 1.5: Refresh Artifact Gates After Regeneration or Re-Verification
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -18,35 +18,35 @@ so that escalation and downstream workflows use current evidence rather than sta
 
 ## Tasks / Subtasks
 
-- [ ] Define what "artifact identity" means for refresh semantics (AC: 1, 3)
-  - [ ] Confirm the identity keys used by the verification record contract from Story 1.1 (e.g. `artifact_path` + `artifact_type`) and use those as the stable replacement key.
-  - [ ] Ensure refresh semantics do not accidentally merge distinct artifacts from the same run (e.g. markdown vs docx vs pdf).
+- [x] Define what "artifact identity" means for refresh semantics (AC: 1, 3)
+  - [x] Confirm the identity keys used by the verification record contract from Story 1.1 (e.g. `artifact_path` + `artifact_type`) and use those as the stable replacement key.
+  - [x] Ensure refresh semantics do not accidentally merge distinct artifacts from the same run (e.g. markdown vs docx vs pdf).
 
-- [ ] Implement "refresh" behavior for document verification current-state persistence (AC: 1, 3)
-  - [ ] When saving verification results, replace existing entry for the same artifact identity instead of appending duplicates.
-  - [ ] Update `updated_at` / `verified_at` fields consistently so downstream agents can tell "new evidence" exists.
-  - [ ] Keep behavior deterministic given the same inputs (stable ordering, stable identity mapping).
+- [x] Implement "refresh" behavior for document verification current-state persistence (AC: 1, 3)
+  - [x] When saving verification results, replace existing entry for the same artifact identity instead of appending duplicates.
+  - [x] Update `updated_at` / `verified_at` fields consistently so downstream agents can tell "new evidence" exists.
+  - [x] Keep behavior deterministic given the same inputs (stable ordering, stable identity mapping).
 
-- [ ] Implement "refresh" behavior for review-gate decisions (AC: 1, 3)
-  - [ ] Ensure review-ready decisions are recomputed from the latest verification/neatness evidence, not cached stale values.
-  - [ ] When persisting review-gate results, replace prior decision records for the same artifact identity.
+- [x] Implement "refresh" behavior for review-gate decisions (AC: 1, 3)
+  - [x] Ensure review-ready decisions are recomputed from the latest verification/neatness evidence, not cached stale values.
+  - [x] When persisting review-gate results, replace prior decision records for the same artifact identity.
 
-- [ ] Ensure refresh is invoked in the pipeline paths that can produce stale evidence (AC: 1)
-  - [ ] Identify the code path(s) that re-run verification after regeneration/re-verification and ensure they call the same persistence helpers (no parallel formats).
-  - [ ] Verify reporting reads the current-state files and does not keep its own shadow copy.
+- [x] Ensure refresh is invoked in the pipeline paths that can produce stale evidence (AC: 1)
+  - [x] Identify the code path(s) that re-run verification after regeneration/re-verification and ensure they call the same persistence helpers (no parallel formats).
+  - [x] Verify reporting reads the current-state files and does not keep its own shadow copy.
 
-- [ ] PDF-aware refresh semantics (AC: 2)
-  - [ ] Ensure that when PDF is part of the run, the refresh behavior covers PDF verification + gate results using the same identity semantics.
-  - [ ] Ensure PDF generation/conversion failure remains distinct from PDF verification failure in the persisted state model.
+- [x] PDF-aware refresh semantics (AC: 2)
+  - [x] Ensure that when PDF is part of the run, the refresh behavior covers PDF verification + gate results using the same identity semantics.
+  - [x] Ensure PDF generation/conversion failure remains distinct from PDF verification failure in the persisted state model.
 
-- [ ] Add regression tests (AC: 1-3)
-  - [ ] Test "replace not append": saving a second result for the same artifact identity overwrites (or replaces) the existing record and does not create duplicates.
-  - [ ] Test determinism: same input snapshot produces same persisted outcome.
-  - [ ] If PDF is in-scope in code, add at least one focused test that proves PDF refresh does not collide with docx/markdown identity.
+- [x] Add regression tests (AC: 1-3)
+  - [x] Test "replace not append": saving a second result for the same artifact identity overwrites (or replaces) the existing record and does not create duplicates.
+  - [x] Test determinism: same input snapshot produces same persisted outcome.
+  - [x] If PDF is in-scope in code, add at least one focused test that proves PDF refresh does not collide with docx/markdown identity.
 
-- [ ] Verify from repo root (AC: 1-3)
-  - [ ] Run focused tests added/updated for this story.
-  - [ ] Run `python3 -m unittest discover -s tests -p 'test_*.py'`.
+- [x] Verify from repo root (AC: 1-3)
+  - [x] Run focused tests added/updated for this story.
+  - [x] Run `python3 -m unittest discover -s tests -p 'test_*.py'`.
 
 ## Dev Notes
 
@@ -76,11 +76,32 @@ so that escalation and downstream workflows use current evidence rather than sta
 
 ### Agent Model Used
 
-TBD
+GPT-5.2 (Codex CLI)
 
 ### Debug Log References
 
+- `python3 -m unittest discover -s tests -p 'test_*.py'`
+
 ### Completion Notes List
+
+- Added `refresh_document_verification_state()` so artifact verification current-state upserts by `(artifact_path, artifact_type)` and can remove stale paths.
+- Added `app/review_gate_state.py` to persist current-state artifact review-gate decisions and refresh them alongside verification.
+- Updated generation + remediation pipelines to use the shared refresh helpers (including removing stale PDF gate state on conversion failure).
+- Added regression tests for replace-not-append, removals, and PDF identity separation.
 
 ### File List
 
+- `app/document_creation.py`
+- `app/document_verification.py`
+- `app/remediation.py`
+- `app/review_gate_state.py`
+- `tests/test_document_verification.py`
+- `tests/test_review_gate_state.py`
+- `_bmad-output/implementation-artifacts/1-5-refresh-artifact-gates-after-regeneration-or-reverification.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+
+## Change Log
+
+- 2026-05-31: Implemented refresh semantics for artifact verification + review-gate current-state and added regression tests.
+- 2026-05-31: Updated sprint-status tracking for Story 1.5 to `review`.
+- 2026-06-01: Code review complete; story marked done.

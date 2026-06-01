@@ -144,6 +144,24 @@ def build_document_verification_record(
     }
 
 
+def artifact_identity(document_verification_record):
+    if not isinstance(document_verification_record, dict):
+        return (None, None)
+
+    artifact_path = document_verification_record.get("artifact_path")
+    if isinstance(artifact_path, Path):
+        artifact_path = str(artifact_path)
+
+    artifact_type = document_verification_record.get("artifact_type")
+    if isinstance(artifact_type, str):
+        artifact_type = artifact_type.lower()
+
+    return (
+        artifact_path,
+        artifact_type,
+    )
+
+
 def _count_max_consecutive_blank_lines(lines):
     max_run = 0
     current_run = 0
@@ -726,3 +744,76 @@ def save_document_verification(file_path, document_verification_records, updated
 
     logger.info("Saved document verification state to %s", file_path)
     return state
+
+
+def refresh_document_verification_state(
+    file_path=DEFAULT_DOCUMENT_QUALITY_PATH,
+    document_verification_records=None,
+    remove_artifact_paths=None,
+    updated_at=None,
+):
+    file_path = Path(file_path)
+    state, errors = load_document_verification(file_path)
+    if errors:
+        logger.warning(
+            "Document verification load reported %d recoverable issue(s).",
+            len(errors),
+        )
+
+    merged_by_identity = {}
+    seen_types_by_path = {}
+    for record in (state.get("entries") or {}).values():
+        identity = artifact_identity(record)
+        if not identity[0] or not identity[1]:
+            continue
+        prior_type = seen_types_by_path.get(identity[0])
+        if prior_type is not None and prior_type != identity[1]:
+            raise ValueError(
+                "Document verification state contains conflicting artifact types for {!r}: {!r} vs {!r}".format(
+                    identity[0],
+                    prior_type,
+                    identity[1],
+                )
+            )
+        seen_types_by_path[identity[0]] = identity[1]
+        merged_by_identity[identity] = record
+
+    for record in document_verification_records or []:
+        if not isinstance(record, dict):
+            raise ValueError(
+                "document verification records must be dictionaries; got {!r}".format(
+                    record
+                )
+            )
+        built = build_document_verification_record(
+            artifact_path=record.get("artifact_path"),
+            artifact_type=record.get("artifact_type"),
+            verification_status=record.get("verification_status"),
+            verification_reasons=record.get("verification_reasons"),
+            verified_at=record.get("verified_at"),
+        )
+        identity = artifact_identity(built)
+        prior_type = seen_types_by_path.get(identity[0])
+        if prior_type is not None and prior_type != identity[1]:
+            raise ValueError(
+                "Conflicting artifact identity for path {!r}: got types {!r} and {!r}".format(
+                    identity[0],
+                    prior_type,
+                    identity[1],
+                )
+            )
+        seen_types_by_path[identity[0]] = identity[1]
+        merged_by_identity[identity] = built
+
+    for artifact_path in remove_artifact_paths or []:
+        if not artifact_path:
+            continue
+        artifact_path = str(artifact_path)
+        for identity in [key for key in merged_by_identity.keys() if key[0] == artifact_path]:
+            merged_by_identity.pop(identity, None)
+
+    return save_document_verification(
+        file_path,
+        list(merged_by_identity.values()),
+        updated_at=updated_at,
+    )

@@ -7,8 +7,7 @@ from app.content_scoring import compose_content_score, validate_quality_score
 from app.document_verification import (
     DEFAULT_DOCUMENT_QUALITY_PATH,
     evaluate_document_artifact,
-    load_document_verification,
-    save_document_verification,
+    refresh_document_verification_state,
 )
 from app.generation_filtering import evaluate_cached_content
 from app.quality_assessment import assess_candidate_quality
@@ -24,6 +23,7 @@ from app.remediation_state import (
     save_remediated_content,
 )
 from app.review_gate import compute_review_gate_decisions
+from app.review_gate_state import refresh_review_gate_state
 from app.review_state import (
     DEFAULT_CONTENT_SCORES_PATH,
     DEFAULT_QUALITY_STATUS_PATH,
@@ -409,9 +409,6 @@ def reevaluate_remediated_content(
     refreshed_verification_records = []
     missing_artifact_paths = []
     if artifact_paths:
-        document_verification_state, _ = load_document_verification(document_quality_path)
-        merged_records = _flatten_state_records(document_verification_state)
-
         for artifact_path in artifact_paths:
             path = Path(artifact_path)
             if not path.exists():
@@ -419,15 +416,23 @@ def reevaluate_remediated_content(
                 continue
             refreshed_record = evaluate_document_artifact(path)
             refreshed_verification_records.append(refreshed_record)
-            merged_records = _merge_document_verification_record(
-                {"entries": {str(index): {"record": record} for index, record in enumerate(merged_records)}},
-                refreshed_record,
+        if refreshed_verification_records or missing_artifact_paths:
+            refresh_document_verification_state(
+                document_quality_path,
+                refreshed_verification_records,
+                remove_artifact_paths=missing_artifact_paths,
             )
 
-        if refreshed_verification_records:
-            save_document_verification(document_quality_path, merged_records)
-
     review_gate_decisions = compute_review_gate_decisions(refreshed_verification_records)
+    if artifact_paths and (review_gate_decisions or missing_artifact_paths):
+        review_gate_state_path = Path(document_quality_path).with_name(
+            "review_gate_decisions.json"
+        )
+        refresh_review_gate_state(
+            file_path=review_gate_state_path,
+            review_gate_decisions=review_gate_decisions,
+            remove_artifact_paths=missing_artifact_paths,
+        )
 
     previous_quality_score = None
     previous_content_hash = None

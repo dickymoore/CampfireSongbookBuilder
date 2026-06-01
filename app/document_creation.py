@@ -10,8 +10,7 @@ from app.content_scoring import compose_content_score
 from app.document_verification import (
     DEFAULT_DOCUMENT_QUALITY_PATH,
     evaluate_document_artifact,
-    load_document_verification,
-    save_document_verification,
+    refresh_document_verification_state,
 )
 from app.document_formatting import (
     add_header_footer,
@@ -32,6 +31,7 @@ from app.review_state import (
 )
 from app.pdf_generation import convert_document_to_pdf
 from app.review_gate import compute_review_gate_decisions
+from app.review_gate_state import refresh_review_gate_state
 from app.text_cleaning import clean_chords, clean_lyrics
 
 
@@ -105,26 +105,12 @@ def _write_markdown_document(output_path, lines):
     logger.info("Markdown document saved as %s.", target_path)
 
 
-def _save_document_verification_records(records, remove_artifact_paths=None):
-    state, errors = load_document_verification(DOCUMENT_QUALITY_PATH)
-    if errors:
-        logger.warning(
-            "Document verification load reported %d recoverable issue(s).",
-            len(errors),
-        )
-
-    merged_entries = dict(state.get("entries", {}))
-    for record in records:
-        merged_entries[record["artifact_path"]] = record
-
-    for artifact_path in remove_artifact_paths or []:
-        if not artifact_path:
-            continue
-        merged_entries.pop(str(artifact_path), None)
-
-    save_document_verification(
+def _save_document_verification_records(records, remove_artifact_paths=None, updated_at=None):
+    refresh_document_verification_state(
         DOCUMENT_QUALITY_PATH,
-        list(merged_entries.values()),
+        records,
+        remove_artifact_paths=remove_artifact_paths,
+        updated_at=updated_at,
     )
 
 
@@ -394,8 +380,19 @@ def create_document_from_cache(
         _save_document_verification_records(
             document_verification_records,
             remove_artifact_paths=remove_stale_verification_paths,
+            updated_at=generated_at,
         )
     review_gate_decisions = compute_review_gate_decisions(document_verification_records)
+    if review_gate_decisions or remove_stale_verification_paths:
+        review_gate_state_path = Path(DOCUMENT_QUALITY_PATH).with_name(
+            "review_gate_decisions.json"
+        )
+        refresh_review_gate_state(
+            file_path=review_gate_state_path,
+            review_gate_decisions=review_gate_decisions,
+            remove_artifact_paths=remove_stale_verification_paths,
+            updated_at=generated_at,
+        )
 
     if content_score_records:
         score_state, score_errors = load_content_scores(
