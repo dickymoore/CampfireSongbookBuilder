@@ -1,5 +1,6 @@
 import subprocess
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
 from app.content_models import derive_song_key, validate_content_type
@@ -409,18 +410,20 @@ def reevaluate_remediated_content(
     refreshed_verification_records = []
     missing_artifact_paths = []
     if artifact_paths:
+        refreshed_at = datetime.now().astimezone().isoformat(timespec="seconds")
         for artifact_path in artifact_paths:
             path = Path(artifact_path)
             if not path.exists():
                 missing_artifact_paths.append(str(path))
                 continue
-            refreshed_record = evaluate_document_artifact(path)
+            refreshed_record = evaluate_document_artifact(path, verified_at=refreshed_at)
             refreshed_verification_records.append(refreshed_record)
         if refreshed_verification_records or missing_artifact_paths:
             refresh_document_verification_state(
                 document_quality_path,
                 refreshed_verification_records,
                 remove_artifact_paths=missing_artifact_paths,
+                updated_at=refreshed_at,
             )
 
     review_gate_decisions = compute_review_gate_decisions(refreshed_verification_records)
@@ -432,6 +435,7 @@ def reevaluate_remediated_content(
             file_path=review_gate_state_path,
             review_gate_decisions=review_gate_decisions,
             remove_artifact_paths=missing_artifact_paths,
+            updated_at=refreshed_at,
         )
 
     previous_quality_score = None

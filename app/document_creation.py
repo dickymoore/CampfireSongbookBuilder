@@ -318,20 +318,32 @@ def create_document_from_cache(
         lyrics_markdown_path = Path(lyrics_output).with_suffix(".md")
         _write_markdown_document(lyrics_markdown_path, lyrics_markdown_lines)
         document_verification_records.append(
-            evaluate_document_artifact(lyrics_markdown_path, artifact_type="markdown")
+            evaluate_document_artifact(
+                lyrics_markdown_path,
+                artifact_type="markdown",
+                verified_at=generated_at,
+            )
         )
         os.makedirs(os.path.dirname(lyrics_output), exist_ok=True)
         lyrics_document.save(lyrics_output)
         logger.info("Lyrics document saved as %s.", lyrics_output)
         document_verification_records.append(
-            evaluate_document_artifact(lyrics_output, artifact_type="docx")
+            evaluate_document_artifact(
+                lyrics_output,
+                artifact_type="docx",
+                verified_at=generated_at,
+            )
         )
         if pdf_output:
             lyrics_pdf_path, lyrics_pdf_error = convert_document_to_pdf(lyrics_output)
             if lyrics_pdf_path is not None:
                 pdf_outputs.append(str(lyrics_pdf_path))
                 document_verification_records.append(
-                    evaluate_document_artifact(lyrics_pdf_path, artifact_type="pdf")
+                    evaluate_document_artifact(
+                        lyrics_pdf_path,
+                        artifact_type="pdf",
+                        verified_at=generated_at,
+                    )
                 )
             if lyrics_pdf_error is not None:
                 remove_stale_verification_paths.append(
@@ -349,20 +361,32 @@ def create_document_from_cache(
         chords_markdown_path = Path(chords_output).with_suffix(".md")
         _write_markdown_document(chords_markdown_path, chords_markdown_lines)
         document_verification_records.append(
-            evaluate_document_artifact(chords_markdown_path, artifact_type="markdown")
+            evaluate_document_artifact(
+                chords_markdown_path,
+                artifact_type="markdown",
+                verified_at=generated_at,
+            )
         )
         os.makedirs(os.path.dirname(chords_output), exist_ok=True)
         chords_document.save(chords_output)
         logger.info("Chords document saved as %s.", chords_output)
         document_verification_records.append(
-            evaluate_document_artifact(chords_output, artifact_type="docx")
+            evaluate_document_artifact(
+                chords_output,
+                artifact_type="docx",
+                verified_at=generated_at,
+            )
         )
         if pdf_output:
             chords_pdf_path, chords_pdf_error = convert_document_to_pdf(chords_output)
             if chords_pdf_path is not None:
                 pdf_outputs.append(str(chords_pdf_path))
                 document_verification_records.append(
-                    evaluate_document_artifact(chords_pdf_path, artifact_type="pdf")
+                    evaluate_document_artifact(
+                        chords_pdf_path,
+                        artifact_type="pdf",
+                        verified_at=generated_at,
+                    )
                 )
             if chords_pdf_error is not None:
                 remove_stale_verification_paths.append(
