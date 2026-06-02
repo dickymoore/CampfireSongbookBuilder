@@ -5,16 +5,24 @@ def _normalize_line_endings(text):
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
-def remove_contributors_and_embeds(lyrics):
-    """Remove the Contributors, Embed sections, and unwanted advertisements from the lyrics."""
+def remove_scraped_prefix_artifacts(lyrics):
+    """Remove deterministic scraped prefixes like translation lists, contributor counts, and embed counters."""
     lyrics = _normalize_line_endings(lyrics)
-    lyrics = re.sub(r'^.*Contributors', '', lyrics, flags=re.DOTALL)
-    lyrics = re.sub(r'Embed\s*$', '', lyrics, flags=re.MULTILINE)
+
+    # Common Genius-like prefix noise at the start of scraped lyric pages.
+    lyrics = re.sub(r"(?s)^Translations.*?Lyrics", "", lyrics)
+    lyrics = re.sub(r"^\s*\d+\s*Contributors?", "", lyrics, flags=re.IGNORECASE)
+    lyrics = re.sub(r"\b\d+\s*Embed\b", "", lyrics, flags=re.IGNORECASE)
+    lyrics = re.sub(r"\b\d+Embed\b", "", lyrics, flags=re.IGNORECASE)
+
     return lyrics
+
 
 def remove_unwanted_phrases(lyrics):
     """Remove common scraped lyric ads / cross-promo blocks."""
     lyrics = _normalize_line_endings(lyrics)
+    lyrics = re.sub(r"You might also like(?=\[)", "", lyrics, flags=re.IGNORECASE)
+    lyrics = re.sub(r"See .*? LiveGet tickets as low as \$\d+(?=\[)", "", lyrics, flags=re.IGNORECASE)
 
     lines = lyrics.split("\n")
     out = []
@@ -51,10 +59,10 @@ def remove_unwanted_phrases(lyrics):
     return "\n".join(out)
 
 def clean_lyrics(lyrics):
-    """Clean the lyrics by removing contributors, embeds, and unwanted phrases."""
+    """Clean the lyrics by removing deterministic scrape artifacts and promo blocks."""
     if lyrics is None or not isinstance(lyrics, str):
         return ''
-    lyrics = remove_contributors_and_embeds(lyrics)
+    lyrics = remove_scraped_prefix_artifacts(lyrics)
     lyrics = remove_unwanted_phrases(lyrics)
     # Collapse excessive blank lines.
     lyrics = _normalize_line_endings(lyrics)
