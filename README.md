@@ -82,15 +82,59 @@ Run the application from the command line with various options:
   python main.py --generate-from-cache
   ```
 
+- To generate documents from the cache and also produce PDFs:
+  ```sh
+  python main.py --generate-from-cache --pdf
+  ```
+
 - To restrict any run to songs marked as favourites in the source CSV:
   ```sh
   python main.py --favourites-only --generate-from-cache
+  ```
+
+- To generate favourite-only DOCX and PDF outputs:
+  ```sh
+  python main.py --favourites-only --generate-from-cache --pdf
   ```
 
 - To restrict any run to a named selection from `data/selections/<name>.json`:
   ```sh
   python main.py --selection trip-night --generate-from-cache
   ```
+
+### Manual Lyrics / Chords Import
+
+If you have copied lyrics or chords manually and want to use those local versions instead of network sources, put the pasted text into `data/manual_import.txt` and run:
+
+```sh
+python main.py --import-manual data/manual_import.txt
+```
+
+This writes two local override files:
+
+- `data/manual_lyrics.json`
+- `data/manual_chords.json`
+
+Typical manual-refresh workflow:
+
+```sh
+python main.py --import-manual data/manual_import.txt
+python main.py --favourites-only --cache-only
+python main.py --favourites-only --generate-from-cache --pdf
+```
+
+What each step does:
+
+- `--import-manual` parses pasted sections such as `# Artist - Title lyrics`, `# Title chords`, or `# Title by Artist` and writes deterministic local overrides.
+- `--cache-only` refreshes the cache from those manual overrides so later generation uses the cleaned local text.
+- `--generate-from-cache --pdf` builds the DOCX and PDF outputs from the refreshed cache.
+
+Current output files:
+
+- `data/output/Lyrics_Document.docx`
+- `data/output/Lyrics_Document.pdf`
+- `data/output/Chords_Document.docx`
+- `data/output/Chords_Document.pdf`
 
 ## Running Tests & Linting
 
