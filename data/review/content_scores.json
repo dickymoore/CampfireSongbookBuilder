@@ -1,5 +1,369 @@
 {
   "entries": {
+    "Alison Moyet - Love Resurrection": {
+      "chords": {
+        "artist": "Alison Moyet",
+        "content_hash": "sha256:b65c718b0aa258db0b338830667d746b6a1dd6853f651cb31baf2044f5329a83",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Alison Moyet - Love Resurrection",
+        "title": "Love Resurrection"
+      },
+      "lyrics": {
+        "artist": "Alison Moyet",
+        "content_hash": "sha256:f78571acc8543db86c3519e42251cd85cf9426bb041d9dc41dab4e6fab3c7463",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Alison Moyet - Love Resurrection",
+        "title": "Love Resurrection"
+      }
+    },
+    "Beyonce - Bodyguard": {
+      "chords": {
+        "artist": "Beyonce",
+        "content_hash": "sha256:3e139854526ceac97b09fed85e382dbe9b52f5c2f2dfb0ddecd7be8a33836a0b",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Beyonce - Bodyguard",
+        "title": "Bodyguard"
+      },
+      "lyrics": {
+        "artist": "Beyonce",
+        "content_hash": "sha256:c4b267d769f66b324e6bfe5f1b822be6ecb5b6f8b0c8c7de6c6d1bf32a82f502",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Beyonce - Bodyguard",
+        "title": "Bodyguard"
+      }
+    },
+    "Big Moon - Silent Movie Suzie": {
+      "chords": {
+        "artist": "Big Moon",
+        "content_hash": "sha256:bb0a26b5319df9742ebadb26c839d2240cb8b06bcb1a95d500cecf8cd4ba84a2",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Big Moon - Silent Movie Suzie",
+        "title": "Silent Movie Suzie"
+      },
+      "lyrics": {
+        "artist": "Big Moon",
+        "content_hash": "sha256:37f730890012e03b0d134e81d07e0c1178bfa4e666c1b67077fe804aae2a4d6d",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Big Moon - Silent Movie Suzie",
+        "title": "Silent Movie Suzie"
+      }
+    },
+    "Blur - Coffee & TV": {
+      "chords": {
+        "artist": "Blur",
+        "content_hash": "sha256:1b79df687b6b971854562daee8dd745319a0f95203a95460b24bf687da742e92",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Blur - Coffee & TV",
+        "title": "Coffee & TV"
+      },
+      "lyrics": {
+        "artist": "Blur",
+        "content_hash": "sha256:fffda397303b7deeea981b1dac7c4a85cee0ef55179ecb42767d47a93c1bc740",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Blur - Coffee & TV",
+        "title": "Coffee & TV"
+      }
+    },
+    "Britney Spears - Toxic": {
+      "chords": {
+        "artist": "Britney Spears",
+        "content_hash": "sha256:8a8dcae1c71b307752b53e941859fe6a3759a3ff7b2783834af8ac3107131b4c",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Britney Spears - Toxic",
+        "title": "Toxic"
+      },
+      "lyrics": {
+        "artist": "Britney Spears",
+        "content_hash": "sha256:6cdb2dc49c55e3552f2c9d47f36ae2555252dd79dbf17affc65ce5880b748f2c",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Britney Spears - Toxic",
+        "title": "Toxic"
+      }
+    },
+    "Bruce Springsteen - Dancing in the Dark": {
+      "chords": {
+        "artist": "Bruce Springsteen",
+        "content_hash": "sha256:27db5782d45259c2d79830d790ba7d07ddf62504233cf56a636b15f33ba0835f",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Bruce Springsteen - Dancing in the Dark",
+        "title": "Dancing in the Dark"
+      },
+      "lyrics": {
+        "artist": "Bruce Springsteen",
+        "content_hash": "sha256:a410daaa3c3229c31d3f6394a0d62e837619540fa41d8e3dd3f32ee5a2877b0a",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Bruce Springsteen - Dancing in the Dark",
+        "title": "Dancing in the Dark"
+      }
+    },
+    "David Bowie - Oh! You Pretty Things": {
+      "chords": {
+        "artist": "David Bowie",
+        "content_hash": "sha256:82df4e7fea8c78d0ef1dca865d2c00d689a6a0b203facf3f3ec2c108f98eb92e",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "David Bowie - Oh! You Pretty Things",
+        "title": "Oh! You Pretty Things"
+      },
+      "lyrics": {
+        "artist": "David Bowie",
+        "content_hash": "sha256:d5ee5d77364698671a880edfc636d7cafb7edcd7f072b5a0b4b0156c033ed0f4",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "David Bowie - Oh! You Pretty Things",
+        "title": "Oh! You Pretty Things"
+      }
+    },
+    "Echobelly - Today Tomorrow Sometimes Never": {
+      "chords": {
+        "artist": "Echobelly",
+        "content_hash": "sha256:468be7aa9b7e144e5bcfcfbe6f481671f89368f65cd2729bdc422f09eff27298",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Echobelly - Today Tomorrow Sometimes Never",
+        "title": "Today Tomorrow Sometimes Never"
+      },
+      "lyrics": {
+        "artist": "Echobelly",
+        "content_hash": "sha256:6aa5616043c1b2352b9083d0cb4a55daaea4cce1e73e42949efdd3cff2377b51",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Echobelly - Today Tomorrow Sometimes Never",
+        "title": "Today Tomorrow Sometimes Never"
+      }
+    },
+    "Everything Everything - My CZ UR BF": {
+      "chords": {
+        "artist": "Everything Everything",
+        "content_hash": "sha256:82f2103ad2335bece82e7cb61369de080acae7d8ec90477de9e77d76e4eed643",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Everything Everything - My CZ UR BF",
+        "title": "My CZ UR BF"
+      },
+      "lyrics": {
+        "artist": "Everything Everything",
+        "content_hash": "sha256:bfdd18a2749490d6fd9878b0a5c59eadec71b3bcda2520482bbedae36795cb9d",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Everything Everything - My CZ UR BF",
+        "title": "My CZ UR BF"
+      }
+    },
+    "Here We Go Magic - Alone but Moving": {
+      "chords": {
+        "artist": "Here We Go Magic",
+        "content_hash": "sha256:1adc417f8785929c4fe7ea5d897ffca69efbe582a30d3693e23371ebdc6e4a72",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Here We Go Magic - Alone but Moving",
+        "title": "Alone but Moving"
+      },
+      "lyrics": {
+        "artist": "Here We Go Magic",
+        "content_hash": "sha256:b0b629703c198be27930924c4fd943510617a620468762c113bdf0546f25a139",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Here We Go Magic - Alone but Moving",
+        "title": "Alone but Moving"
+      }
+    },
+    "Honeyblood - Justine, Misery Queen": {
+      "chords": {
+        "artist": "Honeyblood",
+        "content_hash": "sha256:e28c6b32bc3f9edbb2c218e20f1a7f58d44aa945de04ea3a31c36b7337f489c6",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Honeyblood - Justine, Misery Queen",
+        "title": "Justine, Misery Queen"
+      },
+      "lyrics": {
+        "artist": "Honeyblood",
+        "content_hash": "sha256:07bd621c91c5c6bd7ae75f7f01671e44f8682c1ed1657cbfa80e980374cd4c24",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Honeyblood - Justine, Misery Queen",
+        "title": "Justine, Misery Queen"
+      }
+    },
+    "Honeyblood - Sister Wolf": {
+      "chords": {
+        "artist": "Honeyblood",
+        "content_hash": "sha256:8dda6e9bc20a156dbd005616966bf0956dd6ecd81a8143f33cd22533f9f57d0d",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Honeyblood - Sister Wolf",
+        "title": "Sister Wolf"
+      },
+      "lyrics": {
+        "artist": "Honeyblood",
+        "content_hash": "sha256:4db2a0b3ec6f2ff3397ff7d21570e17bcbddffb1db2885d1732dfdcf829f2f5a",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Honeyblood - Sister Wolf",
+        "title": "Sister Wolf"
+      }
+    },
+    "Killing Joke - Love Like Blood": {
+      "chords": {
+        "artist": "Killing Joke",
+        "content_hash": "sha256:cd33ff5ff3fc7a989514d1e123474a88cb7028a6669a090e7c6df27bf89ab612",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Killing Joke - Love Like Blood",
+        "title": "Love Like Blood"
+      },
+      "lyrics": {
+        "artist": "Killing Joke",
+        "content_hash": "sha256:8e9306627b51551e0e93505b247faaca6e9a019c908b9266bba92863c2c3600b",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Killing Joke - Love Like Blood",
+        "title": "Love Like Blood"
+      }
+    },
+    "Super Furry Animals - Ohio Heat": {
+      "chords": {
+        "artist": "Super Furry Animals",
+        "content_hash": "sha256:cfb3c519291419578e1b36b7febc7ac68240a855ecdda837a31ba06ebfdcee72",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Super Furry Animals - Ohio Heat",
+        "title": "Ohio Heat"
+      },
+      "lyrics": {
+        "artist": "Super Furry Animals",
+        "content_hash": "sha256:a0fcbac36d7d4709da54ec10e932ead6d08bfe5a2e4ebe364de4587d98e7b0f1",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "Super Furry Animals - Ohio Heat",
+        "title": "Ohio Heat"
+      }
+    },
     "The Campfire Trio - Trail Song": {
       "lyrics": {
         "artist": "The Campfire Trio",
@@ -13,8 +377,190 @@
         "song_key": "The Campfire Trio - Trail Song",
         "title": "Trail Song"
       }
+    },
+    "The Darkness - Givin' Up": {
+      "chords": {
+        "artist": "The Darkness",
+        "content_hash": "sha256:e82c4f40d020f1068248d7ec1af6079680b73b251d409b4f136c9fca86b99a44",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Darkness - Givin' Up",
+        "title": "Givin' Up"
+      },
+      "lyrics": {
+        "artist": "The Darkness",
+        "content_hash": "sha256:88ae3080bef7da2b9721b65aa988df643643e4fe94f2fe34c9a3e3bfc4392a89",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Darkness - Givin' Up",
+        "title": "Givin' Up"
+      }
+    },
+    "The Monkees - Me & Magdelana": {
+      "chords": {
+        "artist": "The Monkees",
+        "content_hash": "sha256:144a43aac758edc6073d7458da93dd230a18b2ed08ff245a553539b34c43dc45",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Monkees - Me & Magdelana",
+        "title": "Me & Magdelana"
+      },
+      "lyrics": {
+        "artist": "The Monkees",
+        "content_hash": "sha256:bd379a31389a98257aaecfeffeb065f44fcebfac6cffb0ef8801abc3345dd2e2",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Monkees - Me & Magdelana",
+        "title": "Me & Magdelana"
+      }
+    },
+    "The Shins - Australia": {
+      "chords": {
+        "artist": "The Shins",
+        "content_hash": "sha256:0a1ca5bb4052ace4a364643242d4ffb8524f1dae586083947d7e3825c4a80c9e",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Shins - Australia",
+        "title": "Australia"
+      },
+      "lyrics": {
+        "artist": "The Shins",
+        "content_hash": "sha256:569cef39eb17dc8eeaac353015173f383354325e7c133e905454b7ce1cc5893b",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Shins - Australia",
+        "title": "Australia"
+      }
+    },
+    "The Shins - Phantom Limb": {
+      "chords": {
+        "artist": "The Shins",
+        "content_hash": "sha256:89364b9e570a7327270071cb3abd92b0ee5aade3602b0d1f13604171fab1f9a7",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Shins - Phantom Limb",
+        "title": "Phantom Limb"
+      },
+      "lyrics": {
+        "artist": "The Shins",
+        "content_hash": "sha256:24be95cd02570bf9dfa6824b5e5359d320426e91f34405d8e81127f4e5b12f1e",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Shins - Phantom Limb",
+        "title": "Phantom Limb"
+      }
+    },
+    "The Shins - Sleeping Lessons": {
+      "chords": {
+        "artist": "The Shins",
+        "content_hash": "sha256:96325c2a704c73541b1ac193525af4ceaba6811b26a89d6566b127a9a9d3f577",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Shins - Sleeping Lessons",
+        "title": "Sleeping Lessons"
+      },
+      "lyrics": {
+        "artist": "The Shins",
+        "content_hash": "sha256:fd87e2be042456cbb7b49232abd03f67dab3bca921faa73a3b76746d15f02027",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Shins - Sleeping Lessons",
+        "title": "Sleeping Lessons"
+      }
+    },
+    "The Smiths - I Don't Owe you Anything": {
+      "chords": {
+        "artist": "The Smiths",
+        "content_hash": "sha256:031e474ff7734bd9328f5afdf05fc36b3c077532c1423def2307621b69f9a032",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Smiths - I Don't Owe you Anything",
+        "title": "I Don't Owe you Anything"
+      },
+      "lyrics": {
+        "artist": "The Smiths",
+        "content_hash": "sha256:e938218806735540b41cf2fe91784d1387dc895a30b87be3fd76bc3426248aef",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Smiths - I Don't Owe you Anything",
+        "title": "I Don't Owe you Anything"
+      }
+    },
+    "The Smiths - What Difference Does it Make?": {
+      "chords": {
+        "artist": "The Smiths",
+        "content_hash": "sha256:f25a9d9154dab5ae61075c9eb726ea3eaf66aaa958a8c6e05f47cabeaf7818da",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Smiths - What Difference Does it Make?",
+        "title": "What Difference Does it Make?"
+      },
+      "lyrics": {
+        "artist": "The Smiths",
+        "content_hash": "sha256:f5aec92d4bafb95ec6c5deaa1d205da2aaf414ee9e0ceb400a234e8e6cefa7f4",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:44+01:00",
+        "song_key": "The Smiths - What Difference Does it Make?",
+        "title": "What Difference Does it Make?"
+      }
     }
   },
-  "updated_at": "2026-05-27T18:23:15+01:00",
+  "updated_at": "2026-06-01T20:23:44+01:00",
   "version": 1
 }

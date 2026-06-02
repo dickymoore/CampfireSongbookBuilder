@@ -4,43 +4,95 @@
       "artifact_path": "data/output/Chords_Document.docx",
       "artifact_type": "docx",
       "verification_reasons": [
-        "print_hostile_structure",
-        "excessive_whitespace"
+        "meets_neatness_thresholds"
       ],
-      "verification_status": "failed",
-      "verified_at": "2026-05-23T22:40:27+01:00"
+      "verification_status": "passed",
+      "verified_at": "2026-06-01T20:23:44+01:00"
     },
     "data/output/Chords_Document.md": {
       "artifact_path": "data/output/Chords_Document.md",
       "artifact_type": "markdown",
       "verification_reasons": [
-        "print_hostile_structure",
-        "excessive_whitespace"
+        "meets_neatness_thresholds"
+      ],
+      "verification_status": "passed",
+      "verified_at": "2026-06-01T20:23:44+01:00"
+    },
+    "data/output/Chords_Document.pdf": {
+      "artifact_path": "data/output/Chords_Document.pdf",
+      "artifact_type": "pdf",
+      "verification_reasons": [
+        "meets_neatness_thresholds"
+      ],
+      "verification_status": "passed",
+      "verified_at": "2026-06-01T20:23:44+01:00"
+    },
+    "data/output/Favourites_Chords_Document.docx": {
+      "artifact_path": "data/output/Favourites_Chords_Document.docx",
+      "artifact_type": "docx",
+      "verification_reasons": [
+        "sparse_layout",
+        "fragmented_song_blocks"
       ],
       "verification_status": "failed",
-      "verified_at": "2026-05-23T22:40:27+01:00"
+      "verified_at": "2026-06-01T17:20:59+01:00"
+    },
+    "data/output/Favourites_Chords_Document.md": {
+      "artifact_path": "data/output/Favourites_Chords_Document.md",
+      "artifact_type": "markdown",
+      "verification_reasons": [
+        "sparse_layout",
+        "fragmented_song_blocks"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-06-01T17:20:59+01:00"
+    },
+    "data/output/Favourites_Lyrics_Document.docx": {
+      "artifact_path": "data/output/Favourites_Lyrics_Document.docx",
+      "artifact_type": "docx",
+      "verification_reasons": [
+        "sparse_layout"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-06-01T17:20:59+01:00"
+    },
+    "data/output/Favourites_Lyrics_Document.md": {
+      "artifact_path": "data/output/Favourites_Lyrics_Document.md",
+      "artifact_type": "markdown",
+      "verification_reasons": [
+        "sparse_layout"
+      ],
+      "verification_status": "failed",
+      "verified_at": "2026-06-01T17:20:59+01:00"
     },
     "data/output/Lyrics_Document.docx": {
       "artifact_path": "data/output/Lyrics_Document.docx",
       "artifact_type": "docx",
       "verification_reasons": [
-        "print_hostile_structure",
-        "excessive_whitespace"
+        "meets_neatness_thresholds"
       ],
-      "verification_status": "failed",
-      "verified_at": "2026-05-23T22:40:27+01:00"
+      "verification_status": "passed",
+      "verified_at": "2026-06-01T20:23:44+01:00"
     },
     "data/output/Lyrics_Document.md": {
       "artifact_path": "data/output/Lyrics_Document.md",
       "artifact_type": "markdown",
       "verification_reasons": [
-        "print_hostile_structure",
-        "excessive_whitespace"
+        "meets_neatness_thresholds"
       ],
-      "verification_status": "failed",
-      "verified_at": "2026-05-23T22:40:27+01:00"
+      "verification_status": "passed",
+      "verified_at": "2026-06-01T20:23:44+01:00"
+    },
+    "data/output/Lyrics_Document.pdf": {
+      "artifact_path": "data/output/Lyrics_Document.pdf",
+      "artifact_type": "pdf",
+      "verification_reasons": [
+        "meets_neatness_thresholds"
+      ],
+      "verification_status": "passed",
+      "verified_at": "2026-06-01T20:23:44+01:00"
     }
   },
-  "updated_at": "2026-05-23T22:40:27+01:00",
+  "updated_at": "2026-06-01T20:23:44+01:00",
   "version": 1
 }
