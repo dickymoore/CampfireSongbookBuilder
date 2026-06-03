@@ -6,6 +6,7 @@ from app.load_config import load_config
 from app.load_songs import filter_favourite_songs, load_songs
 from app.content_models import derive_song_key
 from app.document_generation import cache_lyrics, cache_chords
+from app.document_generation import refresh_quality_status_from_cache
 from app.fetch_data import get_genius_client
 from app.song_info import get_song_lyrics_info
 from app.reporting import (
@@ -161,6 +162,11 @@ def main():
     parser.add_argument('--lyrics-only', action='store_true', help='Generate document for lyrics only')
     parser.add_argument('--chords-only', action='store_true', help='Generate document for chords only')
     parser.add_argument('--generate-from-cache', action='store_true', help='Generate documents from cache only')
+    parser.add_argument(
+        '--refresh-quality-state',
+        action='store_true',
+        help='Rebuild data/review/quality_status.json from the current cache, then write a fresh quality report',
+    )
     parser.add_argument('--pdf', action='store_true', help='Also generate PDFs when producing DOCX outputs (requires pandoc or LibreOffice)')
     parser.add_argument('--test-api', action='store_true', help='Test the Genius API key')
     parser.add_argument('--cache-only', action='store_true', help='Fetch and cache all lyrics and chords, but do not generate documents')
@@ -318,6 +324,37 @@ def main():
             pdf_output=bool(args.pdf),
         )
         report_data["source"] = "generate_from_selection" if args.selection else "generate_from_cache"
+        report_data["invalid_song_rows"] = invalid_song_rows
+        report_data["selection_issues"] = selection_issues + report_data.get("selection_issues", [])
+        _write_generation_report(report_data)
+        return
+
+    if args.refresh_quality_state:
+        logging.info("Refreshing quality state from cache only.")
+        from app.cache import jsonl_load_all
+        lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
+        chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+        refresh_summary = refresh_quality_status_from_cache(
+            songs,
+            lyrics_cache,
+            chords_cache,
+        )
+        logging.info(
+            "Refreshed %d content record(s) into %s.",
+            refresh_summary["refreshed_count"],
+            refresh_summary["quality_status_path"],
+        )
+        from app.document_creation import create_document_from_cache
+        report_data = create_document_from_cache(
+            songs,
+            lyrics_cache,
+            chords_cache,
+            selection_records=selection_records,
+            report_source="refresh_quality_state",
+            pdf_output=False,
+            report_all_content=True,
+        )
+        report_data["source"] = "refresh_quality_state"
         report_data["invalid_song_rows"] = invalid_song_rows
         report_data["selection_issues"] = selection_issues + report_data.get("selection_issues", [])
         _write_generation_report(report_data)

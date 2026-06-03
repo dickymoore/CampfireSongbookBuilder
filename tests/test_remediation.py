@@ -395,7 +395,7 @@ class TestRemediation(unittest.TestCase):
             self.assertEqual(score_errors, [])
             self.assertEqual(
                 score_state["entries"]["The Campfire Trio - Trail Song"]["lyrics"]["quality_score"],
-                0,
+                30,
             )
 
             audit_records, audit_errors = load_remediation_audit_records(audit_path)

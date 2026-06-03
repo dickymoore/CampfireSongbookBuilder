@@ -352,7 +352,7 @@ def assess_junk_content(content_type, content):
         signals.append(
             _build_signal(
                 "duplicate_block",
-                "error",
+                "warning",
                 "Repeated blocks make the content difficult to trust.",
                 content_type_value,
             )
@@ -360,22 +360,17 @@ def assess_junk_content(content_type, content):
 
     bracket_tags, bracket_chars = _bracket_noise_counts(content_text)
     if bracket_tags >= 3 or bracket_chars >= 12:
-        severity = "error" if bracket_tags >= 6 or bracket_chars >= 24 else "warning"
         signals.append(
             _build_signal(
                 "excessive_bracket_noise",
-                severity,
+                "warning",
                 "Bracket noise makes the content hard to read.",
                 content_type_value,
             )
         )
 
     if signals:
-        quality = (
-            "missing"
-            if any(signal["severity"] == "error" for signal in signals)
-            else "questionable"
-        )
+        quality = "questionable"
         summary = {
             "line_count": len(lines),
             "bracket_tag_count": bracket_tags,

@@ -268,6 +268,10 @@ def install_docx_stub():
     shared_stub.Pt = lambda value: value
     shared_stub.Inches = lambda value: value
 
+    enum_stub = types.ModuleType("docx.enum")
+    section_stub = types.ModuleType("docx.enum.section")
+    section_stub.WD_SECTION = types.SimpleNamespace(NEW_PAGE=1)
+
     oxml_stub = types.ModuleType("docx.oxml")
     oxml_stub.OxmlElement = lambda *args, **kwargs: _FakeXmlElement()
 
@@ -276,5 +280,7 @@ def install_docx_stub():
 
     sys.modules["docx"] = docx_stub
     sys.modules["docx.shared"] = shared_stub
+    sys.modules["docx.enum"] = enum_stub
+    sys.modules["docx.enum.section"] = section_stub
     sys.modules["docx.oxml"] = oxml_stub
     sys.modules["docx.oxml.ns"] = ns_stub

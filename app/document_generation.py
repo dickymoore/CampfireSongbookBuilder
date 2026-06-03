@@ -42,6 +42,64 @@ def _flatten_content_score_records(state):
     return records
 
 
+def _song_artist(song):
+    if not isinstance(song, dict):
+        return None
+    return song.get("Artist") or song.get("artist")
+
+
+def _song_title(song):
+    if not isinstance(song, dict):
+        return None
+    return song.get("Title") or song.get("title")
+
+
+def _song_key(song):
+    if not isinstance(song, dict):
+        return None
+    return song.get("song_key")
+
+
+def refresh_quality_status_from_cache(song_list, lyrics_cache, chords_cache, quality_status_path=QUALITY_STATUS_PATH):
+    generated_at = datetime.now().astimezone().isoformat(timespec="seconds")
+    refreshed_records = []
+
+    for song in sort_songs(song_list):
+        artist = _song_artist(song)
+        title = _song_title(song)
+        cache_key = _song_key(song) or derive_song_key(artist, title)
+
+        for content_type, cache in (("lyrics", lyrics_cache), ("chords", chords_cache)):
+            content = cache.get(cache_key) if isinstance(cache, dict) else None
+            if not isinstance(content, str) or content == "":
+                continue
+
+            quality_result = _assess_cached_content(artist, title, content_type, content)
+            refreshed_records.append(
+                build_quality_status(
+                    artist,
+                    title,
+                    content_type,
+                    compute_content_hash(content),
+                    quality_result["quality"],
+                    signals=quality_result["signals"],
+                    assessed_at=generated_at,
+                )
+            )
+
+    save_quality_status(quality_status_path, refreshed_records, updated_at=generated_at)
+    logger.info(
+        "Refreshed quality status from cache for %d content record(s).",
+        len(refreshed_records),
+    )
+    return {
+        "generated_at": generated_at,
+        "refreshed_records": refreshed_records,
+        "refreshed_count": len(refreshed_records),
+        "quality_status_path": str(quality_status_path),
+    }
+
+
 def _load_quality_status_record(artist, title, content_type):
     state, errors = load_quality_status(QUALITY_STATUS_PATH)
     if errors:

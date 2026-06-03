@@ -228,17 +228,17 @@ class TestQualityAssessment(unittest.TestCase):
         self.assertEqual(result["summary"]["has_html_residue"], True)
         self.assertEqual(result["summary"]["has_email_header_artifacts"], True)
 
-    def test_duplicate_blocks_mark_content_as_missing(self):
+    def test_duplicate_blocks_mark_content_as_questionable(self):
         content = "Verse 1\nLine A\nVerse 2\nLine B\nVerse 1\nLine A"
         result = assess_junk_content("chords", content)
 
-        self.assertEqual(result["quality"], "missing")
+        self.assertEqual(result["quality"], "questionable")
         self.assertEqual(
             result["signals"],
             [
                 build_quality_signal(
                     "duplicate_block",
-                    "error",
+                    "warning",
                     "Repeated blocks make the content difficult to trust.",
                     "chords",
                 )
@@ -295,7 +295,7 @@ class TestQualityAssessment(unittest.TestCase):
                 "excessive_bracket_noise",
             ],
         )
-        self.assertEqual(result["quality"], "missing")
+        self.assertEqual(result["quality"], "questionable")
         self.assertEqual(result["summary"]["line_count"], 5)
 
     def test_valid_content_stays_clean_with_no_junk_signals(self):

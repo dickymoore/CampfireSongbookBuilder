@@ -153,6 +153,7 @@ def create_document_from_cache(
     selection_records=None,
     report_source=None,
     pdf_output=False,
+    report_all_content=False,
 ):
     logger.debug("Running create_document_from_cache function")
 
@@ -209,131 +210,139 @@ def create_document_from_cache(
         chords_quality_status = quality_status_state.get("entries", {}).get(cache_key, {}).get("chords")
         chords_review_decision = review_decision_state.get("entries", {}).get(cache_key, {}).get("chords")
 
-        if lyrics_output:
-            lyrics = lyrics_cache.get(cache_key) if isinstance(lyrics_cache, dict) else None
-            generation_result = evaluate_cached_content(
-                artist,
-                title,
-                "lyrics",
-                lyrics,
-                quality_status_record=lyrics_quality_status,
-                review_decision_record=lyrics_review_decision,
-            )
-            if generation_result.get("content_hash") is not None:
-                try:
-                    content_score_records.append(
-                        compose_content_score(
-                            generation_result.get("quality_status") or {},
-                            scored_at=generated_at,
-                        )
+        lyrics = lyrics_cache.get(cache_key) if isinstance(lyrics_cache, dict) else None
+        lyrics_generation_result = evaluate_cached_content(
+            artist,
+            title,
+            "lyrics",
+            lyrics,
+            quality_status_record=lyrics_quality_status,
+            review_decision_record=lyrics_review_decision,
+        )
+        if lyrics_generation_result.get("content_hash") is not None:
+            try:
+                content_score_records.append(
+                    compose_content_score(
+                        lyrics_generation_result.get("quality_status") or {},
+                        scored_at=generated_at,
                     )
-                except ValueError as exc:
-                    logger.warning("Failed to compute lyrics content score for %s: %s", cache_key, exc)
-
-            report_included = generation_result["included"]
-            report_reason = generation_result["reason"]
-            if generation_result["included"] and isinstance(lyrics, str) and lyrics != "":
-                lyrics = clean_lyrics(lyrics)
-                num_characters = len(lyrics)
-                logger.debug("Adding lyrics for %s by %s", title, artist)
-
-                if num_characters <= 5000:
-                    lyrics_render_items.append(
-                        {
-                            "artist": artist,
-                            "title": title,
-                            "content": lyrics,
-                            "bookmark_name": build_song_bookmark_name(song, len(lyrics_render_items) + 1),
-                        }
-                    )
-                    lyrics_markdown_lines.extend(_markdown_song_block(artist, title, lyrics))
-                else:
-                    report_included = False
-                    report_reason = "Lyrics are too long and were excluded from the document."
-                    logger.debug("Lyrics for %s are too long and have been excluded.", title)
-            else:
-                logger.debug(
-                    "Skipping lyrics for %s by %s: %s",
-                    title,
-                    artist,
-                    report_reason,
                 )
+            except ValueError as exc:
+                logger.warning("Failed to compute lyrics content score for %s: %s", cache_key, exc)
 
+        report_included = lyrics_generation_result["included"]
+        report_reason = lyrics_generation_result["reason"]
+        if lyrics_output and lyrics_generation_result["included"] and isinstance(lyrics, str) and lyrics != "":
+            lyrics = clean_lyrics(lyrics)
+            num_characters = len(lyrics)
+            logger.debug("Adding lyrics for %s by %s", title, artist)
+
+            if num_characters <= 5000:
+                lyrics_render_items.append(
+                    {
+                        "artist": artist,
+                        "title": title,
+                        "content": lyrics,
+                        "bookmark_name": build_song_bookmark_name(song, len(lyrics_render_items) + 1),
+                    }
+                )
+                lyrics_markdown_lines.extend(_markdown_song_block(artist, title, lyrics))
+            else:
+                report_included = False
+                report_reason = "Lyrics are too long and were excluded from the document."
+                logger.debug("Lyrics for %s are too long and have been excluded.", title)
+        elif lyrics_output:
+            logger.debug(
+                "Skipping lyrics for %s by %s: %s",
+                title,
+                artist,
+                report_reason,
+            )
+
+        if report_all_content or lyrics_output:
             report_entries.append(
                 _build_report_entry(
                     song,
                     "lyrics",
-                    generation_result,
+                    lyrics_generation_result,
                     included=report_included,
                     reason=report_reason,
                 )
             )
-            if selection_records is not None and generation_result["quality"] == "missing":
-                selection_issues.append(
-                    {
-                        "selection_name": None,
-                        "issue_type": "missing_content",
-                        "artist": artist,
-                        "title": title,
-                        "song_key": cache_key,
-                        "content_type": "lyrics",
-                        "reason": report_reason,
-                    }
-                )
-
-        if chords_output:
-            chords = chords_cache.get(cache_key) if isinstance(chords_cache, dict) else None
-            generation_result = evaluate_cached_content(
-                artist,
-                title,
-                "chords",
-                chords,
-                quality_status_record=chords_quality_status,
-                review_decision_record=chords_review_decision,
+        if (
+            selection_records is not None
+            and lyrics_generation_result["quality"] == "missing"
+            and (report_all_content or lyrics_output)
+        ):
+            selection_issues.append(
+                {
+                    "selection_name": None,
+                    "issue_type": "missing_content",
+                    "artist": artist,
+                    "title": title,
+                    "song_key": cache_key,
+                    "content_type": "lyrics",
+                    "reason": report_reason,
+                }
             )
-            if generation_result.get("content_hash") is not None:
-                try:
-                    content_score_records.append(
-                        compose_content_score(
-                            generation_result.get("quality_status") or {},
-                            scored_at=generated_at,
-                        )
-                    )
-                except ValueError as exc:
-                    logger.warning("Failed to compute chords content score for %s: %s", cache_key, exc)
-            report_entries.append(_build_report_entry(song, "chords", generation_result))
-            if selection_records is not None and generation_result["quality"] == "missing":
-                selection_issues.append(
-                    {
-                        "selection_name": None,
-                        "issue_type": "missing_content",
-                        "artist": artist,
-                        "title": title,
-                        "song_key": cache_key,
-                        "content_type": "chords",
-                        "reason": generation_result["reason"],
-                    }
-                )
 
-            if generation_result["included"] and isinstance(chords, str) and chords != "":
-                chords = clean_chords(chords)
-                logger.debug("Adding chords for %s by %s", title, artist)
-                chords_render_items.append(
-                    {
-                        "artist": artist,
-                        "title": title,
-                        "content": chords,
-                        "bookmark_name": build_song_bookmark_name(song, len(chords_render_items) + 1),
-                    }
+        chords = chords_cache.get(cache_key) if isinstance(chords_cache, dict) else None
+        chords_generation_result = evaluate_cached_content(
+            artist,
+            title,
+            "chords",
+            chords,
+            quality_status_record=chords_quality_status,
+            review_decision_record=chords_review_decision,
+        )
+        if chords_generation_result.get("content_hash") is not None:
+            try:
+                content_score_records.append(
+                    compose_content_score(
+                        chords_generation_result.get("quality_status") or {},
+                        scored_at=generated_at,
+                    )
                 )
-                chords_markdown_lines.extend(_markdown_song_block(artist, title, chords))
-            else:
-                logger.debug(
-                    "Skipping chords for %s by %s: %s",
-                    title,
-                    artist,
-                    generation_result["reason"],
-                )
+            except ValueError as exc:
+                logger.warning("Failed to compute chords content score for %s: %s", cache_key, exc)
+        if report_all_content or chords_output:
+            report_entries.append(_build_report_entry(song, "chords", chords_generation_result))
+        if (
+            selection_records is not None
+            and chords_generation_result["quality"] == "missing"
+            and (report_all_content or chords_output)
+        ):
+            selection_issues.append(
+                {
+                    "selection_name": None,
+                    "issue_type": "missing_content",
+                    "artist": artist,
+                    "title": title,
+                    "song_key": cache_key,
+                    "content_type": "chords",
+                    "reason": chords_generation_result["reason"],
+                }
+            )
+
+        if chords_output and chords_generation_result["included"] and isinstance(chords, str) and chords != "":
+            chords = clean_chords(chords)
+            logger.debug("Adding chords for %s by %s", title, artist)
+            chords_render_items.append(
+                {
+                    "artist": artist,
+                    "title": title,
+                    "content": chords,
+                    "bookmark_name": build_song_bookmark_name(song, len(chords_render_items) + 1),
+                }
+            )
+            chords_markdown_lines.extend(_markdown_song_block(artist, title, chords))
+        elif chords_output:
+            logger.debug(
+                "Skipping chords for %s by %s: %s",
+                title,
+                artist,
+                chords_generation_result["reason"],
+            )
 
     if lyrics_output:
         add_contents_page(lyrics_document, lyrics_render_items)

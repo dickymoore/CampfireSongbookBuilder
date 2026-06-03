@@ -25,6 +25,7 @@ install_docx_stub()
 _install_bs4_stub()
 
 import main  # noqa: E402  pylint: disable=wrong-import-position
+import app.document_creation  # noqa: E402  pylint: disable=wrong-import-position
 
 
 class TestMain(unittest.TestCase):
@@ -159,6 +160,48 @@ class TestMain(unittest.TestCase):
             written_report["selection_issues"][0]["song_key"],
             "Missing Band - Lost Song",
         )
+
+    def test_refresh_quality_state_rebuilds_from_cache_before_reporting(self):
+        songs = [
+            {"Artist": "The Campfire Trio", "Title": "Trail Song", "Favourite": True},
+        ]
+        report_data = {
+            "generated_at": "2026-05-20T12:00:00+01:00",
+            "report_type": "quality_run",
+            "source": "refresh_quality_state",
+            "entries": [],
+            "selection_issues": [],
+            "pdf_outputs": [],
+            "pdf_errors": [],
+        }
+
+        with patch.object(sys, "argv", ["main.py", "--refresh-quality-state"]):
+            with patch("main.load_config", return_value={"genius": {"client_access_token": "token"}}):
+                with patch("main.load_songs", return_value=(songs, [])):
+                    with patch("app.cache.jsonl_load_all", side_effect=[{"The Campfire Trio - Trail Song": "Verse 1"}, {}]):
+                        with patch(
+                            "main.refresh_quality_status_from_cache",
+                            return_value={
+                                "generated_at": "2026-05-20T12:00:00+01:00",
+                                "refreshed_records": [],
+                                "refreshed_count": 1,
+                                "quality_status_path": "data/review/quality_status.json",
+                            },
+                        ) as refresh_quality:
+                            with patch(
+                                "app.document_creation.create_document_from_cache",
+                                return_value=report_data,
+                            ) as create_document:
+                                with patch("main._write_generation_report") as write_report:
+                                    main.main()
+
+        refresh_quality.assert_called_once()
+        create_document.assert_called_once()
+        self.assertEqual(
+            create_document.call_args.kwargs["report_source"],
+            "refresh_quality_state",
+        )
+        write_report.assert_called_once()
 
     def test_load_selection_records_reports_validation_errors(self):
         songs = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
