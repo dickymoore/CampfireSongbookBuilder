@@ -181,7 +181,7 @@ def main():
     )
     parser.add_argument(
         '--import-manual',
-        help='Parse a pasted manual import text file and write data/manual_lyrics.json and data/manual_chords.json',
+        help='Parse a pasted manual import text file and merge entries into data/manual_lyrics.json and data/manual_chords.json',
     )
     args = parser.parse_args()
 
@@ -238,7 +238,7 @@ def main():
         write_manual_json(MANUAL_LYRICS_PATH, entries, "lyrics")
         write_manual_json(MANUAL_CHORDS_PATH, entries, "chords")
         logging.info(
-            "Wrote %d manual song entr%s to %s and %s.",
+            "Merged %d manual song entr%s into %s and %s.",
             len(entries),
             "y" if len(entries) == 1 else "ies",
             MANUAL_LYRICS_PATH,

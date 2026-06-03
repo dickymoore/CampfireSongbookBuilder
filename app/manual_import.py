@@ -93,6 +93,16 @@ def _infer_artist_title(header: str, known_songs: dict[str, tuple[str, str]]) ->
     return known_songs.get(normalized, (None, None))
 
 
+def _canonicalize_artist_title(
+    artist: str | None,
+    title: str | None,
+    known_songs: dict[str, tuple[str, str]] | None,
+) -> tuple[str | None, str | None]:
+    if artist is None or title is None or not known_songs:
+        return artist, title
+    return known_songs.get(_normalize_title(title), (artist, title))
+
+
 def _is_chord_line(line: str) -> bool:
     # Heuristic: a line made mostly of chord tokens and separators.
     # This lets us extract lyrics from chord sheets that interleave chords+lyrics.
@@ -128,8 +138,17 @@ def _is_chord_line(line: str) -> bool:
 
 
 def _extract_lyrics_from_chords(chords_text: str) -> str:
+    section_only_re = re.compile(
+        r"^(intro|verse|chorus|bridge|interlude|instrumental|outro|pre-chorus|solo)(\s+\d+)?$",
+        flags=re.IGNORECASE,
+    )
+    bracketed_section_re = re.compile(
+        r"^\[(intro|instrumental|outro|solo)\]$",
+        flags=re.IGNORECASE,
+    )
+
     def _is_chord_token(tok: str) -> bool:
-        if tok in {"x", "X", "%"}:
+        if tok in {"x", "X", "%"} or re.match(r"^(?:[xX]\d+|\d+[xX])$", tok):
             return True
         if re.match(
             r"^[A-Ga-g](?:#|b)?[0-9]?(?:maj|min|m|sus|add|dim|aug)?[0-9]*(?:/[A-Ga-g](?:#|b)?)?$",
@@ -170,7 +189,14 @@ def _extract_lyrics_from_chords(chords_text: str) -> str:
             # Pure chord line: drop it.
             continue
         # Drop obvious chord-section-only markers.
-        if line.strip().lower() in {"intro", "verse", "chorus", "bridge", "interlude", "instrumental"}:
+        stripped = line.strip()
+        if section_only_re.match(stripped):
+            continue
+        if bracketed_section_re.match(stripped):
+            continue
+        if re.match(r"^(no capo|capo\b.*|key:.*|bpm:.*)$", stripped, flags=re.IGNORECASE):
+            continue
+        if re.match(r"^(?:[xX]\d+|\d+[xX])$", stripped):
             continue
         out.append(line)
     return _normalize_text("\n".join(out))
@@ -231,6 +257,7 @@ def parse_manual_import(text: str, known_songs: dict[str, tuple[str, str]] | Non
         artist, title = _parse_artist_title(header)
         if (artist is None or title is None) and known_songs:
             artist, title = _infer_artist_title(header, known_songs)
+        artist, title = _canonicalize_artist_title(artist, title, known_songs)
         if artist is None or title is None:
             continue
         key = (artist, title)
@@ -264,7 +291,29 @@ def parse_manual_import(text: str, known_songs: dict[str, tuple[str, str]] | Non
     return entries
 
 
-def write_manual_json(path: str | Path, entries: list[ManualSongEntry], field: str) -> None:
+def _load_manual_json(path: str | Path) -> dict[str, str]:
+    target = Path(path)
+    if not target.exists():
+        return {}
+    try:
+        payload = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    return {
+        str(key): value
+        for key, value in payload.items()
+        if isinstance(key, str) and isinstance(value, str) and value.strip()
+    }
+
+
+def write_manual_json(
+    path: str | Path,
+    entries: list[ManualSongEntry],
+    field: str,
+    merge_existing: bool = True,
+) -> None:
     """
     Write a manual JSON dictionary keyed by 'Artist - Title' -> text.
     field: 'lyrics' or 'chords'
@@ -275,7 +324,7 @@ def write_manual_json(path: str | Path, entries: list[ManualSongEntry], field: s
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
 
-    data: dict[str, str] = {}
+    data: dict[str, str] = _load_manual_json(target) if merge_existing else {}
     for entry in entries:
         value = getattr(entry, field)
         if isinstance(value, str) and value.strip():
