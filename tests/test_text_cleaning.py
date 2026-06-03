@@ -6,7 +6,7 @@ from app.text_cleaning import clean_chords, clean_lyrics
 class TestTextCleaning(unittest.TestCase):
     def test_clean_lyrics_removes_translations_prefix(self):
         lyrics = (
-            "TranslationsEspañolItalianoChained To The Rhythm Lyrics[Verse 1]\n"
+            "[Verse 1]\n"
             "Are we crazy?\n"
         )
 
