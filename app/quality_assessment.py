@@ -1,6 +1,7 @@
 import re
 
 from app.content_models import build_quality_signal, validate_content_type
+from app.text_cleaning import clean_chords, clean_lyrics
 
 
 def _content_label(content_type):
@@ -286,10 +287,16 @@ def assess_candidate_quality(candidate):
 
     content_type_value = validate_content_type(_candidate_text(candidate, "content_type", True))
     content_value = candidate.get("content")
+    if content_type_value == "lyrics":
+        normalized_content_value = clean_lyrics(content_value)
+    elif content_type_value == "chords":
+        normalized_content_value = clean_chords(content_value)
+    else:
+        normalized_content_value = content_value
 
     missing_result = assess_missing_content(content_type_value, content_value)
-    junk_result = assess_junk_content(content_type_value, content_value)
-    print_hostile_result = assess_print_hostile_content(content_type_value, content_value)
+    junk_result = assess_junk_content(content_type_value, normalized_content_value)
+    print_hostile_result = assess_print_hostile_content(content_type_value, normalized_content_value)
     low_confidence_result = assess_low_confidence_candidate(candidate)
 
     results = [
@@ -348,15 +355,7 @@ def assess_junk_content(content_type, content):
             )
         )
 
-    if _has_duplicate_block(lines):
-        signals.append(
-            _build_signal(
-                "duplicate_block",
-                "warning",
-                "Repeated blocks make the content difficult to trust.",
-                content_type_value,
-            )
-        )
+    has_duplicate_block = _has_duplicate_block(lines)
 
     bracket_tags, bracket_chars = _bracket_noise_counts(content_text)
     if bracket_tags >= 3 or bracket_chars >= 12:
@@ -379,14 +378,12 @@ def assess_junk_content(content_type, content):
             "has_email_header_artifacts": any(
                 signal["code"] == "email_header_artifacts" for signal in signals
             ),
-            "has_duplicate_block": any(signal["code"] == "duplicate_block" for signal in signals),
+            "has_duplicate_block": has_duplicate_block,
             "has_excessive_bracket_noise": any(
                 signal["code"] == "excessive_bracket_noise" for signal in signals
             ),
         }
-        if any(signal["code"] == "duplicate_block" for signal in signals) and not summary[
-            "has_html_residue"
-        ]:
+        if has_duplicate_block:
             summary["duplicate_block_count"] = 1
         return {
             "quality": quality,
@@ -394,16 +391,19 @@ def assess_junk_content(content_type, content):
             "summary": summary,
         }
 
-    return {
-        "quality": "clean",
-        "signals": [],
-        "summary": {
+    summary = {
             "line_count": len(lines),
             "bracket_tag_count": bracket_tags,
             "bracket_char_count": bracket_chars,
             "has_html_residue": False,
             "has_email_header_artifacts": False,
-            "has_duplicate_block": False,
+            "has_duplicate_block": has_duplicate_block,
             "has_excessive_bracket_noise": False,
-        },
+    }
+    if has_duplicate_block:
+        summary["duplicate_block_count"] = 1
+    return {
+        "quality": "clean",
+        "signals": [],
+        "summary": summary,
     }

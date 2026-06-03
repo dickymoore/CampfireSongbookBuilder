@@ -228,23 +228,40 @@ class TestQualityAssessment(unittest.TestCase):
         self.assertEqual(result["summary"]["has_html_residue"], True)
         self.assertEqual(result["summary"]["has_email_header_artifacts"], True)
 
-    def test_duplicate_blocks_mark_content_as_questionable(self):
+    def test_duplicate_blocks_are_recorded_without_blocking_quality(self):
         content = "Verse 1\nLine A\nVerse 2\nLine B\nVerse 1\nLine A"
         result = assess_junk_content("chords", content)
 
-        self.assertEqual(result["quality"], "questionable")
-        self.assertEqual(
-            result["signals"],
-            [
-                build_quality_signal(
-                    "duplicate_block",
-                    "warning",
-                    "Repeated blocks make the content difficult to trust.",
-                    "chords",
-                )
-            ],
-        )
+        self.assertEqual(result["quality"], "clean")
+        self.assertEqual(result["signals"], [])
         self.assertEqual(result["summary"]["has_duplicate_block"], True)
+        self.assertEqual(result["summary"]["duplicate_block_count"], 1)
+
+    def test_repeated_lines_are_collapsed_before_candidate_quality_scoring(self):
+        candidate = {
+            "artist": "Campfire Band",
+            "title": "Trail Song",
+            "content_type": "lyrics",
+            "content": "This is the chorus line\nThis is the chorus line\nVerse 2\n",
+        }
+
+        result = assess_candidate_quality(candidate)
+
+        self.assertEqual(result["quality"], "clean")
+        self.assertEqual(result["signals"], [])
+
+    def test_repeated_blocks_are_collapsed_before_candidate_quality_scoring(self):
+        candidate = {
+            "artist": "Campfire Band",
+            "title": "Trail Song",
+            "content_type": "lyrics",
+            "content": "Verse 1\nLine A\nLine B\nVerse 1\nLine A\nLine B\n",
+        }
+
+        result = assess_candidate_quality(candidate)
+
+        self.assertEqual(result["quality"], "clean")
+        self.assertEqual(result["signals"], [])
 
     def test_bracket_noise_is_reported_with_stable_summary(self):
         content = "[ch][tab][intro]\nG C D"
@@ -291,12 +308,12 @@ class TestQualityAssessment(unittest.TestCase):
             [
                 "html_residue",
                 "email_header_artifacts",
-                "duplicate_block",
                 "excessive_bracket_noise",
             ],
         )
         self.assertEqual(result["quality"], "questionable")
         self.assertEqual(result["summary"]["line_count"], 5)
+        self.assertEqual(result["summary"]["has_duplicate_block"], True)
 
     def test_valid_content_stays_clean_with_no_junk_signals(self):
         result = assess_junk_content("lyrics", "This is a verse with lyrics.")

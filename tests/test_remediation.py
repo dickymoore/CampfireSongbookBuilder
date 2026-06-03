@@ -353,7 +353,7 @@ class TestRemediation(unittest.TestCase):
                 ["allowed", "attempted", "failed"],
             )
 
-    def test_run_bounded_remediation_persists_unresolved_post_check_when_score_stays_below_threshold(self):
+    def test_run_bounded_remediation_resolves_after_deterministic_repeat_normalization(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace_root = Path(tmp_dir)
             remediated_content_path = workspace_root / "data" / "review" / "remediated_content.json"
@@ -383,34 +383,23 @@ class TestRemediation(unittest.TestCase):
             )
 
             self.assertEqual(result["status"], "success")
-            self.assertTrue(result["manual_review_required"])
-            self.assertEqual(result["post_remediation_evaluation"]["status"], "unresolved")
-            self.assertEqual(result["escalation_category"], "still_below_threshold")
-            self.assertEqual(
-                result["post_remediation_evaluation"]["unresolved_reasons"],
-                ["still_below_threshold"],
-            )
+            self.assertFalse(result["manual_review_required"])
+            self.assertEqual(result["post_remediation_evaluation"]["status"], "resolved")
+            self.assertIsNone(result["escalation_category"])
+            self.assertEqual(result["post_remediation_evaluation"]["unresolved_reasons"], [])
 
             score_state, score_errors = load_content_scores(content_scores_path)
             self.assertEqual(score_errors, [])
             self.assertEqual(
                 score_state["entries"]["The Campfire Trio - Trail Song"]["lyrics"]["quality_score"],
-                30,
+                100,
             )
 
             audit_records, audit_errors = load_remediation_audit_records(audit_path)
             self.assertEqual(audit_errors, [])
             self.assertEqual(
                 [record["outcome"] for record in audit_records],
-                ["allowed", "attempted", "success", "unresolved"],
-            )
-            self.assertEqual(
-                audit_records[-1]["details"]["unresolved_reasons"],
-                ["still_below_threshold"],
-            )
-            self.assertEqual(
-                audit_records[-1]["details"]["escalation_category"],
-                "still_below_threshold",
+                ["allowed", "attempted", "success", "resolved"],
             )
 
     def test_run_bounded_remediation_refuses_when_retry_limit_is_reached(self):

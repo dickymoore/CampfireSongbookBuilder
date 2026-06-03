@@ -4,7 +4,7 @@
 
 1. **What happened.** The catalogue currently has 61 songs whose lyrics are marked `questionable`; the evidence shows these are mostly repeat-block, bracket-noise, print-hostile, low-confidence, and unusable-lyrics cases.
 2. **Where the case stands.** The repair queue is mapped and prioritized, but no cleanup has been applied yet to this batch.
-3. **What's needed next.** Start with deterministic cleanup for the repeated artifact patterns, then refresh the affected lyrics cache and re-run the quality counts.
+3. **What's needed next.** The queue is mapped, but cleanup is currently paused so higher-priority catalogue work can continue first.
 
 ## Case Info
 
@@ -18,7 +18,7 @@
 
 ## Problem Statement
 
-The user wants a prioritized repair queue for the 61 catalogue songs whose lyrics are currently labeled `questionable`, so the catalogue quality counts can be improved in a targeted way.
+The user previously wanted a prioritized repair queue for the 61 catalogue songs whose lyrics were labeled `questionable`. That work has now been deferred because the quality gate is no longer the active priority.
 
 ## Evidence Inventory
 
@@ -103,21 +103,20 @@ The user wants a prioritized repair queue for the 61 catalogue songs whose lyric
 
 **Confidence:** High
 
-The first 61-song batch is a cleanup problem, not a missing-content problem. The evidence points to a small set of recurring artifacts, especially repeat blocks, so the best next move is to fix those mechanically and only fall back to manual overrides for the stubborn cases.
+The first 61-song batch is a cleanup problem, not a missing-content problem. The evidence points to a small set of recurring artifacts, especially repeat blocks, so the best next move would be mechanical cleanup. That work is now paused by priority, not because the diagnosis changed.
 
 ## Recommended Next Steps
 
 ### Fix direction
 
-1. Clean the deterministic artifact patterns in `app/text_cleaning.py`.
-2. Refresh the affected lyrics cache entries from manual overrides or the cleaned source text.
-3. Re-run the quality-state counts and compare the new questionable total to 61.
+1. Defer cleanup of the deterministic artifact patterns in `app/text_cleaning.py` until the quality gate becomes a priority again.
+2. Keep the current cleaner and scorer logic in place so the queue can be resumed later without rework.
+3. Continue with catalogue work that is not blocked by the quality gate.
 
 ### Diagnostic
 
-1. Pick the top 10 songs with the most distinct signals.
-2. Clean them and verify that the `questionable` label drops to `clean`.
-3. If a song still fails, inspect whether the remaining issue is source noise or a true manual override case.
+1. No further diagnostic work is needed while the queue is paused.
+2. Resume the queue later by re-running the priority report and checking whether the same top signals remain.
 
 ## Reproduction Plan
 
@@ -154,3 +153,48 @@ The first 61-song batch is a cleanup problem, not a missing-content problem. The
 ### Updated Conclusion
 
 - The queue is ready for targeted cleanup.
+
+## Follow-up: 2026-06-03 #3
+
+### New Evidence
+
+- Refreshed quality report: `data/review/reports/quality_run-refresh_quality_state-20260603T164846+0100.json`.
+- The report still shows `638` questionable lyrics entries after deterministic normalization.
+- The priority queue is dominated by the same three signals:
+  - `duplicate_block`
+  - `print_hostile_content`
+  - `excessive_bracket_noise`
+- In the top 100 priority items, the signal distribution is:
+  - `duplicate_block`: `100`
+  - `print_hostile_content`: `100`
+  - `excessive_bracket_noise`: `81`
+  - `email_header_artifacts`: `9`
+  - `html_residue`: `2`
+
+### Additional Findings
+
+- The highest-priority songs are all lyrics entries with the same 3-signal pattern and quality score `2`.
+- The first unique priority items are:
+  - `ABC - The Look of Love`
+  - `Alex Ebert - Truth`
+  - `Ariana Grande - Positions`
+  - `Ariana Grande - no tears left to cry`
+  - `Aztec Camera - Somewhere in my heart`
+  - `Beyonce - Bodyguard`
+  - `Blur - Tender`
+  - `Britney Spears - Hit Me Baby One More Time`
+  - `Britney Spears - Not So Innocent`
+  - `Britney Spears - Toxic`
+
+### Updated Hypotheses
+
+- The remaining questionable queue is still dominated by scrape-artifact cleanup rather than missing content.
+
+### Backlog Changes
+
+- Prioritize the top unique songs above for deterministic cleanup or manual override review.
+- Inspect the 11-song cluster where the rank-1 signals repeat unchanged.
+
+### Updated Conclusion
+
+- The next useful step is to leave this queue paused and work the higher-priority catalogue tasks first.

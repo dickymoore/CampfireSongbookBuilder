@@ -48,6 +48,31 @@ class TestTextCleaning(unittest.TestCase):
 
         self.assertEqual(cleaned, "[Chorus]\nA line\n[Verse 2]\nAnother line\n")
 
+    def test_clean_lyrics_collapses_exact_repeated_lines(self):
+        lyrics = (
+            "This is the chorus line\n"
+            "This is the chorus line\n"
+            "Verse 2\n"
+        )
+
+        cleaned = clean_lyrics(lyrics)
+
+        self.assertEqual(cleaned, "This is the chorus line x2\nVerse 2\n")
+
+    def test_clean_lyrics_collapses_exact_repeated_blocks(self):
+        lyrics = (
+            "Verse 1\n"
+            "Line A\n"
+            "Line B\n"
+            "Verse 1\n"
+            "Line A\n"
+            "Line B\n"
+        )
+
+        cleaned = clean_lyrics(lyrics)
+
+        self.assertEqual(cleaned, "Verse 1\nLine A\nLine B x2\n")
+
     def test_clean_chords_collapses_vertical_chord_runs(self):
         chords = (
             "Intro 1\n"

@@ -37,7 +37,10 @@ def _set_cell_no_wrap(cell):
 
 
 def _set_table_fixed_layout(table):
-    tbl_pr = table._tbl.tblPr
+    tbl = getattr(table, "_tbl", None)
+    tbl_pr = getattr(tbl, "tblPr", None)
+    if tbl_pr is None:
+        return
     tbl_layout = tbl_pr.find(qn("w:tblLayout"))
     if tbl_layout is None:
         tbl_layout = OxmlElement("w:tblLayout")
@@ -46,7 +49,10 @@ def _set_table_fixed_layout(table):
 
 
 def _set_table_borders(table):
-    tbl_pr = table._tbl.tblPr
+    tbl = getattr(table, "_tbl", None)
+    tbl_pr = getattr(tbl, "tblPr", None)
+    if tbl_pr is None:
+        return
     borders = tbl_pr.find(qn("w:tblBorders"))
     if borders is None:
         borders = OxmlElement("w:tblBorders")

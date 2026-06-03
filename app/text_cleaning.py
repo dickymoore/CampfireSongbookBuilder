@@ -58,6 +58,71 @@ def remove_unwanted_phrases(lyrics):
 
     return "\n".join(out)
 
+
+def _collapse_exact_block_runs(lines, max_block_length=8):
+    collapsed = []
+    chunk = []
+
+    def _append_chunk(chunk_lines):
+        if not chunk_lines:
+            return
+
+        i = 0
+        while i < len(chunk_lines):
+            best_block_length = None
+            best_run_count = 1
+            max_candidate_length = min(max_block_length, (len(chunk_lines) - i) // 2)
+
+            for block_length in range(1, max_candidate_length + 1):
+                block = chunk_lines[i : i + block_length]
+                run_count = 1
+
+                while True:
+                    start = i + run_count * block_length
+                    end = start + block_length
+                    if end > len(chunk_lines):
+                        break
+                    if chunk_lines[start:end] != block:
+                        break
+                    run_count += 1
+
+                if run_count > 1:
+                    span = block_length * run_count
+                    if best_block_length is None:
+                        best_block_length = block_length
+                        best_run_count = run_count
+                        best_span = span
+                        continue
+
+                    best_span = best_block_length * best_run_count
+                    if span > best_span or (span == best_span and block_length > best_block_length):
+                        best_block_length = block_length
+                        best_run_count = run_count
+
+            if best_block_length is None:
+                collapsed.append(chunk_lines[i])
+                i += 1
+                continue
+
+            block = chunk_lines[i : i + best_block_length]
+            collapsed.extend(block)
+            if best_run_count > 1 and block:
+                collapsed[-1] = "{} x{}".format(collapsed[-1], best_run_count)
+            i += best_block_length * best_run_count
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            _append_chunk(chunk)
+            chunk = []
+            collapsed.append(line)
+            continue
+
+        chunk.append(line)
+
+    _append_chunk(chunk)
+    return collapsed
+
 def clean_lyrics(lyrics):
     """Clean the lyrics by removing deterministic scrape artifacts and promo blocks."""
     if lyrics is None or not isinstance(lyrics, str):
@@ -66,6 +131,9 @@ def clean_lyrics(lyrics):
     lyrics = remove_unwanted_phrases(lyrics)
     # Collapse excessive blank lines.
     lyrics = _normalize_line_endings(lyrics)
+    lines = [line.rstrip() for line in lyrics.split("\n")]
+    lines = _collapse_exact_block_runs(lines)
+    lyrics = "\n".join(lines)
     lyrics = re.sub(r"\n{3,}", "\n\n", lyrics).strip() + "\n"
     return lyrics
 
