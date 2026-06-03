@@ -1,6 +1,6 @@
 import unittest
 
-from app.text_cleaning import clean_lyrics
+from app.text_cleaning import clean_chords, clean_lyrics
 
 
 class TestTextCleaning(unittest.TestCase):
@@ -47,3 +47,17 @@ class TestTextCleaning(unittest.TestCase):
         cleaned = clean_lyrics(lyrics)
 
         self.assertEqual(cleaned, "[Chorus]\nA line\n[Verse 2]\nAnother line\n")
+
+    def test_clean_chords_collapses_vertical_chord_runs(self):
+        chords = (
+            "Intro 1\n"
+            "F\n"
+            "Am\n"
+            "F\n"
+            "Am\n"
+            "Today I\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "Intro 1\nF / Am / F / Am\nToday I\n")

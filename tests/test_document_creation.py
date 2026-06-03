@@ -90,6 +90,38 @@ class TestDocumentCreation(unittest.TestCase):
                 "Questionable content is excluded by default.",
             )
 
+    def test_create_document_from_cache_adds_contents_page_before_songs(self):
+        song_list = [
+            {"Artist": "The Campfire Trio", "Title": "Trail Song"},
+            {"Artist": "The Campfire Trio", "Title": "River Song"},
+        ]
+        lyrics_cache = {
+            "The Campfire Trio - Trail Song": "First line\nSecond line",
+            "The Campfire Trio - River Song": "Third line\nFourth line",
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            output_path = tmp_path / "lyrics.docx"
+
+            self._run_create_document(
+                tmp_path,
+                song_list,
+                lyrics_cache,
+                {},
+                lyrics_output=output_path,
+            )
+
+            document = Document(output_path)
+            paragraph_texts = [paragraph.text for paragraph in document.paragraphs]
+
+            self.assertEqual(paragraph_texts[0], "Contents")
+            self.assertEqual(len(document.tables), 1)
+            table = document.tables[0]
+            self.assertEqual(table.cell(1, 0).text, "River Song - The Campfire Trio")
+            self.assertEqual(table.cell(2, 0).text, "Trail Song - The Campfire Trio")
+            self.assertIn("Trail Song by The Campfire Trio", paragraph_texts)
+
     def test_create_document_from_cache_persists_content_scores_for_lyrics_and_chords(self):
         song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
         lyrics_cache = {"The Campfire Trio - Trail Song": "First line\nSecond line"}

@@ -63,13 +63,40 @@ class _FakeHeaderFooter:
 
 
 class _FakeSectPr:
+    def __init__(self):
+        self._cols = [_FakeXmlElement()]
+
     def xpath(self, _query):
-        return [_FakeXmlElement()]
+        if _query == './w:cols':
+            return self._cols
+        return []
+
+    def append(self, element):
+        self._cols.append(element)
 
 
 class _FakeXmlElement:
+    def __init__(self):
+        self.attrs = {}
+        self.children = []
+
     def set(self, _name, _value):
+        self.attrs[_name] = _value
         return None
+
+    def find(self, _name):
+        return None
+
+    def append(self, element):
+        self.children.append(element)
+
+
+class _FakeTc:
+    def __init__(self):
+        self._tc_pr = _FakeXmlElement()
+
+    def get_or_add_tcPr(self):
+        return self._tc_pr
 
 
 class _FakeSection:
@@ -83,10 +110,52 @@ class _FakeSection:
         self.right_margin = None
 
 
+class _FakeCell:
+    def __init__(self, text=""):
+        self.paragraphs = [_FakeParagraph(text)]
+        self.width = None
+        self._tc = _FakeTc()
+
+    @property
+    def text(self):
+        return "\n".join(paragraph.text for paragraph in self.paragraphs)
+
+    @text.setter
+    def text(self, value):
+        self.paragraphs = [_FakeParagraph(value)]
+
+
+class _FakeRow:
+    def __init__(self, cell_count):
+        self.cells = [_FakeCell() for _ in range(cell_count)]
+
+
+class _FakeTable:
+    def __init__(self, rows, cols):
+        self.autofit = True
+        self.rows = [_FakeRow(cols) for _ in range(rows)]
+        self.style = None
+        self.columns = [_FakeColumn() for _ in range(cols)]
+
+    def add_row(self):
+        row = _FakeRow(len(self.rows[0].cells) if self.rows else len(self.columns))
+        self.rows.append(row)
+        return row
+
+    def cell(self, row_index, col_index):
+        return self.rows[row_index].cells[col_index]
+
+
+class _FakeColumn:
+    def __init__(self):
+        self.width = None
+
+
 class FakeDocument:
     def __init__(self, path=None):
         self.sections = [_FakeSection()]
         self.paragraphs = []
+        self.tables = []
         if path is not None:
             self._load(path)
 
@@ -114,8 +183,28 @@ class FakeDocument:
             loaded_paragraphs.append(paragraph)
 
         self.paragraphs = loaded_paragraphs
+        self.tables = []
+        for table_payload in payload.get("tables", []):
+            table = _FakeTable(0, 0)
+            table.autofit = table_payload.get("autofit", True)
+            table.style = table_payload.get("style")
+            table.rows = []
+            for row_payload in table_payload.get("rows", []):
+                cells = []
+                for cell_payload in row_payload:
+                    cell = _FakeCell()
+                    cell.paragraphs = [_FakeParagraph(text) for text in cell_payload]
+                    if not cell.paragraphs:
+                        cell.paragraphs = [_FakeParagraph()]
+                    cells.append(cell)
+                row = _FakeRow(0)
+                row.cells = cells
+                table.rows.append(row)
+            if table.rows:
+                table.columns = [_FakeColumn() for _ in range(len(table.rows[0].cells))]
+            self.tables.append(table)
 
-    def add_section(self):
+    def add_section(self, *args, **kwargs):  # noqa: ARG002
         section = _FakeSection()
         self.sections.append(section)
         return section
@@ -131,6 +220,17 @@ class FakeDocument:
         self.paragraphs.append(paragraph)
         return paragraph
 
+    def add_table(self, rows, cols):
+        table = _FakeTable(rows, cols)
+        self.tables.append(table)
+        return table
+
+    def add_page_break(self):
+        paragraph = _FakeParagraph()
+        paragraph.style.name = "Page Break"
+        self.paragraphs.append(paragraph)
+        return paragraph
+
     def save(self, path):
         target_path = Path(path)
         target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -141,7 +241,18 @@ class FakeDocument:
                     "style_name": getattr(paragraph.style, "name", "Normal"),
                 }
                 for paragraph in self.paragraphs
-            ]
+            ],
+            "tables": [
+                {
+                    "autofit": table.autofit,
+                    "style": table.style,
+                    "rows": [
+                        [cell.text.split("\n") for cell in row.cells]
+                        for row in table.rows
+                    ],
+                }
+                for table in self.tables
+            ],
         }
         target_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 

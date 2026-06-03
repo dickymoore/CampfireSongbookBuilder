@@ -31,6 +31,23 @@ MANUAL_LYRICS_PATH = Path('data/manual_lyrics.json')
 MANUAL_CHORDS_PATH = Path('data/manual_chords.json')
 
 
+def _resolve_output_paths(args):
+    if args.favourites_only:
+        prefix = "Favourites"
+    elif args.selection:
+        prefix = "Selection_{}".format(args.selection)
+    else:
+        prefix = None
+
+    if prefix is None:
+        return LYRICS_DOC_PATH, CHORDS_DOC_PATH
+
+    return (
+        "data/output/{}_Lyrics_Document.docx".format(prefix),
+        "data/output/{}_Chords_Document.docx".format(prefix),
+    )
+
+
 def _write_generation_report(report_data):
     if report_data is None:
         raise ValueError("create_document_from_cache did not return report data.")
@@ -275,14 +292,16 @@ def main():
             print(f"{title}: {num_characters} characters")
         return
 
+    lyrics_doc_path, chords_doc_path = _resolve_output_paths(args)
+
     # The following cache loading is not needed with the new JSONL logic
     # lyrics_cache = load_cache(LYRICS_CACHE_PATH)
     # chords_cache = load_cache(CHORDS_CACHE_PATH)
 
     if args.generate_from_cache:
         logging.info("Generating documents from cache only.")
-        lyrics_output = LYRICS_DOC_PATH if not args.chords_only else None
-        chords_output = CHORDS_DOC_PATH if not args.lyrics_only else None
+        lyrics_output = lyrics_doc_path if not args.chords_only else None
+        chords_output = chords_doc_path if not args.lyrics_only else None
         # The document generation functions will now load from JSONL as needed
         from app.cache import jsonl_load_all
         lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
@@ -313,7 +332,7 @@ def main():
             songs,
             lyrics_cache,
             {},
-            lyrics_output=LYRICS_DOC_PATH,
+            lyrics_output=lyrics_doc_path,
             selection_records=selection_records,
             report_source="lyrics_only_selection" if args.selection else "lyrics_only",
         )
@@ -332,7 +351,7 @@ def main():
             songs,
             {},
             chords_cache,
-            chords_output=CHORDS_DOC_PATH,
+            chords_output=chords_doc_path,
             selection_records=selection_records,
             report_source="chords_only_selection" if args.selection else "chords_only",
         )
@@ -353,8 +372,8 @@ def main():
         songs,
         lyrics_cache,
         chords_cache,
-        lyrics_output=LYRICS_DOC_PATH,
-        chords_output=CHORDS_DOC_PATH,
+        lyrics_output=lyrics_doc_path,
+        chords_output=chords_doc_path,
         selection_records=selection_records,
         report_source="full_generation_selection" if args.selection else "full_generation",
     )

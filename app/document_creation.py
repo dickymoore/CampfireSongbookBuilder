@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from docx import Document
+from docx.enum.section import WD_SECTION
 
 from app.content_models import derive_song_key
 from app.content_scoring import compose_content_score
@@ -13,7 +14,10 @@ from app.document_verification import (
     refresh_document_verification_state,
 )
 from app.document_formatting import (
+    add_contents_page,
+    add_bookmark,
     add_header_footer,
+    build_song_bookmark_name,
     create_two_column_section,
     set_document_margins,
     set_paragraph_font,
@@ -98,6 +102,25 @@ def _markdown_song_block(artist, title, content):
     ]
 
 
+def _render_song_item(document, song_item, heading_font_size, body_font_size, bookmark_id):
+    artist = song_item["artist"]
+    title = song_item["title"]
+    content = song_item["content"]
+    bookmark_name = song_item["bookmark_name"]
+
+    heading = document.add_heading("{} by {}".format(title, artist), level=1)
+    set_paragraph_font(heading, heading_font_size)
+    add_bookmark(heading, bookmark_name, bookmark_id)
+
+    paragraph = document.add_paragraph()
+    lines = content.split("\n")
+    for i, line in enumerate(lines):
+        if i > 0:
+            paragraph.add_run().add_break()
+        paragraph.add_run(line)
+    set_paragraph_font(paragraph, body_font_size)
+
+
 def _write_markdown_document(output_path, lines):
     target_path = Path(output_path)
     target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -152,23 +175,23 @@ def create_document_from_cache(
             len(review_decision_errors),
         )
 
+    songs_to_process = selection_records if selection_records is not None else sort_songs(song_list)
+
     if lyrics_output:
         logger.debug("Initializing lyrics document")
         lyrics_document = Document()
         set_document_margins(lyrics_document, 0.5)
-        create_two_column_section(lyrics_document)
         add_header_footer(lyrics_document)
         lyrics_markdown_lines = []
+        lyrics_render_items = []
 
     if chords_output:
         logger.debug("Initializing chords document")
         chords_document = Document()
         set_document_margins(chords_document, 0.5)
-        create_two_column_section(chords_document)
         add_header_footer(chords_document)
         chords_markdown_lines = []
-
-    songs_to_process = selection_records if selection_records is not None else sort_songs(song_list)
+        chords_render_items = []
     report_entries = []
     selection_issues = []
     pdf_outputs = []
@@ -215,15 +238,14 @@ def create_document_from_cache(
                 logger.debug("Adding lyrics for %s by %s", title, artist)
 
                 if num_characters <= 5000:
-                    heading = lyrics_document.add_heading("{} by {}".format(title, artist), level=1)
-                    set_paragraph_font(heading, 14)
-                    paragraph = lyrics_document.add_paragraph()
-                    lines = lyrics.split("\n")
-                    for i, line in enumerate(lines):
-                        if i > 0:
-                            paragraph.add_run().add_break()
-                        paragraph.add_run(line)
-                    set_paragraph_font(paragraph, 12)
+                    lyrics_render_items.append(
+                        {
+                            "artist": artist,
+                            "title": title,
+                            "content": lyrics,
+                            "bookmark_name": build_song_bookmark_name(song, len(lyrics_render_items) + 1),
+                        }
+                    )
                     lyrics_markdown_lines.extend(_markdown_song_block(artist, title, lyrics))
                 else:
                     report_included = False
@@ -296,15 +318,14 @@ def create_document_from_cache(
             if generation_result["included"] and isinstance(chords, str) and chords != "":
                 chords = clean_chords(chords)
                 logger.debug("Adding chords for %s by %s", title, artist)
-                heading = chords_document.add_heading("{} by {}".format(title, artist), level=1)
-                set_paragraph_font(heading, 14)
-                paragraph = chords_document.add_paragraph()
-                lines = chords.split("\n")
-                for i, line in enumerate(lines):
-                    if i > 0:
-                        paragraph.add_run().add_break()
-                    paragraph.add_run(line)
-                set_paragraph_font(paragraph, 12)
+                chords_render_items.append(
+                    {
+                        "artist": artist,
+                        "title": title,
+                        "content": chords,
+                        "bookmark_name": build_song_bookmark_name(song, len(chords_render_items) + 1),
+                    }
+                )
                 chords_markdown_lines.extend(_markdown_song_block(artist, title, chords))
             else:
                 logger.debug(
@@ -315,6 +336,10 @@ def create_document_from_cache(
                 )
 
     if lyrics_output:
+        add_contents_page(lyrics_document, lyrics_render_items)
+        create_two_column_section(lyrics_document.add_section(WD_SECTION.NEW_PAGE))
+        for index, song_item in enumerate(lyrics_render_items, start=1):
+            _render_song_item(lyrics_document, song_item, 14, 12, index)
         lyrics_markdown_path = Path(lyrics_output).with_suffix(".md")
         _write_markdown_document(lyrics_markdown_path, lyrics_markdown_lines)
         document_verification_records.append(
@@ -358,6 +383,10 @@ def create_document_from_cache(
                 )
 
     if chords_output:
+        add_contents_page(chords_document, chords_render_items)
+        create_two_column_section(chords_document.add_section(WD_SECTION.NEW_PAGE))
+        for index, song_item in enumerate(chords_render_items, start=1):
+            _render_song_item(chords_document, song_item, 14, 12, index)
         chords_markdown_path = Path(chords_output).with_suffix(".md")
         _write_markdown_document(chords_markdown_path, chords_markdown_lines)
         document_verification_records.append(

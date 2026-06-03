@@ -28,6 +28,22 @@ import main  # noqa: E402  pylint: disable=wrong-import-position
 
 
 class TestMain(unittest.TestCase):
+    def test_resolve_output_paths_uses_favourites_prefix(self):
+        args = types.SimpleNamespace(favourites_only=True, selection=None)
+
+        lyrics_path, chords_path = main._resolve_output_paths(args)
+
+        self.assertEqual(lyrics_path, "data/output/Favourites_Lyrics_Document.docx")
+        self.assertEqual(chords_path, "data/output/Favourites_Chords_Document.docx")
+
+    def test_resolve_output_paths_uses_selection_prefix(self):
+        args = types.SimpleNamespace(favourites_only=False, selection="trip-night")
+
+        lyrics_path, chords_path = main._resolve_output_paths(args)
+
+        self.assertEqual(lyrics_path, "data/output/Selection_trip-night_Lyrics_Document.docx")
+        self.assertEqual(chords_path, "data/output/Selection_trip-night_Chords_Document.docx")
+
     def test_generate_from_cache_favourites_only_filters_song_list_before_generation(self):
         songs = [
             {"Artist": "The Campfire Trio", "Title": "Trail Song", "Favourite": True},
@@ -59,6 +75,14 @@ class TestMain(unittest.TestCase):
         self.assertEqual(
             passed_song_list,
             [{"Artist": "The Campfire Trio", "Title": "Trail Song", "Favourite": True}],
+        )
+        self.assertEqual(
+            create_document.call_args.args[3],
+            "data/output/Favourites_Lyrics_Document.docx",
+        )
+        self.assertEqual(
+            create_document.call_args.args[4],
+            "data/output/Favourites_Chords_Document.docx",
         )
         write_report.assert_called_once()
 

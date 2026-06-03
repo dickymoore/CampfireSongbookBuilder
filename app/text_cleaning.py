@@ -76,6 +76,50 @@ MARKUP_TAGS = [
     'repeat', '/repeat', 'end', '/end', 'coda', '/coda', 'refrain', '/refrain'
 ]
 
+
+_CHORD_TOKEN_RE = re.compile(
+    r"^[A-Ga-g](?:#|b)?(?:maj|min|m|sus|add|dim|aug)?[0-9]*(?:/[A-Ga-g](?:#|b)?)?$"
+)
+
+
+def _is_chord_only_line(line):
+    stripped = line.strip()
+    if not stripped:
+        return False
+    tokens = [token for token in re.split(r"\s+", stripped) if token]
+    if not tokens:
+        return False
+    if any(token.lower().startswith(("verse", "chorus", "bridge", "intro", "outro", "interlude")) for token in tokens):
+        return False
+    return all(
+        token in {"x", "X", "%", "/"} or bool(_CHORD_TOKEN_RE.match(token))
+        for token in tokens
+    )
+
+
+def _collapse_vertical_chord_runs(lines):
+    collapsed = []
+    run = []
+
+    def flush_run():
+        nonlocal run
+        if run:
+            collapsed.append(" / ".join(item.strip() for item in run))
+            run = []
+
+    for line in lines:
+        if _is_chord_only_line(line):
+            run.append(line)
+            continue
+        if run and line.strip():
+            flush_run()
+        elif run and not line.strip():
+            flush_run()
+        collapsed.append(line)
+
+    flush_run()
+    return collapsed
+
 def clean_chords(chords):
     """Clean the chords by removing unnecessary introductory lines, email headers, and only markup tags like [ch], [tab], etc. (not chords like [G])."""
     if chords is None or not isinstance(chords, str):
@@ -98,6 +142,7 @@ def clean_chords(chords):
 
     # Normalize whitespace without destroying chord/lyric separation.
     lines = [line.rstrip() for line in chords.split("\n")]
+    lines = _collapse_vertical_chord_runs(lines)
     out = []
     blank_run = 0
     for line in lines:

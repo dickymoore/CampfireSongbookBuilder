@@ -1,5 +1,36 @@
 {
   "entries": {
+    "Air,Beth Hirsch - All I Need (feat. Beth Hirsch)": {
+      "lyrics": {
+        "artist": "Air,Beth Hirsch",
+        "content_hash": "sha256:be70fa3564edd50eb3fa778921ef2e2abbb56ac656af182c9804c8c15cce4a12",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T11:40:02+01:00",
+        "song_key": "Air,Beth Hirsch - All I Need (feat. Beth Hirsch)",
+        "title": "All I Need (feat. Beth Hirsch)"
+      }
+    },
+    "Alex Winston - Choice Notes": {
+      "lyrics": {
+        "artist": "Alex Winston",
+        "content_hash": "sha256:81c464371292657bdf23cf759563f8df85f0e836733a67bd44ddd9e2fbf15f77",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Alex Winston - Choice Notes",
+        "title": "Choice Notes"
+      }
+    },
     "Alison Moyet - Love Resurrection": {
       "chords": {
         "artist": "Alison Moyet",
@@ -9,7 +40,7 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:46+01:00",
         "song_key": "Alison Moyet - Love Resurrection",
         "title": "Love Resurrection"
       },
@@ -17,13 +48,87 @@
         "artist": "Alison Moyet",
         "content_hash": "sha256:f78571acc8543db86c3519e42251cd85cf9426bb041d9dc41dab4e6fab3c7463",
         "content_type": "lyrics",
-        "quality_band": "clean",
-        "quality_score": 100,
-        "score_reasons": [],
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
         "song_key": "Alison Moyet - Love Resurrection",
         "title": "Love Resurrection"
+      }
+    },
+    "Amaya Laucirica - All Of Our Time": {
+      "lyrics": {
+        "artist": "Amaya Laucirica",
+        "content_hash": "sha256:a2168cc9a0f5bb766b1db015dbe5cceb83afe46a499cca0895bb5d2317ea7b42",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Amaya Laucirica - All Of Our Time",
+        "title": "All Of Our Time"
+      }
+    },
+    "Anna Calvi - Don't Beat the Girl out of My Boy": {
+      "lyrics": {
+        "artist": "Anna Calvi",
+        "content_hash": "sha256:768dff00df1232528b2391aad9911978400de8483b8541b30741c1e5cc8d5e22",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Anna Calvi - Don't Beat the Girl out of My Boy",
+        "title": "Don't Beat the Girl out of My Boy"
+      }
+    },
+    "Austra - Darken Her Horse": {
+      "lyrics": {
+        "artist": "Austra",
+        "content_hash": "sha256:5e2ba4d6e69e9af91aac319d0467cc7b62804781060e51d0ec3c289db7a0c5e0",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Austra - Darken Her Horse",
+        "title": "Darken Her Horse"
+      }
+    },
+    "Barry Dransfield - Be My Friend": {
+      "lyrics": {
+        "artist": "Barry Dransfield",
+        "content_hash": "sha256:d88fe6c7a9900b8b8431b1bb7aebe17d0969647773923af2f1966110f90fd6e6",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Barry Dransfield - Be My Friend",
+        "title": "Be My Friend"
       }
     },
     "Beyonce - Bodyguard": {
@@ -35,7 +140,7 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:46+01:00",
         "song_key": "Beyonce - Bodyguard",
         "title": "Bodyguard"
       },
@@ -43,11 +148,16 @@
         "artist": "Beyonce",
         "content_hash": "sha256:c4b267d769f66b324e6bfe5f1b822be6ecb5b6f8b0c8c7de6c6d1bf32a82f502",
         "content_type": "lyrics",
-        "quality_band": "clean",
-        "quality_score": 100,
-        "score_reasons": [],
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
         "song_key": "Beyonce - Bodyguard",
         "title": "Bodyguard"
       }
@@ -55,24 +165,19 @@
     "Big Moon - Silent Movie Suzie": {
       "chords": {
         "artist": "Big Moon",
-        "content_hash": "sha256:ca3c73b062b0c947ebd2ddf69b6b0dd6ffaeca4d3d87638321d5c15481928b84",
+        "content_hash": "sha256:bb0a26b5319df9742ebadb26c839d2240cb8b06bcb1a95d500cecf8cd4ba84a2",
         "content_type": "chords",
-        "quality_band": "poor",
-        "quality_score": 0,
-        "score_reasons": [
-          "quality:missing",
-          "signal:duplicate_block",
-          "signal:print_hostile_content",
-          "signal:excessive_bracket_noise"
-        ],
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:46+01:00",
         "song_key": "Big Moon - Silent Movie Suzie",
         "title": "Silent Movie Suzie"
       },
       "lyrics": {
         "artist": "Big Moon",
-        "content_hash": "sha256:dc5824e0d037b8338f70fec9f1d940a62ea1936ac68b5dd8156329840dc4394d",
+        "content_hash": "sha256:37f730890012e03b0d134e81d07e0c1178bfa4e666c1b67077fe804aae2a4d6d",
         "content_type": "lyrics",
         "quality_band": "poor",
         "quality_score": 0,
@@ -82,32 +187,62 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
         "song_key": "Big Moon - Silent Movie Suzie",
         "title": "Silent Movie Suzie"
+      }
+    },
+    "Billy Bragg - A Lover Sings": {
+      "lyrics": {
+        "artist": "Billy Bragg",
+        "content_hash": "sha256:58a09af2129c8fbc775dcb14e7e6e7723ed6591db8f365bea0a1de3a3a175366",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Billy Bragg - A Lover Sings",
+        "title": "A Lover Sings"
+      }
+    },
+    "Blur - Beetlebum": {
+      "lyrics": {
+        "artist": "Blur",
+        "content_hash": "sha256:35359a1117c1c54017dbb13e253be321d071b6bbd0184daab507aefe04cee554",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Blur - Beetlebum",
+        "title": "Beetlebum"
       }
     },
     "Blur - Coffee & TV": {
       "chords": {
         "artist": "Blur",
-        "content_hash": "sha256:b53e082ab65ca8c8a812cf5c2d6b542cf5a865b7d9368dc0b1bc5646c932ae72",
+        "content_hash": "sha256:1b79df687b6b971854562daee8dd745319a0f95203a95460b24bf687da742e92",
         "content_type": "chords",
-        "quality_band": "poor",
-        "quality_score": 0,
-        "score_reasons": [
-          "quality:missing",
-          "signal:duplicate_block",
-          "signal:print_hostile_content",
-          "signal:excessive_bracket_noise"
-        ],
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:46+01:00",
         "song_key": "Blur - Coffee & TV",
         "title": "Coffee & TV"
       },
       "lyrics": {
         "artist": "Blur",
-        "content_hash": "sha256:7e16005afdc3b2ad40582e0e6951bba90e84793facd6b515cf923682170cb131",
+        "content_hash": "sha256:fffda397303b7deeea981b1dac7c4a85cee0ef55179ecb42767d47a93c1bc740",
         "content_type": "lyrics",
         "quality_band": "poor",
         "quality_score": 0,
@@ -117,9 +252,27 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
         "song_key": "Blur - Coffee & TV",
         "title": "Coffee & TV"
+      }
+    },
+    "Blur - End of a Century": {
+      "lyrics": {
+        "artist": "Blur",
+        "content_hash": "sha256:2b4e0689c7635b8402a8ca1a35f520623e6310fea6798f3f04585c270afbd7da",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Blur - End of a Century",
+        "title": "End of a Century"
       }
     },
     "Britney Spears - Toxic": {
@@ -136,7 +289,7 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-02T14:03:22+01:00",
         "song_key": "Britney Spears - Toxic",
         "title": "Toxic"
       },
@@ -153,7 +306,7 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-01T20:23:44+01:00",
         "song_key": "Britney Spears - Toxic",
         "title": "Toxic"
       }
@@ -167,7 +320,7 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-02T14:03:22+01:00",
         "song_key": "Bruce Springsteen - Dancing in the Dark",
         "title": "Dancing in the Dark"
       },
@@ -175,13 +328,64 @@
         "artist": "Bruce Springsteen",
         "content_hash": "sha256:a410daaa3c3229c31d3f6394a0d62e837619540fa41d8e3dd3f32ee5a2877b0a",
         "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T09:12:38+01:00",
+        "song_key": "Bruce Springsteen - Dancing in the Dark",
+        "title": "Dancing in the Dark"
+      }
+    },
+    "Chaka Khan - Ain't nobody love me better": {
+      "lyrics": {
+        "artist": "Chaka Khan",
+        "content_hash": "sha256:45bd52f61e2b4688ca9bd85f8e58b23167da2f9462db912c958a8f6e5550c137",
+        "content_type": "lyrics",
         "quality_band": "clean",
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
-        "song_key": "Bruce Springsteen - Dancing in the Dark",
-        "title": "Dancing in the Dark"
+        "scored_at": "2026-06-03T11:40:02+01:00",
+        "song_key": "Chaka Khan - Ain't nobody love me better",
+        "title": "Ain't nobody love me better"
+      }
+    },
+    "David Bowie - Changes": {
+      "lyrics": {
+        "artist": "David Bowie",
+        "content_hash": "sha256:0fab39c65d907f43f1a1a532235f92ecce007fed04f0e8d70e4d6d4b67e7ff74",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "David Bowie - Changes",
+        "title": "Changes"
+      }
+    },
+    "David Bowie - Eight Line Poem": {
+      "lyrics": {
+        "artist": "David Bowie",
+        "content_hash": "sha256:2cf1c37c6ef917d56da2484c2e06980e5302a0a696a145d5fba9ea6a84c3f03b",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T09:12:45+01:00",
+        "song_key": "David Bowie - Eight Line Poem",
+        "title": "Eight Line Poem"
       }
     },
     "David Bowie - Oh! You Pretty Things": {
@@ -197,7 +401,7 @@
           "signal:print_hostile_content"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-02T14:03:22+01:00",
         "song_key": "David Bowie - Oh! You Pretty Things",
         "title": "Oh! You Pretty Things"
       },
@@ -213,9 +417,27 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-01T20:23:43+01:00",
         "song_key": "David Bowie - Oh! You Pretty Things",
         "title": "Oh! You Pretty Things"
+      }
+    },
+    "Depeche Mode - Enjoy the Silence": {
+      "lyrics": {
+        "artist": "Depeche Mode",
+        "content_hash": "sha256:2ed710b12558e48e814ff5dc123b629fe90267c1a2e08aa45239d665af23561d",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Depeche Mode - Enjoy the Silence",
+        "title": "Enjoy the Silence"
       }
     },
     "Echobelly - Today Tomorrow Sometimes Never": {
@@ -227,7 +449,7 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-02T14:03:22+01:00",
         "song_key": "Echobelly - Today Tomorrow Sometimes Never",
         "title": "Today Tomorrow Sometimes Never"
       },
@@ -244,16 +466,63 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-01T20:23:44+01:00",
         "song_key": "Echobelly - Today Tomorrow Sometimes Never",
         "title": "Today Tomorrow Sometimes Never"
+      }
+    },
+    "Emily Loizeau - Eaux sombres": {
+      "lyrics": {
+        "artist": "Emily Loizeau",
+        "content_hash": "sha256:55d55a682f79d14d2dcff8f1bd2d890566d34e362f2364c441710ac875031f7b",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Emily Loizeau - Eaux sombres",
+        "title": "Eaux sombres"
+      }
+    },
+    "Estelle,Kanye West - American Boy": {
+      "lyrics": {
+        "artist": "Estelle,Kanye West",
+        "content_hash": "sha256:86746f0319ad1cab10c1daf9079fa1e1c4e5fe6766f07533c5cc7bf91a2cb813",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Estelle,Kanye West - American Boy",
+        "title": "American Boy"
       }
     },
     "Everything Everything - My CZ UR BF": {
       "chords": {
         "artist": "Everything Everything",
-        "content_hash": "sha256:ecac406b7c3f4e7af82b6f049d7d850822f2c09599d9e52f84d2f149175b6494",
+        "content_hash": "sha256:82f2103ad2335bece82e7cb61369de080acae7d8ec90477de9e77d76e4eed643",
         "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T09:13:46+01:00",
+        "song_key": "Everything Everything - My CZ UR BF",
+        "title": "My CZ UR BF"
+      },
+      "lyrics": {
+        "artist": "Everything Everything",
+        "content_hash": "sha256:bfdd18a2749490d6fd9878b0a5c59eadec71b3bcda2520482bbedae36795cb9d",
+        "content_type": "lyrics",
         "quality_band": "poor",
         "quality_score": 0,
         "score_reasons": [
@@ -263,21 +532,164 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
         "song_key": "Everything Everything - My CZ UR BF",
         "title": "My CZ UR BF"
-      },
+      }
+    },
+    "Feargal Sharkey - A Good Heart": {
       "lyrics": {
-        "artist": "Everything Everything",
-        "content_hash": "sha256:bfdd18a2749490d6fd9878b0a5c59eadec71b3bcda2520482bbedae36795cb9d",
+        "artist": "Feargal Sharkey",
+        "content_hash": "sha256:e5fbb673f6f57357c7e85a8a2d91e3d5d3083bbaaf1b59c4c9c3daadab09ac11",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Feargal Sharkey - A Good Heart",
+        "title": "A Good Heart"
+      }
+    },
+    "Fever Ray - Dry and Dusty": {
+      "lyrics": {
+        "artist": "Fever Ray",
+        "content_hash": "sha256:eb29d2087949fc36a4471d59f10063ea548d16e82d2c14ab93ccd27abacfc868",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Fever Ray - Dry and Dusty",
+        "title": "Dry and Dusty"
+      }
+    },
+    "Fleetwood Mac - Everywhere": {
+      "lyrics": {
+        "artist": "Fleetwood Mac",
+        "content_hash": "sha256:2e7de1c5601bcc58f5ba181227c6d2420a95a06561a020bb8b155d3a5d571e55",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Fleetwood Mac - Everywhere",
+        "title": "Everywhere"
+      }
+    },
+    "Foals - Exits": {
+      "lyrics": {
+        "artist": "Foals",
+        "content_hash": "sha256:cb3b3f7171bb857cec3dd354b30d6e14274f4596cc46c74236bdb86503c0cdea",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Foals - Exits",
+        "title": "Exits"
+      }
+    },
+    "Franz Ferdinand - All for you": {
+      "lyrics": {
+        "artist": "Franz Ferdinand",
+        "content_hash": "sha256:f16f85a05818b9fcfa9a345d3410c2352004e74af11d14ad215e87e76c8181ac",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Franz Ferdinand - All for you",
+        "title": "All for you"
+      }
+    },
+    "Gene - Do You Want To Hear It From Me": {
+      "lyrics": {
+        "artist": "Gene",
+        "content_hash": "sha256:2c56dd8f350e8a26dec67f7ffea778be05847805a2e2b52d7e808c2448f6b985",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Gene - Do You Want To Hear It From Me",
+        "title": "Do You Want To Hear It From Me"
+      }
+    },
+    "Gently Tender - Avez-vous déjà": {
+      "lyrics": {
+        "artist": "Gently Tender",
+        "content_hash": "sha256:fd3d19064f42420be8e9d4c7b8c22c66307d7399ab84d9a83d805ac0c6402e5a",
         "content_type": "lyrics",
         "quality_band": "clean",
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
-        "song_key": "Everything Everything - My CZ UR BF",
-        "title": "My CZ UR BF"
+        "scored_at": "2026-06-03T11:40:02+01:00",
+        "song_key": "Gently Tender - Avez-vous déjà",
+        "title": "Avez-vous déjà"
+      }
+    },
+    "Harvey Danger - Authenticity": {
+      "lyrics": {
+        "artist": "Harvey Danger",
+        "content_hash": "sha256:397561fb2aa41597d71c207c011be1dc4282b2142c09bb9a7e9495df231166b9",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Harvey Danger - Authenticity",
+        "title": "Authenticity"
+      }
+    },
+    "Heart - Alone": {
+      "lyrics": {
+        "artist": "Heart",
+        "content_hash": "sha256:64ae844b9bd362701445567496037af744fdd438a6165f69b6a8b1728d3aa18c",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Heart - Alone",
+        "title": "Alone"
       }
     },
     "Here We Go Magic - Alone but Moving": {
@@ -294,13 +706,13 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-02T14:03:22+01:00",
         "song_key": "Here We Go Magic - Alone but Moving",
         "title": "Alone but Moving"
       },
       "lyrics": {
         "artist": "Here We Go Magic",
-        "content_hash": "sha256:ea20d169110d6e248d1bed63884bdb678f65ec31acd13f4119494735382ad7e7",
+        "content_hash": "sha256:b0b629703c198be27930924c4fd943510617a620468762c113bdf0546f25a139",
         "content_type": "lyrics",
         "quality_band": "poor",
         "quality_score": 0,
@@ -310,7 +722,7 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:12:07+01:00",
         "song_key": "Here We Go Magic - Alone but Moving",
         "title": "Alone but Moving"
       }
@@ -324,13 +736,13 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:46+01:00",
         "song_key": "Honeyblood - Justine, Misery Queen",
         "title": "Justine, Misery Queen"
       },
       "lyrics": {
         "artist": "Honeyblood",
-        "content_hash": "sha256:b834f5970102e2379803106f2ae66d4b856015195c04bd25de594db0a5224a9f",
+        "content_hash": "sha256:07bd621c91c5c6bd7ae75f7f01671e44f8682c1ed1657cbfa80e980374cd4c24",
         "content_type": "lyrics",
         "quality_band": "poor",
         "quality_score": 0,
@@ -341,7 +753,7 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
         "song_key": "Honeyblood - Justine, Misery Queen",
         "title": "Justine, Misery Queen"
       }
@@ -355,13 +767,49 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:46+01:00",
         "song_key": "Honeyblood - Sister Wolf",
         "title": "Sister Wolf"
       },
       "lyrics": {
         "artist": "Honeyblood",
-        "content_hash": "sha256:71b87a2002abce461c651961015d448d4d83c2dd260db5999ab5b92cbeaadab1",
+        "content_hash": "sha256:4db2a0b3ec6f2ff3397ff7d21570e17bcbddffb1db2885d1732dfdcf829f2f5a",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T09:13:31+01:00",
+        "song_key": "Honeyblood - Sister Wolf",
+        "title": "Sister Wolf"
+      }
+    },
+    "Jane's Addiction - Been Caught Stealing": {
+      "lyrics": {
+        "artist": "Jane's Addiction",
+        "content_hash": "sha256:aeada093a4a479b353582d2740bfc85497aa32d39c6c151394e9309ffc369573",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Jane's Addiction - Been Caught Stealing",
+        "title": "Been Caught Stealing"
+      }
+    },
+    "Kate Bush - Army Dreamers": {
+      "lyrics": {
+        "artist": "Kate Bush",
+        "content_hash": "sha256:e444ff1586484106b44037f166dbc517aa97bc51a8ba1313f42f59da41c0bbf8",
         "content_type": "lyrics",
         "quality_band": "poor",
         "quality_score": 0,
@@ -372,9 +820,98 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
-        "song_key": "Honeyblood - Sister Wolf",
-        "title": "Sister Wolf"
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Kate Bush - Army Dreamers",
+        "title": "Army Dreamers"
+      }
+    },
+    "Kate Bush - Babooshka": {
+      "lyrics": {
+        "artist": "Kate Bush",
+        "content_hash": "sha256:249bc687eed96b6fb1c29ef7200e476a1e32748b0f2122651eeb18ff85671954",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Kate Bush - Babooshka",
+        "title": "Babooshka"
+      }
+    },
+    "Kate Bush - Breathing": {
+      "lyrics": {
+        "artist": "Kate Bush",
+        "content_hash": "sha256:991b92668e8e6e77fc5a25b966d5607c48bc7796b7205912eaa6b7fd33c21fe9",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Kate Bush - Breathing",
+        "title": "Breathing"
+      }
+    },
+    "Kate Bush - Cloudbusting": {
+      "lyrics": {
+        "artist": "Kate Bush",
+        "content_hash": "sha256:f8603ab299bdd54b36762edf032ddb77afefc7b2ee6cb8e8c023318d5c818ad3",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Kate Bush - Cloudbusting",
+        "title": "Cloudbusting"
+      }
+    },
+    "Katy Perry,Juicy J - Dark Horse": {
+      "lyrics": {
+        "artist": "Katy Perry,Juicy J",
+        "content_hash": "sha256:c47d994dfd976f9659fb49b1362db9a4322d3ab9d3aa06480f0849f7c90632b2",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T09:12:38+01:00",
+        "song_key": "Katy Perry,Juicy J - Dark Horse",
+        "title": "Dark Horse"
+      }
+    },
+    "Katy Perry,Skip Marley - Chained To The Rhythm": {
+      "lyrics": {
+        "artist": "Katy Perry,Skip Marley",
+        "content_hash": "sha256:e88dda7e7a2b1ff86a905f6a4774cfb2fb4402026fe54e17c39b420dd1ceaa73",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Katy Perry,Skip Marley - Chained To The Rhythm",
+        "title": "Chained To The Rhythm"
       }
     },
     "Killing Joke - Love Like Blood": {
@@ -386,7 +923,7 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-02T14:03:22+01:00",
         "song_key": "Killing Joke - Love Like Blood",
         "title": "Love Like Blood"
       },
@@ -402,9 +939,356 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-01T20:23:43+01:00",
         "song_key": "Killing Joke - Love Like Blood",
         "title": "Love Like Blood"
+      }
+    },
+    "Laura Jean - Devotion": {
+      "lyrics": {
+        "artist": "Laura Jean",
+        "content_hash": "sha256:151931567998694d2571256ab2a5d68f5db9e4eee230dfecdb7d82e709dc91e8",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T09:12:41+01:00",
+        "song_key": "Laura Jean - Devotion",
+        "title": "Devotion"
+      }
+    },
+    "Les Miserables Cast - Drink With Me": {
+      "lyrics": {
+        "artist": "Les Miserables Cast",
+        "content_hash": "sha256:ea5c317cab5cc5b3011cc4786d9c3d77a112d89ee132ca647b2652eca175613a",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Les Miserables Cast - Drink With Me",
+        "title": "Drink With Me"
+      }
+    },
+    "Lionel Richie - All Night Long (All Night)": {
+      "lyrics": {
+        "artist": "Lionel Richie",
+        "content_hash": "sha256:f7a086e2acb53b692ac0bf989f300d5fffce422073dc44ca430c87a4b1615232",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T11:40:02+01:00",
+        "song_key": "Lionel Richie - All Night Long (All Night)",
+        "title": "All Night Long (All Night)"
+      }
+    },
+    "Loma - Black Willow": {
+      "lyrics": {
+        "artist": "Loma",
+        "content_hash": "sha256:a0a13357d1468b01abc203a0b9faab7e7a8e76717595c425380b965ef89b67cf",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Loma - Black Willow",
+        "title": "Black Willow"
+      }
+    },
+    "Longpigs - Far": {
+      "lyrics": {
+        "artist": "Longpigs",
+        "content_hash": "sha256:bdbd81e0f0b204521522d265abdcae8437847e6b44844bf5d2b2db6b2fdfd09d",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Longpigs - Far",
+        "title": "Far"
+      }
+    },
+    "Maximo Park - Apply Some Pressure": {
+      "lyrics": {
+        "artist": "Maximo Park",
+        "content_hash": "sha256:acfe672a493234ebff281f8cdae2b45fd1a027551a5905e8f28550fdb02dc557",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Maximo Park - Apply Some Pressure",
+        "title": "Apply Some Pressure"
+      }
+    },
+    "Nick Cave & The Bad Seeds - Bring It On": {
+      "lyrics": {
+        "artist": "Nick Cave & The Bad Seeds",
+        "content_hash": "sha256:43b2e722f23ffc21268921718d2c28a5dc73a74c246a6cd85911bbd417e44d25",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Nick Cave & The Bad Seeds - Bring It On",
+        "title": "Bring It On"
+      }
+    },
+    "Nick Cave & The Bad Seeds - Darker With the Day": {
+      "lyrics": {
+        "artist": "Nick Cave & The Bad Seeds",
+        "content_hash": "sha256:3e884a3f33759a77b7911a5a20a5744ab63f1a7199207cdb8c6ac8b57f0cc670",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Nick Cave & The Bad Seeds - Darker With the Day",
+        "title": "Darker With the Day"
+      }
+    },
+    "Olivia Rodrigo - drivers license": {
+      "lyrics": {
+        "artist": "Olivia Rodrigo",
+        "content_hash": "sha256:39576f2d7cacc9bbd7fb9b43ecf9e10be3737138d5327525b91e86aad53464b4",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Olivia Rodrigo - drivers license",
+        "title": "drivers license"
+      }
+    },
+    "PJ Harvey - All And Everyone": {
+      "lyrics": {
+        "artist": "PJ Harvey",
+        "content_hash": "sha256:68ecd296456f70d12b28363891243019be5e700616a4fb4a934bff42320ded8f",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "PJ Harvey - All And Everyone",
+        "title": "All And Everyone"
+      }
+    },
+    "PJ Harvey - Bitter Branches": {
+      "lyrics": {
+        "artist": "PJ Harvey",
+        "content_hash": "sha256:286e993026415dba89670cf0de361c9c75ac668ad07f9082a6474d847f0b21dd",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "PJ Harvey - Bitter Branches",
+        "title": "Bitter Branches"
+      }
+    },
+    "Palace Winter - Empire": {
+      "lyrics": {
+        "artist": "Palace Winter",
+        "content_hash": "sha256:693e85ff2504cfa2857957988d7256a9bd1a1a8198484f3fb9776a2e23067be6",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Palace Winter - Empire",
+        "title": "Empire"
+      }
+    },
+    "Pixies - Caribou": {
+      "lyrics": {
+        "artist": "Pixies",
+        "content_hash": "sha256:8b6b3f392eed9640487020d064288c42e3798b327d412a475f4ce6f5b9937735",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Pixies - Caribou",
+        "title": "Caribou"
+      }
+    },
+    "Pixies - Debaser": {
+      "lyrics": {
+        "artist": "Pixies",
+        "content_hash": "sha256:675be69d00d1638afa10e841c5aa86d5b3f4c1bf7d8a35e36cd2b64c1fc4c7f2",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Pixies - Debaser",
+        "title": "Debaser"
+      }
+    },
+    "Pixies - Dig for Fire": {
+      "lyrics": {
+        "artist": "Pixies",
+        "content_hash": "sha256:315c25757ddfc605f066b019fcd0b06ee19bf30ae08c3d9c2ff1311dd6349a61",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Pixies - Dig for Fire",
+        "title": "Dig for Fire"
+      }
+    },
+    "Placebo - Every You Every Me": {
+      "lyrics": {
+        "artist": "Placebo",
+        "content_hash": "sha256:22eb10ce6acdb3055b99b23c8bbcefce5ac35d1d81bfae9395883ed730a1c5be",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Placebo - Every You Every Me",
+        "title": "Every You Every Me"
+      }
+    },
+    "R.E.M. - Can't Get There from Here": {
+      "lyrics": {
+        "artist": "R.E.M.",
+        "content_hash": "sha256:3e55c190c3ff47ff18828a25047b99c1dd4f76e4e2c2a202df54f34af18163fa",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T11:40:02+01:00",
+        "song_key": "R.E.M. - Can't Get There from Here",
+        "title": "Can't Get There from Here"
+      }
+    },
+    "R.E.M. - Cuyahoga": {
+      "lyrics": {
+        "artist": "R.E.M.",
+        "content_hash": "sha256:366fd8856579bb1b0081bb6f3a502a5fbaab8c5d39372688ea83bef8f1e0f801",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "R.E.M. - Cuyahoga",
+        "title": "Cuyahoga"
+      }
+    },
+    "Roy Bailey - Beeswing": {
+      "lyrics": {
+        "artist": "Roy Bailey",
+        "content_hash": "sha256:a6b36b11b1efe1d51ddbecdf01bec161132a01fa3b08fe670dd468d0d0287534",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Roy Bailey - Beeswing",
+        "title": "Beeswing"
+      }
+    },
+    "Suede - Animal Nitrate": {
+      "lyrics": {
+        "artist": "Suede",
+        "content_hash": "sha256:a19e09b4c220ad200f9561d05b6f419e1d18174b700684ffb5969f2df22ffbb6",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Suede - Animal Nitrate",
+        "title": "Animal Nitrate"
       }
     },
     "Super Furry Animals - Ohio Heat": {
@@ -420,7 +1304,7 @@
           "signal:print_hostile_content"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-02T14:03:22+01:00",
         "song_key": "Super Furry Animals - Ohio Heat",
         "title": "Ohio Heat"
       },
@@ -436,30 +1320,79 @@
           "signal:print_hostile_content"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-01T20:23:43+01:00",
         "song_key": "Super Furry Animals - Ohio Heat",
         "title": "Ohio Heat"
       }
     },
-    "The Campfire Trio - Trail Song": {
+    "The B-52's - Dry County": {
       "lyrics": {
-        "artist": "The Campfire Trio",
-        "content_hash": "sha256:db74c59cc7971dc73f516e5d9f08ccaa3c63ccc34f6894c5e68028abe62b9e7d",
+        "artist": "The B-52's",
+        "content_hash": "sha256:5ff7d186c7ecf7ca67ffac1a2f27f97217460218b25fd2aa7bae31a60a3aca0b",
         "content_type": "lyrics",
-        "quality_band": "clean",
-        "quality_score": 100,
-        "score_reasons": [],
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
         "score_version": "v1",
-        "scored_at": "2026-05-27T18:23:15+01:00",
-        "song_key": "The Campfire Trio - Trail Song",
-        "title": "Trail Song"
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "The B-52's - Dry County",
+        "title": "Dry County"
+      }
+    },
+    "The Cure - Boys Don't Cry": {
+      "lyrics": {
+        "artist": "The Cure",
+        "content_hash": "sha256:d310cbb7dca7b67fd4402b2840ba5ffdfd3fc34742d1483dc3ec97e1ef6e0bbe",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "The Cure - Boys Don't Cry",
+        "title": "Boys Don't Cry"
+      }
+    },
+    "The Cure - Close To Me": {
+      "lyrics": {
+        "artist": "The Cure",
+        "content_hash": "sha256:21b0aad348dd72066b6b93fc22a25eb735b820e5d75ad4a4edf6f184f45f499a",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "The Cure - Close To Me",
+        "title": "Close To Me"
       }
     },
     "The Darkness - Givin' Up": {
       "chords": {
         "artist": "The Darkness",
-        "content_hash": "sha256:a9a60b98695ce77bc61a3af26d9f4c5a7116c7c79468b0c699151f8142738c4c",
+        "content_hash": "sha256:e82c4f40d020f1068248d7ec1af6079680b73b251d409b4f136c9fca86b99a44",
         "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T09:13:46+01:00",
+        "song_key": "The Darkness - Givin' Up",
+        "title": "Givin' Up"
+      },
+      "lyrics": {
+        "artist": "The Darkness",
+        "content_hash": "sha256:88ae3080bef7da2b9721b65aa988df643643e4fe94f2fe34c9a3e3bfc4392a89",
+        "content_type": "lyrics",
         "quality_band": "poor",
         "quality_score": 0,
         "score_reasons": [
@@ -469,23 +1402,7 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
-        "song_key": "The Darkness - Givin' Up",
-        "title": "Givin' Up"
-      },
-      "lyrics": {
-        "artist": "The Darkness",
-        "content_hash": "sha256:5e31809599aa4887c8a2177fc656da2ef1933f196a9459d1115638410158a858",
-        "content_type": "lyrics",
-        "quality_band": "poor",
-        "quality_score": 0,
-        "score_reasons": [
-          "quality:missing",
-          "signal:duplicate_block",
-          "signal:excessive_bracket_noise"
-        ],
-        "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
         "song_key": "The Darkness - Givin' Up",
         "title": "Givin' Up"
       }
@@ -499,7 +1416,7 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-02T14:03:22+01:00",
         "song_key": "The Monkees - Me & Magdelana",
         "title": "Me & Magdelana"
       },
@@ -507,13 +1424,31 @@
         "artist": "The Monkees",
         "content_hash": "sha256:bd379a31389a98257aaecfeffeb065f44fcebfac6cffb0ef8801abc3345dd2e2",
         "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-01T20:23:43+01:00",
+        "song_key": "The Monkees - Me & Magdelana",
+        "title": "Me & Magdelana"
+      }
+    },
+    "The Offspring - Come Out And Play (Keep 'Em Separated)": {
+      "lyrics": {
+        "artist": "The Offspring",
+        "content_hash": "sha256:af058133ce1762c3c4f5e05c103acd249bdf1143c0ccdefae9d6086ab545fd32",
+        "content_type": "lyrics",
         "quality_band": "clean",
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
-        "song_key": "The Monkees - Me & Magdelana",
-        "title": "Me & Magdelana"
+        "scored_at": "2026-06-03T11:40:02+01:00",
+        "song_key": "The Offspring - Come Out And Play (Keep 'Em Separated)",
+        "title": "Come Out And Play (Keep 'Em Separated)"
       }
     },
     "The Shins - Australia": {
@@ -525,7 +1460,7 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:46+01:00",
         "song_key": "The Shins - Australia",
         "title": "Australia"
       },
@@ -533,11 +1468,15 @@
         "artist": "The Shins",
         "content_hash": "sha256:569cef39eb17dc8eeaac353015173f383354325e7c133e905454b7ce1cc5893b",
         "content_type": "lyrics",
-        "quality_band": "clean",
-        "quality_score": 100,
-        "score_reasons": [],
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
         "song_key": "The Shins - Australia",
         "title": "Australia"
       }
@@ -551,7 +1490,7 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:46+01:00",
         "song_key": "The Shins - Phantom Limb",
         "title": "Phantom Limb"
       },
@@ -559,11 +1498,16 @@
         "artist": "The Shins",
         "content_hash": "sha256:24be95cd02570bf9dfa6824b5e5359d320426e91f34405d8e81127f4e5b12f1e",
         "content_type": "lyrics",
-        "quality_band": "clean",
-        "quality_score": 100,
-        "score_reasons": [],
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
         "song_key": "The Shins - Phantom Limb",
         "title": "Phantom Limb"
       }
@@ -577,7 +1521,7 @@
         "quality_score": 100,
         "score_reasons": [],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:46+01:00",
         "song_key": "The Shins - Sleeping Lessons",
         "title": "Sleeping Lessons"
       },
@@ -585,36 +1529,52 @@
         "artist": "The Shins",
         "content_hash": "sha256:fd87e2be042456cbb7b49232abd03f67dab3bca921faa73a3b76746d15f02027",
         "content_type": "lyrics",
-        "quality_band": "clean",
-        "quality_score": 100,
-        "score_reasons": [],
-        "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
-        "song_key": "The Shins - Sleeping Lessons",
-        "title": "Sleeping Lessons"
-      }
-    },
-    "The Smiths - I Don't Owe you Anything": {
-      "chords": {
-        "artist": "The Smiths",
-        "content_hash": "sha256:f78631b7580d5d8643bbfce9174332341a09626de47eb2cf731cce5f68b106f3",
-        "content_type": "chords",
         "quality_band": "poor",
         "quality_score": 0,
         "score_reasons": [
           "quality:missing",
           "signal:duplicate_block",
-          "signal:print_hostile_content",
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
+        "song_key": "The Shins - Sleeping Lessons",
+        "title": "Sleeping Lessons"
+      }
+    },
+    "The Smiths - Cemetry Gates": {
+      "lyrics": {
+        "artist": "The Smiths",
+        "content_hash": "sha256:0424788df2a53ed33aea61b8f43824ed9a1423345effe4e6f4acd876c43491fd",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "The Smiths - Cemetry Gates",
+        "title": "Cemetry Gates"
+      }
+    },
+    "The Smiths - I Don't Owe you Anything": {
+      "chords": {
+        "artist": "The Smiths",
+        "content_hash": "sha256:031e474ff7734bd9328f5afdf05fc36b3c077532c1423def2307621b69f9a032",
+        "content_type": "chords",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T09:13:46+01:00",
         "song_key": "The Smiths - I Don't Owe you Anything",
         "title": "I Don't Owe you Anything"
       },
       "lyrics": {
         "artist": "The Smiths",
-        "content_hash": "sha256:20f21a1bd3fa916fdfd6893751db3f5df26413443246311ef70704b5fe388c29",
+        "content_hash": "sha256:e938218806735540b41cf2fe91784d1387dc895a30b87be3fd76bc3426248aef",
         "content_type": "lyrics",
         "quality_band": "poor",
         "quality_score": 0,
@@ -625,7 +1585,7 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-03T09:13:31+01:00",
         "song_key": "The Smiths - I Don't Owe you Anything",
         "title": "I Don't Owe you Anything"
       }
@@ -644,7 +1604,7 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-02T14:03:22+01:00",
         "song_key": "The Smiths - What Difference Does it Make?",
         "title": "What Difference Does it Make?"
       },
@@ -660,12 +1620,149 @@
           "signal:excessive_bracket_noise"
         ],
         "score_version": "v1",
-        "scored_at": "2026-06-02T09:21:09+01:00",
+        "scored_at": "2026-06-01T20:23:44+01:00",
         "song_key": "The Smiths - What Difference Does it Make?",
         "title": "What Difference Does it Make?"
       }
+    },
+    "The Stone Roses - Elephant Stone": {
+      "lyrics": {
+        "artist": "The Stone Roses",
+        "content_hash": "sha256:e27381683ee98d2e785b2e66eedabf02b452937fd830745d68af1a6ce2263754",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "The Stone Roses - Elephant Stone",
+        "title": "Elephant Stone"
+      }
+    },
+    "The Stone Roses - Elizabeth My Dear": {
+      "lyrics": {
+        "artist": "The Stone Roses",
+        "content_hash": "sha256:82fff18399597c75bb8b4efdd287265a3b7aac91191162be2048e542a7a33d87",
+        "content_type": "lyrics",
+        "quality_band": "clean",
+        "quality_score": 100,
+        "score_reasons": [],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T09:12:46+01:00",
+        "song_key": "The Stone Roses - Elizabeth My Dear",
+        "title": "Elizabeth My Dear"
+      }
+    },
+    "The Wonder Stuff - Circle Square": {
+      "lyrics": {
+        "artist": "The Wonder Stuff",
+        "content_hash": "sha256:5f19fb47aa4ad15832667e80c20c4718e2f326dfe6401be7f623aeeb08a3f3ad",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 25,
+        "score_reasons": [
+          "quality:questionable",
+          "signal:unusable_lyrics"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:51:02+01:00",
+        "song_key": "The Wonder Stuff - Circle Square",
+        "title": "Circle Square"
+      }
+    },
+    "Tori Amos - Cornflake Girl": {
+      "lyrics": {
+        "artist": "Tori Amos",
+        "content_hash": "sha256:a50541cca66df6af5aa8ac5c3ce57b54e3a0c2da2e372f2c9ad89797f4e7e2de",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Tori Amos - Cornflake Girl",
+        "title": "Cornflake Girl"
+      }
+    },
+    "Voice of the Beehive - Don't Call Me Baby": {
+      "lyrics": {
+        "artist": "Voice of the Beehive",
+        "content_hash": "sha256:41870d1e79ebc86b5f6c97cbc7a38fecb60afc858e22d7e50505a7ecfa962f7d",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Voice of the Beehive - Don't Call Me Baby",
+        "title": "Don't Call Me Baby"
+      }
+    },
+    "Weezer - Buddy Holly": {
+      "lyrics": {
+        "artist": "Weezer",
+        "content_hash": "sha256:5357ff6d8854c9bad4ce941f593af498f9b137b18587a71b255521f2912926c6",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:excessive_bracket_noise"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Weezer - Buddy Holly",
+        "title": "Buddy Holly"
+      }
+    },
+    "Wild Beasts - All The King's Men": {
+      "lyrics": {
+        "artist": "Wild Beasts",
+        "content_hash": "sha256:88e0fd972227153ec2800b18986bd3603adbd123e9dded146326efc8ac325ba9",
+        "content_type": "lyrics",
+        "quality_band": "questionable",
+        "quality_score": 52,
+        "score_reasons": [
+          "quality:questionable",
+          "signal:print_hostile_content"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:51:02+01:00",
+        "song_key": "Wild Beasts - All The King's Men",
+        "title": "All The King's Men"
+      }
+    },
+    "Zero 7 - Destiny": {
+      "lyrics": {
+        "artist": "Zero 7",
+        "content_hash": "sha256:202fc159b5a4eebf5a6c4b739aeac37360435c6279b5147df62845a70d58d327",
+        "content_type": "lyrics",
+        "quality_band": "poor",
+        "quality_score": 0,
+        "score_reasons": [
+          "quality:missing",
+          "signal:duplicate_block",
+          "signal:print_hostile_content"
+        ],
+        "score_version": "v1",
+        "scored_at": "2026-06-03T10:50:24+01:00",
+        "song_key": "Zero 7 - Destiny",
+        "title": "Destiny"
+      }
     }
   },
-  "updated_at": "2026-06-02T09:21:09+01:00",
+  "updated_at": "2026-06-03T11:40:02+01:00",
   "version": 1
 }
