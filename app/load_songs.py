@@ -1,4 +1,5 @@
 import logging
+import re
 
 import pandas as pd
 
@@ -33,6 +34,33 @@ def _is_favourite(value):
     return False
 
 
+def _normalize_tags(value):
+    if pd.isna(value):
+        return []
+
+    if isinstance(value, (list, tuple, set)):
+        raw_tags = value
+    elif isinstance(value, str):
+        raw_tags = re.split(r"[|,;]+", value)
+    else:
+        raw_tags = [str(value)]
+
+    tags = []
+    seen = set()
+    for raw_tag in raw_tags:
+        if not isinstance(raw_tag, str):
+            raw_tag = str(raw_tag)
+        tag = raw_tag.strip()
+        if not tag:
+            continue
+        tag_key = tag.lower()
+        if tag_key in seen:
+            continue
+        seen.add(tag_key)
+        tags.append(tag)
+    return tags
+
+
 def _build_invalid_row_record(row_number, row):
     artist = row.get("Artist")
     title = row.get("Title")
@@ -58,10 +86,39 @@ def filter_favourite_songs(songs):
     return [song for song in songs if _is_favourite(song.get("Favourite"))]
 
 
+def filter_tagged_songs(songs, tags):
+    if isinstance(tags, str):
+        raw_queries = re.split(r"[|,;]+", tags)
+    elif isinstance(tags, (list, tuple, set)):
+        raw_queries = tags
+    else:
+        raw_queries = [tags]
+
+    queries = [
+        str(tag).strip().lower()
+        for tag in raw_queries
+        if isinstance(tag, str) and tag.strip()
+    ]
+    if not queries:
+        return list(songs)
+
+    filtered = []
+    for song in songs:
+        song_tags = [
+            tag.strip().lower()
+            for tag in song.get("Tags", [])
+            if isinstance(tag, str) and tag.strip()
+        ]
+        if any(query in song_tag for query in queries for song_tag in song_tags):
+            filtered.append(song)
+    return filtered
+
+
 def load_songs(csv_file):
     """
     Load songs from a CSV file, optionally filtering out rows where 'Skip' is set to 'skip'.
     If present, the 'Favourite' column is normalized to a boolean on each song record.
+    If present, the 'Tags' column is normalized to a list of tags on each song record.
 
     Parameters:
     csv_file (str): Path to the CSV file containing songs.
@@ -90,6 +147,8 @@ def load_songs(csv_file):
             song_record = row.to_dict()
             if 'Favourite' in songs_df.columns:
                 song_record["Favourite"] = _is_favourite(row.get("Favourite"))
+            if 'Tags' in songs_df.columns:
+                song_record["Tags"] = _normalize_tags(row.get("Tags"))
 
             songs.append(song_record)
 

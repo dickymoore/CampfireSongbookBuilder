@@ -3,7 +3,7 @@ import unittest
 from math import isnan
 from pathlib import Path
 
-from app.load_songs import filter_favourite_songs, load_songs
+from app.load_songs import filter_favourite_songs, filter_tagged_songs, load_songs
 
 
 class TestLoadSongs(unittest.TestCase):
@@ -87,6 +87,58 @@ The Campfire Trio,Dawn Chorus,,
         )
         self.assertEqual(
             [(song["Artist"], song["Title"]) for song in filter_favourite_songs(songs)],
+            [
+                ("The Campfire Trio", "Trail Song"),
+                ("The Campfire Trio", "Firelight Waltz"),
+            ],
+        )
+
+    def test_load_songs_normalizes_tags_column_and_filters_by_tag(self):
+        csv_text = """Artist,Title,Skip,Favourite,Tags
+The Campfire Trio,Trail Song,,yes,"campfire; opener ; folk"
+The Campfire Trio,Firelight Waltz,,,waltz|campfire
+The Campfire Trio,Night Run,,false,"indie, late-night, Indie"
+"""
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            csv_path = Path(tmp_dir) / "songs.csv"
+            csv_path.write_text(csv_text, encoding="utf-8")
+
+            songs, invalid_rows = load_songs(csv_path)
+
+        self.assertEqual(invalid_rows, [])
+        self.assertEqual(
+            songs[0]["Tags"],
+            ["campfire", "opener", "folk"],
+        )
+        self.assertEqual(
+            songs[1]["Tags"],
+            ["waltz", "campfire"],
+        )
+        self.assertEqual(
+            songs[2]["Tags"],
+            ["indie", "late-night"],
+        )
+        self.assertEqual(
+            [(song["Artist"], song["Title"]) for song in filter_tagged_songs(songs, "campfire")],
+            [
+                ("The Campfire Trio", "Trail Song"),
+                ("The Campfire Trio", "Firelight Waltz"),
+            ],
+        )
+        self.assertEqual(
+            [(song["Artist"], song["Title"]) for song in filter_tagged_songs(songs, ["campfire", "folk"])],
+            [
+                ("The Campfire Trio", "Trail Song"),
+                ("The Campfire Trio", "Firelight Waltz"),
+            ],
+        )
+        self.assertEqual(
+            [(song["Artist"], song["Title"]) for song in filter_tagged_songs(songs, "night")],
+            [("The Campfire Trio", "Night Run")],
+        )
+        self.assertEqual(
+            [(song["Artist"], song["Title"]) for song in filter_tagged_songs(songs, "fire")],
             [
                 ("The Campfire Trio", "Trail Song"),
                 ("The Campfire Trio", "Firelight Waltz"),

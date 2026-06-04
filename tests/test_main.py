@@ -30,7 +30,7 @@ import app.document_creation  # noqa: E402  pylint: disable=wrong-import-positio
 
 class TestMain(unittest.TestCase):
     def test_resolve_output_paths_uses_favourites_prefix(self):
-        args = types.SimpleNamespace(favourites_only=True, selection=None)
+        args = types.SimpleNamespace(favourites_only=True, selection=None, tags=None)
 
         lyrics_path, chords_path = main._resolve_output_paths(args)
 
@@ -38,12 +38,20 @@ class TestMain(unittest.TestCase):
         self.assertEqual(chords_path, "data/output/Favourites_Chords_Document.docx")
 
     def test_resolve_output_paths_uses_selection_prefix(self):
-        args = types.SimpleNamespace(favourites_only=False, selection="trip-night")
+        args = types.SimpleNamespace(favourites_only=False, selection="trip-night", tags=None)
 
         lyrics_path, chords_path = main._resolve_output_paths(args)
 
         self.assertEqual(lyrics_path, "data/output/Selection_trip-night_Lyrics_Document.docx")
         self.assertEqual(chords_path, "data/output/Selection_trip-night_Chords_Document.docx")
+
+    def test_resolve_output_paths_uses_tag_prefix(self):
+        args = types.SimpleNamespace(favourites_only=False, selection=None, tags="Dicky Karaoke")
+
+        lyrics_path, chords_path = main._resolve_output_paths(args)
+
+        self.assertEqual(lyrics_path, "data/output/Tag_Dicky-Karaoke_Lyrics_Document.docx")
+        self.assertEqual(chords_path, "data/output/Tag_Dicky-Karaoke_Chords_Document.docx")
 
     def test_generate_from_cache_favourites_only_filters_song_list_before_generation(self):
         songs = [
@@ -84,6 +92,52 @@ class TestMain(unittest.TestCase):
         self.assertEqual(
             create_document.call_args.args[4],
             "data/output/Favourites_Chords_Document.docx",
+        )
+        write_report.assert_called_once()
+
+    def test_generate_from_cache_tags_filters_song_list_before_generation(self):
+        songs = [
+            {"Artist": "The Campfire Trio", "Title": "Trail Song", "Tags": ["Jessica Protest Karaoke"]},
+            {"Artist": "The Campfire Trio", "Title": "Night Run", "Tags": ["Dicky Karaoke"]},
+            {"Artist": "The Campfire Trio", "Title": "River Song", "Tags": ["Campfire"]},
+        ]
+        report_data = {
+            "generated_at": "2026-05-20T12:00:00+01:00",
+            "report_type": "quality_run",
+            "source": "generate_from_cache",
+            "entries": [],
+            "selection_issues": [],
+            "pdf_outputs": [],
+            "pdf_errors": [],
+        }
+
+        with patch.object(sys, "argv", ["main.py", "--generate-from-cache", "--tags", "Karaoke"]):
+            with patch("main.load_config", return_value={"genius": {"client_access_token": "token"}}):
+                with patch("main.load_songs", return_value=(songs, [])):
+                    with patch("app.cache.jsonl_load_all", return_value={}):
+                        with patch(
+                            "app.document_creation.create_document_from_cache",
+                            return_value=report_data,
+                        ) as create_document:
+                            with patch("main._write_generation_report") as write_report:
+                                main.main()
+
+        create_document.assert_called_once()
+        passed_song_list = create_document.call_args.args[0]
+        self.assertEqual(
+            passed_song_list,
+            [
+                {"Artist": "The Campfire Trio", "Title": "Trail Song", "Tags": ["Jessica Protest Karaoke"]},
+                {"Artist": "The Campfire Trio", "Title": "Night Run", "Tags": ["Dicky Karaoke"]},
+            ],
+        )
+        self.assertEqual(
+            create_document.call_args.args[3],
+            "data/output/Tag_Karaoke_Lyrics_Document.docx",
+        )
+        self.assertEqual(
+            create_document.call_args.args[4],
+            "data/output/Tag_Karaoke_Chords_Document.docx",
         )
         write_report.assert_called_once()
 

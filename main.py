@@ -1,9 +1,10 @@
 import logging
 import argparse
 import sys
+import re
 from pathlib import Path
 from app.load_config import load_config
-from app.load_songs import filter_favourite_songs, load_songs
+from app.load_songs import filter_favourite_songs, filter_tagged_songs, load_songs
 from app.content_models import derive_song_key
 from app.document_generation import cache_lyrics, cache_chords
 from app.document_generation import refresh_quality_status_from_cache
@@ -34,12 +35,16 @@ MANUAL_CHORDS_PATH = Path('data/manual_chords.json')
 
 
 def _resolve_output_paths(args):
-    if args.favourites_only:
-        prefix = "Favourites"
-    elif args.selection:
-        prefix = "Selection_{}".format(args.selection)
-    else:
-        prefix = None
+    prefixes = []
+    if getattr(args, "favourites_only", False):
+        prefixes.append("Favourites")
+    if getattr(args, "selection", None):
+        prefixes.append("Selection_{}".format(args.selection))
+    if getattr(args, "tags", None):
+        tag_slug = re.sub(r"[^A-Za-z0-9._-]+", "-", args.tags).strip("-") or "Tags"
+        prefixes.append("Tag_{}".format(tag_slug))
+
+    prefix = "_".join(prefixes) if prefixes else None
 
     if prefix is None:
         return LYRICS_DOC_PATH, CHORDS_DOC_PATH
@@ -186,6 +191,10 @@ def main():
         help='Restrict the run to a named selection from data/selections/<name>.json',
     )
     parser.add_argument(
+        '--tags',
+        help='Restrict the run to songs whose tags contain this case-insensitive match; supports partial matches like Karaoke',
+    )
+    parser.add_argument(
         '--import-manual',
         help='Parse a pasted manual import text file and merge entries into data/manual_lyrics.json and data/manual_chords.json',
     )
@@ -306,6 +315,14 @@ def main():
             selection_name or args.selection,
             len(selection_records),
             len(selection_issues),
+        )
+
+    if args.tags:
+        songs = filter_tagged_songs(songs, args.tags)
+        logging.info(
+            "Filtered source list to %d tagged song(s) matching '%s'.",
+            len(songs),
+            args.tags,
         )
 
     if args.cache_only:
