@@ -147,12 +147,14 @@ class TestReporting(unittest.TestCase):
 
         self.assertEqual(report["summary"]["included_count"], 2)
         self.assertEqual(report["summary"]["excluded_count"], 0)
+        self.assertEqual(report["summary"]["excluded_due_to_missing_counterpart_count"], 0)
         self.assertEqual(report["summary"]["missing_count"], 1)
         self.assertEqual(report["summary"]["questionable_count"], 1)
         self.assertEqual(report["summary"]["overridden_count"], 1)
         self.assertEqual(report["summary"]["clean_count"], 1)
         self.assertEqual(report["summary"]["invalid_input_count"], 1)
         self.assertEqual(report["summary"]["counts"]["clean"], 1)
+        self.assertEqual(report["summary"]["counts"]["excluded_due_to_missing_counterpart"], 0)
         self.assertEqual(report["summary"]["counts"]["questionable"], 1)
         self.assertEqual(report["summary"]["counts"]["missing"], 1)
         self.assertEqual(report["summary"]["counts"]["invalid_input"], 1)
@@ -424,6 +426,23 @@ class TestReporting(unittest.TestCase):
                 },
                 "review_decision": None,
             },
+            {
+                "artist": "The Campfire Trio",
+                "title": "Missing Chords",
+                "song_key": "The Campfire Trio - Missing Chords",
+                "content_type": "lyrics",
+                "content_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+                "quality": "clean",
+                "included": False,
+                "decision_source": "quality_clean",
+                "reason": "Song is missing lyrics or chords and is excluded from both documents.",
+                "signals": [],
+                "quality_status": {
+                    "content_type": "lyrics",
+                    "quality": "clean",
+                },
+                "review_decision": None,
+            },
         ]
         invalid_song_rows = [
             {
@@ -441,17 +460,31 @@ class TestReporting(unittest.TestCase):
             invalid_song_rows=invalid_song_rows,
         )
 
-        self.assertEqual(report["summary"]["clean_count"], 2)
-        self.assertEqual(report["summary"]["excluded_clean_count"], 1)
-        self.assertEqual(report["summary"]["counts"]["clean"], 2)
-        self.assertEqual(report["summary"]["counts"]["excluded_clean"], 1)
+        self.assertEqual(report["summary"]["clean_count"], 3)
+        self.assertEqual(report["summary"]["excluded_clean_count"], 2)
+        self.assertEqual(report["summary"]["excluded_due_to_missing_counterpart_count"], 1)
+        self.assertEqual(report["summary"]["counts"]["clean"], 3)
+        self.assertEqual(report["summary"]["counts"]["excluded_clean"], 2)
+        self.assertEqual(report["summary"]["counts"]["excluded_due_to_missing_counterpart"], 1)
         self.assertEqual(
             [song["song_key"] for song in report["summary"]["clean_songs"]],
-            ["The Campfire Trio - Trail Song", "The Campfire Trio - Long Song"],
+            [
+                "The Campfire Trio - Trail Song",
+                "The Campfire Trio - Long Song",
+                "The Campfire Trio - Missing Chords",
+            ],
         )
         self.assertEqual(
             report["summary"]["excluded_clean_songs"][0]["song_key"],
             "The Campfire Trio - Long Song",
+        )
+        self.assertEqual(
+            report["summary"]["excluded_clean_songs"][1]["song_key"],
+            "The Campfire Trio - Missing Chords",
+        )
+        self.assertEqual(
+            report["summary"]["excluded_due_to_missing_counterpart_songs"][0]["song_key"],
+            "The Campfire Trio - Missing Chords",
         )
         self.assertIsNone(report["summary"]["invalid_input_rows"][0]["raw_artist"])
         self.assertIsNone(report["summary"]["invalid_input_rows"][0]["raw_title"])
@@ -782,6 +815,7 @@ class TestReporting(unittest.TestCase):
         self.assertIn(str(report_path), output)
         self.assertIn("clean 1", output)
         self.assertIn("invalid input 1", output)
+        self.assertIn("excluded due to missing counterpart 0", output)
         self.assertNotIn("secret-token", output)
         mock_get_genius_client.assert_not_called()
 

@@ -49,6 +49,33 @@ CONTENT_SCORES_PATH = DEFAULT_CONTENT_SCORES_PATH
 DEFAULT_REPORT_SOURCE = "generate_from_cache"
 
 
+def _has_missing_or_unusable_signal(generation_result):
+    signal_codes = {
+        signal.get("code")
+        for signal in generation_result.get("signals", [])
+        if isinstance(signal, dict)
+    }
+    return bool(
+        {
+            "missing_lyrics",
+            "unusable_lyrics",
+            "missing_chords",
+            "unusable_chords",
+        }
+        & signal_codes
+    )
+
+
+def _xml_safe_text(value):
+    if not isinstance(value, str):
+        return value
+    return "".join(
+        ch
+        for ch in value
+        if ch in ("\n", "\r", "\t") or ord(ch) >= 32
+    )
+
+
 def _song_value(song, preferred_key, fallback_key):
     if isinstance(song, dict):
         if preferred_key in song:
@@ -92,11 +119,12 @@ def _build_report_entry(song, content_type, generation_result, included=None, re
 
 
 def _markdown_song_block(artist, title, content):
+    safe_content = _xml_safe_text(content)
     return [
         "# {} by {}".format(title, artist),
         "",
         "```text",
-        content,
+        safe_content,
         "```",
         "",
     ]
@@ -105,7 +133,7 @@ def _markdown_song_block(artist, title, content):
 def _render_song_item(document, song_item, heading_font_size, body_font_size, bookmark_id):
     artist = song_item["artist"]
     title = song_item["title"]
-    content = song_item["content"]
+    content = _xml_safe_text(song_item["content"])
     bookmark_name = song_item["bookmark_name"]
 
     heading = document.add_heading("{} by {}".format(title, artist), level=1)
@@ -154,6 +182,7 @@ def create_document_from_cache(
     report_source=None,
     pdf_output=False,
     report_all_content=False,
+    include_questionable=False,
 ):
     logger.debug("Running create_document_from_cache function")
 
@@ -205,6 +234,10 @@ def create_document_from_cache(
         artist = _song_artist(song)
         title = _song_title(song)
         cache_key = _song_key(song) or derive_song_key(artist, title)
+        pending_lyrics_render_item = None
+        pending_lyrics_markdown_lines = None
+        pending_chords_render_item = None
+        pending_chords_markdown_lines = None
         lyrics_quality_status = quality_status_state.get("entries", {}).get(cache_key, {}).get("lyrics")
         lyrics_review_decision = review_decision_state.get("entries", {}).get(cache_key, {}).get("lyrics")
         chords_quality_status = quality_status_state.get("entries", {}).get(cache_key, {}).get("chords")
@@ -230,6 +263,18 @@ def create_document_from_cache(
             except ValueError as exc:
                 logger.warning("Failed to compute lyrics content score for %s: %s", cache_key, exc)
 
+        if (
+            include_questionable
+            and lyrics_generation_result["quality"] == "questionable"
+            and not _has_missing_or_unusable_signal(lyrics_generation_result)
+        ):
+            lyrics_generation_result = dict(lyrics_generation_result)
+            lyrics_generation_result["included"] = True
+            lyrics_generation_result["decision_source"] = "include_questionable_mode"
+            lyrics_generation_result["reason"] = (
+                "Questionable content included by generation mode."
+            )
+
         report_included = lyrics_generation_result["included"]
         report_reason = lyrics_generation_result["reason"]
         if lyrics_output and lyrics_generation_result["included"] and isinstance(lyrics, str) and lyrics != "":
@@ -238,15 +283,12 @@ def create_document_from_cache(
             logger.debug("Adding lyrics for %s by %s", title, artist)
 
             if num_characters <= 5000:
-                lyrics_render_items.append(
-                    {
-                        "artist": artist,
-                        "title": title,
-                        "content": lyrics,
-                        "bookmark_name": build_song_bookmark_name(song, len(lyrics_render_items) + 1),
-                    }
-                )
-                lyrics_markdown_lines.extend(_markdown_song_block(artist, title, lyrics))
+                pending_lyrics_render_item = {
+                    "artist": artist,
+                    "title": title,
+                    "content": lyrics,
+                }
+                pending_lyrics_markdown_lines = _markdown_song_block(artist, title, lyrics)
             else:
                 report_included = False
                 report_reason = "Lyrics are too long and were excluded from the document."
@@ -258,17 +300,10 @@ def create_document_from_cache(
                 artist,
                 report_reason,
             )
+        else:
+            pending_lyrics_render_item = None
+            pending_lyrics_markdown_lines = None
 
-        if report_all_content or lyrics_output:
-            report_entries.append(
-                _build_report_entry(
-                    song,
-                    "lyrics",
-                    lyrics_generation_result,
-                    included=report_included,
-                    reason=report_reason,
-                )
-            )
         if (
             selection_records is not None
             and lyrics_generation_result["quality"] == "missing"
@@ -305,6 +340,64 @@ def create_document_from_cache(
                 )
             except ValueError as exc:
                 logger.warning("Failed to compute chords content score for %s: %s", cache_key, exc)
+
+        if (
+            include_questionable
+            and chords_generation_result["quality"] == "questionable"
+            and not _has_missing_or_unusable_signal(chords_generation_result)
+        ):
+            chords_generation_result = dict(chords_generation_result)
+            chords_generation_result["included"] = True
+            chords_generation_result["decision_source"] = "include_questionable_mode"
+            chords_generation_result["reason"] = (
+                "Questionable content included by generation mode."
+            )
+
+        # Exclude songs missing either side from both books so the generated sets
+        # stay aligned.
+        lyrics_signal_codes = {
+            signal.get("code")
+            for signal in lyrics_generation_result.get("signals", [])
+            if isinstance(signal, dict)
+        }
+        chords_signal_codes = {
+            signal.get("code")
+            for signal in chords_generation_result.get("signals", [])
+            if isinstance(signal, dict)
+        }
+        song_has_missing_side = (
+            lyrics_output
+            and chords_output
+            and (
+                lyrics_generation_result["quality"] == "missing"
+                or chords_generation_result["quality"] == "missing"
+                or "missing_lyrics" in lyrics_signal_codes
+                or "unusable_lyrics" in lyrics_signal_codes
+                or "missing_chords" in chords_signal_codes
+                or "unusable_chords" in chords_signal_codes
+            )
+        )
+        if song_has_missing_side:
+            missing_reason = "Song is missing lyrics or chords and is excluded from both documents."
+            report_included = False
+            report_reason = missing_reason
+            lyrics_generation_result = dict(lyrics_generation_result)
+            lyrics_generation_result["included"] = False
+            lyrics_generation_result["reason"] = missing_reason
+            chords_generation_result = dict(chords_generation_result)
+            chords_generation_result["included"] = False
+            chords_generation_result["reason"] = missing_reason
+
+        if report_all_content or lyrics_output:
+            report_entries.append(
+                _build_report_entry(
+                    song,
+                    "lyrics",
+                    lyrics_generation_result,
+                    included=report_included,
+                    reason=report_reason,
+                )
+            )
         if report_all_content or chords_output:
             report_entries.append(_build_report_entry(song, "chords", chords_generation_result))
         if (
@@ -327,15 +420,12 @@ def create_document_from_cache(
         if chords_output and chords_generation_result["included"] and isinstance(chords, str) and chords != "":
             chords = clean_chords(chords)
             logger.debug("Adding chords for %s by %s", title, artist)
-            chords_render_items.append(
-                {
-                    "artist": artist,
-                    "title": title,
-                    "content": chords,
-                    "bookmark_name": build_song_bookmark_name(song, len(chords_render_items) + 1),
-                }
-            )
-            chords_markdown_lines.extend(_markdown_song_block(artist, title, chords))
+            pending_chords_render_item = {
+                "artist": artist,
+                "title": title,
+                "content": chords,
+            }
+            pending_chords_markdown_lines = _markdown_song_block(artist, title, chords)
         elif chords_output:
             logger.debug(
                 "Skipping chords for %s by %s: %s",
@@ -343,6 +433,33 @@ def create_document_from_cache(
                 artist,
                 chords_generation_result["reason"],
             )
+        else:
+            pending_chords_render_item = None
+            pending_chords_markdown_lines = None
+
+        if (
+            lyrics_output
+            and report_included
+            and pending_lyrics_render_item is not None
+        ):
+            pending_lyrics_render_item["bookmark_name"] = build_song_bookmark_name(
+                song,
+                len(lyrics_render_items) + 1,
+            )
+            lyrics_render_items.append(pending_lyrics_render_item)
+            lyrics_markdown_lines.extend(pending_lyrics_markdown_lines)
+
+        if (
+            chords_output
+            and chords_generation_result["included"]
+            and pending_chords_render_item is not None
+        ):
+            pending_chords_render_item["bookmark_name"] = build_song_bookmark_name(
+                song,
+                len(chords_render_items) + 1,
+            )
+            chords_render_items.append(pending_chords_render_item)
+            chords_markdown_lines.extend(pending_chords_markdown_lines)
 
     if lyrics_output:
         add_contents_page(lyrics_document, lyrics_render_items)

@@ -87,14 +87,18 @@ def build_song_bookmark_name(song, index):
 
 
 def add_bookmark(paragraph, bookmark_name, bookmark_id):
+    paragraph_element = getattr(paragraph, "_p", None)
+    if paragraph_element is None:
+        return
+
     start = OxmlElement("w:bookmarkStart")
     start.set(qn("w:id"), str(bookmark_id))
     start.set(qn("w:name"), bookmark_name)
-    paragraph._p.insert(0, start)
+    paragraph_element.insert(0, start)
 
     end = OxmlElement("w:bookmarkEnd")
     end.set(qn("w:id"), str(bookmark_id))
-    paragraph._p.append(end)
+    paragraph_element.append(end)
 
 
 def add_page_ref_field(paragraph, bookmark_name):

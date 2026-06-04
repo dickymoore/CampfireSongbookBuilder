@@ -90,6 +90,42 @@ class TestDocumentCreation(unittest.TestCase):
                 "Questionable content is excluded by default.",
             )
 
+    def test_create_document_from_cache_can_include_questionable_content_by_mode(self):
+        song_list = [
+            {"Artist": "The Campfire Trio", "Title": "Long Song"},
+            {"Artist": "The Campfire Trio", "Title": "Missing Song"},
+        ]
+        lyrics_cache = {
+            "The Campfire Trio - Long Song": "\n".join(
+                "Line {}".format(index) for index in range(220)
+            ),
+            "The Campfire Trio - Missing Song": "Lyrics not found.",
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            output_path = tmp_path / "lyrics.docx"
+
+            report_data = self._run_create_document(
+                tmp_path,
+                song_list,
+                lyrics_cache,
+                {},
+                lyrics_output=output_path,
+                include_questionable=True,
+            )
+
+            text = self._read_document_text(output_path)
+            report_entries = {entry["title"]: entry for entry in report_data["entries"]}
+
+            self.assertIn("Long Song by The Campfire Trio", text)
+            self.assertTrue(report_entries["Long Song"]["included"])
+            self.assertEqual(
+                report_entries["Long Song"]["reason"],
+                "Questionable content included by generation mode.",
+            )
+            self.assertFalse(report_entries["Missing Song"]["included"])
+
     def test_create_document_from_cache_adds_contents_page_before_songs(self):
         song_list = [
             {"Artist": "The Campfire Trio", "Title": "Trail Song"},
@@ -315,6 +351,45 @@ class TestDocumentCreation(unittest.TestCase):
             self.assertEqual(report_data["selection_issues"][0]["song_key"], "The Campfire Trio - Missing Song")
             self.assertEqual(report_data["selection_issues"][0]["issue_type"], "missing_content")
             self.assertEqual(report_data["source"], "generate_from_selection")
+
+    def test_create_document_from_cache_excludes_song_from_both_documents_when_one_side_is_missing(self):
+        song_list = [{"Artist": "The Campfire Trio", "Title": "Half Missing Song"}]
+        lyrics_cache = {"The Campfire Trio - Half Missing Song": "First line\nSecond line"}
+        chords_cache = {"The Campfire Trio - Half Missing Song": "Chords not found."}
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            lyrics_output = tmp_path / "lyrics.docx"
+            chords_output = tmp_path / "chords.docx"
+
+            report_data = self._run_create_document(
+                tmp_path,
+                song_list,
+                lyrics_cache,
+                chords_cache,
+                lyrics_output=lyrics_output,
+                chords_output=chords_output,
+            )
+
+            lyrics_text = self._read_document_text(lyrics_output)
+            chords_text = self._read_document_text(chords_output)
+            report_entries = {
+                (entry["title"], entry["content_type"]): entry
+                for entry in report_data["entries"]
+            }
+
+            self.assertNotIn("Half Missing Song by The Campfire Trio", lyrics_text)
+            self.assertNotIn("Half Missing Song by The Campfire Trio", chords_text)
+            self.assertFalse(report_entries[("Half Missing Song", "lyrics")]["included"])
+            self.assertFalse(report_entries[("Half Missing Song", "chords")]["included"])
+            self.assertEqual(
+                report_entries[("Half Missing Song", "lyrics")]["reason"],
+                "Song is missing lyrics or chords and is excluded from both documents.",
+            )
+            self.assertEqual(
+                report_entries[("Half Missing Song", "chords")]["reason"],
+                "Song is missing lyrics or chords and is excluded from both documents.",
+            )
 
     def test_create_document_from_cache_writes_pdf_when_converter_succeeds(self):
         song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]

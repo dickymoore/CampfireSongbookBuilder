@@ -14,6 +14,7 @@ from app.reporting import (
     summarize_traceable_quality_report,
     write_traceable_quality_report,
 )
+from app.duplicate_detection import find_song_duplicates, write_duplicate_report
 from app.source_attempts import load_source_attempts
 from app.selection_state import load_named_selection
 from app.manual_import import parse_manual_import, write_manual_json
@@ -163,6 +164,11 @@ def main():
     parser.add_argument('--chords-only', action='store_true', help='Generate document for chords only')
     parser.add_argument('--generate-from-cache', action='store_true', help='Generate documents from cache only')
     parser.add_argument(
+        '--include-questionable',
+        action='store_true',
+        help='Include questionable content in generated documents; only missing/unusable content stays excluded',
+    )
+    parser.add_argument(
         '--refresh-quality-state',
         action='store_true',
         help='Rebuild data/review/quality_status.json from the current cache, then write a fresh quality report',
@@ -182,6 +188,11 @@ def main():
     parser.add_argument(
         '--import-manual',
         help='Parse a pasted manual import text file and merge entries into data/manual_lyrics.json and data/manual_chords.json',
+    )
+    parser.add_argument(
+        '--find-duplicate-songs',
+        action='store_true',
+        help='Analyze the source CSV for exact and fuzzy duplicate song entries and write a report',
     )
     args = parser.parse_args()
 
@@ -258,6 +269,18 @@ def main():
         logging.error(f"Failed to load songs: {e}")
         sys.exit(1)
 
+    if args.find_duplicate_songs:
+        analysis = find_song_duplicates(songs)
+        report_path = write_duplicate_report(analysis)
+        print(
+            "Duplicate report written to {} (exact groups {}, fuzzy candidates {}).".format(
+                report_path,
+                len(analysis["exact_duplicate_groups"]),
+                analysis["fuzzy_candidate_count"],
+            )
+        )
+        return
+
     if args.favourites_only:
         songs = filter_favourite_songs(songs)
         logging.info(
@@ -322,6 +345,7 @@ def main():
             selection_records=selection_records,
             report_source="generate_from_selection" if args.selection else "generate_from_cache",
             pdf_output=bool(args.pdf),
+            include_questionable=bool(args.include_questionable),
         )
         report_data["source"] = "generate_from_selection" if args.selection else "generate_from_cache"
         report_data["invalid_song_rows"] = invalid_song_rows
@@ -372,6 +396,7 @@ def main():
             lyrics_output=lyrics_doc_path,
             selection_records=selection_records,
             report_source="lyrics_only_selection" if args.selection else "lyrics_only",
+            include_questionable=bool(args.include_questionable),
         )
         report_data["source"] = "lyrics_only_selection" if args.selection else "lyrics_only"
         report_data["invalid_song_rows"] = invalid_song_rows
@@ -391,6 +416,7 @@ def main():
             chords_output=chords_doc_path,
             selection_records=selection_records,
             report_source="chords_only_selection" if args.selection else "chords_only",
+            include_questionable=bool(args.include_questionable),
         )
         report_data["source"] = "chords_only_selection" if args.selection else "chords_only"
         report_data["invalid_song_rows"] = invalid_song_rows
@@ -413,6 +439,7 @@ def main():
         chords_output=chords_doc_path,
         selection_records=selection_records,
         report_source="full_generation_selection" if args.selection else "full_generation",
+        include_questionable=bool(args.include_questionable),
     )
     report_data["source"] = "full_generation_selection" if args.selection else "full_generation"
     report_data["invalid_song_rows"] = invalid_song_rows

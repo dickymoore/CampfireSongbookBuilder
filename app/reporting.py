@@ -12,6 +12,9 @@ from app.content_scoring import prioritize_content_scores
 logger = logging.getLogger(__name__)
 
 DEFAULT_REPORTS_PATH = Path("data/review/reports")
+MISSING_COUNTERPART_REASON = (
+    "Song is missing lyrics or chords and is excluded from both documents."
+)
 SENSITIVE_KEY_PATTERN = re.compile(
     r"(access[_-]?token|api[_-]?token|client[_-]?secret|client[_-]?access[_-]?token|"
     r"private[_-]?key|password|secret|token)",
@@ -130,6 +133,13 @@ def _build_summary_entry(result):
         entry["top_signal"] = copy.deepcopy(signals[0])
 
     return entry
+
+
+def _is_missing_counterpart_exclusion(song):
+    return (
+        not song.get("included")
+        and song.get("reason") == MISSING_COUNTERPART_REASON
+    )
 
 
 def _build_invalid_input_entry(record):
@@ -360,6 +370,11 @@ def build_traceable_quality_report(
         for song in songs
         if song.get("quality") == "missing"
     ]
+    missing_counterpart_exclusions = [
+        _build_summary_entry(song)
+        for song in songs
+        if _is_missing_counterpart_exclusion(song)
+    ]
 
     summary = {
         "included_count": sum(1 for song in songs if song.get("included")),
@@ -378,6 +393,7 @@ def build_traceable_quality_report(
         ),
         "clean_count": len(clean_songs),
         "excluded_clean_count": len(excluded_clean_songs),
+        "excluded_due_to_missing_counterpart_count": len(missing_counterpart_exclusions),
         "invalid_input_count": len(invalid_input_rows),
         "selection_issue_count": len(selection_issue_rows),
         "pdf_output_count": len(pdf_output_rows),
@@ -394,6 +410,7 @@ def build_traceable_quality_report(
         "counts": {
             "clean": len(clean_songs),
             "excluded_clean": len(excluded_clean_songs),
+            "excluded_due_to_missing_counterpart": len(missing_counterpart_exclusions),
             "questionable": len(questionable_songs),
             "missing": len(missing_songs),
             "invalid_input": len(invalid_input_rows),
@@ -412,6 +429,7 @@ def build_traceable_quality_report(
         },
         "clean_songs": clean_songs,
         "excluded_clean_songs": excluded_clean_songs,
+        "excluded_due_to_missing_counterpart_songs": missing_counterpart_exclusions,
         "questionable_songs": questionable_songs,
         "missing_songs": missing_songs,
         "invalid_input_rows": invalid_input_rows,
@@ -471,7 +489,8 @@ def summarize_traceable_quality_report(report, report_path):
     return (
         "Quality report written to {} "
         "(clean {}, questionable {}, missing {}, invalid input {}; "
-        "selection issues {}; included {}, excluded {}, overridden {})."
+        "selection issues {}; included {}, excluded {}, "
+        "excluded due to missing counterpart {}, overridden {})."
     ).format(
         report_path,
         counts.get("clean", summary.get("clean_count", 0)),
@@ -481,5 +500,9 @@ def summarize_traceable_quality_report(report, report_path):
         counts.get("selection_issue", summary.get("selection_issue_count", 0)),
         summary.get("included_count", 0),
         summary.get("excluded_count", 0),
+        counts.get(
+            "excluded_due_to_missing_counterpart",
+            summary.get("excluded_due_to_missing_counterpart_count", 0),
+        ),
         summary.get("overridden_count", 0),
     )
