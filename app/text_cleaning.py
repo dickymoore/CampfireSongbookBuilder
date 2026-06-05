@@ -141,12 +141,13 @@ MARKUP_TAGS = [
     'ch', '/ch', 'tab', '/tab', 'verse', '/verse', 'intro', '/intro',
     'outro', '/outro', 'pre-chorus', '/pre-chorus', 'chorus', '/chorus',
     'bridge', '/bridge', 'solo', '/solo', 'instrumental', '/instrumental',
-    'repeat', '/repeat', 'end', '/end', 'coda', '/coda', 'refrain', '/refrain'
+    'repeat', '/repeat', 'end', '/end', 'coda', '/coda', 'refrain', '/refrain',
+    'sot', '/sot', 'eot', '/eot'
 ]
 
 
 _CHORD_TOKEN_RE = re.compile(
-    r"^[A-Ga-g](?:#|b)?(?:maj|min|m|sus|add|dim|aug)?[0-9]*(?:/[A-Ga-g](?:#|b)?)?$"
+    r"^[A-Ha-h](?:#|b)?[A-Za-z0-9+#b]*(?:/[A-Ha-h](?:#|b)?)?$"
 )
 _TAB_STAFF_RE = re.compile(r"^\s*[eEBGDA]\|")
 _CHORD_DIAGRAM_RE = re.compile(r"^\s*\|[-0-9xXhpb/\\~() ]+\|\s*$")
@@ -157,11 +158,28 @@ _COMMENTARY_LINE_RE = re.compile(
     r"tab\s+from\b|"
     r"note\b|"
     r"received:\s+from\b|"
+    r"spotify\s+link:|"
+    r"youtube\s+link:|"
+    r"from\s+the\s+album\b|"
+    r"capo(?:\s+on|\s+\d)|"
+    r"suggestions:|"
+    r"njoy\b|"
+    r"\[?\s*tab\s+from:\s*https?://|"
+    r"#*\s*this\s+file\s+is\s+the\s+author(?:'|’)s\s+own\s+work\b|"
+    r"#*-*\s*please\s+note\s*-*#*|"
     r"this\s+is\s+the\b|"
+    r"this\s+is\s+close\s+enough\b|"
+    r"this\s+is\s+an\s+awesome\s+song\b|"
     r"when\s+playing\b|"
     r"i\s+prefer\b|"
     r"i\s+added\b|"
+    r"i\s+imagine\s+this\s+tab\b|"
     r"also,\s+i(?:'|’)m\s+not\s+certain\b|"
+    r"if\s+anyone\s+can\s+help\b|"
+    r"one\s+more\s+gem\s+transcribed\b|"
+    r"after\s+this\s+bit\b|"
+    r"the\s+chords\s+are\s+played\b|"
+    r"so\s+that(?:'|’)s\s+the\s+main\b|"
     r"sounds\s+like\b|"
     r"chords\s+used\b|"
     r"updated\s+the\s+tab\b"
@@ -172,12 +190,39 @@ _COMMENTARY_BLOCK_START_RE = re.compile(
     r"^\s*(?:"
     r"\(?\s*tab\s+from\b|"
     r"note:|"
+    r"spotify\s+link:|"
+    r"youtube\s+link:|"
+    r"from\s+the\s+album\b|"
+    r"\[?\s*tab\s+from:\s*https?://|"
+    r"capo(?:\s+on|\s+\d)|"
+    r"key:|"
+    r"voicings:|"
+    r"suggestions:|"
+    r"njoy\b|"
+    r"#*\s*this\s+file\s+is\s+the\s+author(?:'|’)s\s+own\s+work\b|"
+    r"seeing\s+as\s+how\b|"
+    r"suede\s+-\s+the\s+wild\s+ones\b|"
+    r"[A-Za-z0-9 .&',!?/()+-]+\s+-\s+[A-Za-z0-9 .&',!?/()+-]+\s*$|"
     r"this\s+is\s+the\b|"
+    r"this\s+song\b|"
+    r"this\s+is\s+close\s+enough\b|"
+    r"this\s+is\s+an\s+awesome\s+song\b|"
     r"in\s+the\s+recording\b|"
     r"i\s+prefer\b|"
+    r"i\s+been\s+searching\b|"
+    r"i\s+imagine\s+this\s+tab\b|"
+    r"so\s+i\s+made\s+my\s+own\b|"
+    r"so\s+that(?:'|’)s\s+the\s+main\b|"
+    r"sounds\s+best\b|"
+    r"if\s+anyone\s+can\s+help\b|"
+    r"one\s+more\s+gem\s+transcribed\b|"
+    r"after\s+this\s+bit\b|"
+    r"throughout\s+the\s+song\b|"
+    r"the\s+chords\s+are\s+played\b|"
+    r"the\s+strumming\s+pattern\b|"
     r"four\s+chords\s+for\s+the\s+whole\s+song\b|"
     r"david\s+bowie\s+lyrics\s+as\s+written\b|"
-    r"the\s+chords\s+repeat\s+themselves\b|"
+    r"\(?the\s+chords\s+repeat\s+themselves\b|"
     r"also,\s+i(?:'|’)m\s+not\s+certain\b|"
     r"when\s+playing\b|"
     r"updated\s+the\s+tab\b"
@@ -185,6 +230,16 @@ _COMMENTARY_BLOCK_START_RE = re.compile(
     flags=re.IGNORECASE,
 )
 _ASTERISK_SEPARATOR_RE = re.compile(r"^\s*\*{8,}\s*$")
+_DASH_SEPARATOR_RE = re.compile(r"^\s*-{8,}\s*$")
+_HASH_SEPARATOR_RE = re.compile(r"^\s*#[-#]{8,}\s*$")
+_UNDERSCORE_SEPARATOR_RE = re.compile(r"^\s*_{8,}\s*$")
+_INLINE_BRACKETED_CHORD_RE = re.compile(
+    r"\[(?:[A-Ha-h](?:#|b)?[A-Za-z0-9+#b]*(?:/[A-Ha-h](?:#|b)?)?|[0-9xX]{4,})\]"
+)
+_INLINE_COMMENTARY_PAREN_RE = re.compile(
+    r"\s*\((?:this\s+is\s+just|the\s+chords\s+repeat|one,\s*two,\s*three,\s*four)[^)]*\)",
+    flags=re.IGNORECASE,
+)
 
 
 def _is_non_musical_chord_line(line):
@@ -196,6 +251,9 @@ def _is_non_musical_chord_line(line):
         or _CHORD_DIAGRAM_RE.match(stripped)
         or _BEAT_COUNT_RE.match(stripped)
         or _ASTERISK_SEPARATOR_RE.match(stripped)
+        or _DASH_SEPARATOR_RE.match(stripped)
+        or _HASH_SEPARATOR_RE.match(stripped)
+        or _UNDERSCORE_SEPARATOR_RE.match(stripped)
         or _COMMENTARY_LINE_RE.match(stripped)
     )
 
@@ -241,6 +299,13 @@ def _is_chord_only_line(line):
     )
 
 
+def _chord_token_count(line):
+    stripped = line.strip()
+    if not stripped:
+        return 0
+    return len([token for token in re.split(r"\s+", stripped) if token])
+
+
 def _collapse_vertical_chord_runs(lines):
     collapsed = []
     run = []
@@ -252,7 +317,7 @@ def _collapse_vertical_chord_runs(lines):
             run = []
 
     for line in lines:
-        if _is_chord_only_line(line):
+        if _is_chord_only_line(line) and _chord_token_count(line) <= 2:
             run.append(line)
             continue
         if run and line.strip():
@@ -263,6 +328,35 @@ def _collapse_vertical_chord_runs(lines):
 
     flush_run()
     return collapsed
+
+
+def _expand_slash_compacted_chord_lines(lines):
+    expanded = []
+
+    for line in lines:
+        stripped = line.strip()
+        if " / " not in stripped:
+            expanded.append(line)
+            continue
+
+        segments = [segment.strip() for segment in stripped.split(" / ") if segment.strip()]
+        if segments and all(_is_chord_only_line(segment) for segment in segments):
+            expanded.extend(segments)
+            continue
+
+        expanded.append(line)
+
+    return expanded
+
+
+def _strip_inline_bracketed_chords(lines):
+    cleaned = []
+    for line in lines:
+        updated = _INLINE_BRACKETED_CHORD_RE.sub("", line)
+        updated = _INLINE_COMMENTARY_PAREN_RE.sub("", updated)
+        updated = re.sub(r"\s{2,}", " ", updated).rstrip()
+        cleaned.append(updated)
+    return cleaned
 
 def clean_chords(chords):
     """Clean the chords by removing unnecessary introductory lines, email headers, and only markup tags like [ch], [tab], etc. (not chords like [G])."""
@@ -288,6 +382,8 @@ def clean_chords(chords):
     lines = [line.rstrip() for line in chords.split("\n")]
     lines = _strip_commentary_blocks(lines)
     lines = [line for line in lines if not _is_non_musical_chord_line(line)]
+    lines = _strip_inline_bracketed_chords(lines)
+    lines = _expand_slash_compacted_chord_lines(lines)
     lines = _collapse_vertical_chord_runs(lines)
     out = []
     blank_run = 0

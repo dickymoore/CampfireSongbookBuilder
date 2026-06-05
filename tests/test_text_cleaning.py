@@ -136,3 +136,90 @@ class TestTextCleaning(unittest.TestCase):
         cleaned = clean_chords(chords)
 
         self.assertEqual(cleaned, "Am\nLine\n")
+
+    def test_clean_chords_removes_link_and_title_preamble_block(self):
+        chords = (
+            "From the album \"Let It Bee\" (1988)\n"
+            "Spotify link: https://example.com\n"
+            "Voice of the Beehive - I Say Nothing\n"
+            "D\n"
+            "Lyric line\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "D\nLyric line\n")
+
+    def test_clean_chords_removes_dash_separator_lines(self):
+        chords = (
+            "-----------------------------\n"
+            "Am\n"
+            "Line\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "Am\nLine\n")
+
+    def test_clean_chords_removes_hash_separator_and_ug_disclaimer_lines(self):
+        chords = (
+            "##This file is the author's own work and represents their interpretation of the #\n"
+            "#------------------------------------------------------------------------------##\n"
+            "Am\n"
+            "Line\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "Am\nLine\n")
+
+    def test_clean_chords_removes_bracketed_tab_from_link(self):
+        chords = (
+            "[ Tab from: http://www.guitartabs.cc/example ]\n"
+            "Am\n"
+            "Line\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "Am\nLine\n")
+
+    def test_clean_chords_removes_capo_and_please_note_lines(self):
+        chords = (
+            "Capo on 2. Closest thing I could think of.\n"
+            "#----------------------------------PLEASE NOTE---------------------------------#\n"
+            "Am\n"
+            "Line\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "Am\nLine\n")
+
+    def test_clean_chords_removes_inline_parenthetical_commentary(self):
+        chords = (
+            "C, Am, C, Am (This is just an estimation of what's going on with the synth part.)\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "C, Am, C, Am\n")
+
+    def test_clean_chords_expands_slash_compacted_chord_only_lines(self):
+        chords = (
+            "C G D / C G D / Em Bm C\n"
+            "Lyric line\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "C G D\nC G D\nEm Bm C\nLyric line\n")
+
+    def test_clean_chords_strips_inline_bracketed_chords(self):
+        chords = (
+            "[Cmaj7]we are in love [H7sus4]we are in love [242222]\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "we are in love we are in love\n")
