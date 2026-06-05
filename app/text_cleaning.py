@@ -5,6 +5,12 @@ def _normalize_line_endings(text):
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
+def _strip_tab_blocks(text):
+    text = re.sub(r"(?is)\{sot\}.*?\{eot\}", "", text)
+    text = re.sub(r"(?im)^\s*(?:riff\s*[A-Z0-9]*|intro riff|main riff|guitar solo|solo|bass only|guitar|break)\s*:?\s*$", "", text)
+    return text
+
+
 def remove_scraped_prefix_artifacts(lyrics):
     """Remove deterministic scraped prefixes like translation lists, contributor counts, and embed counters."""
     lyrics = _normalize_line_endings(lyrics)
@@ -233,9 +239,6 @@ _ASTERISK_SEPARATOR_RE = re.compile(r"^\s*\*{8,}\s*$")
 _DASH_SEPARATOR_RE = re.compile(r"^\s*-{8,}\s*$")
 _HASH_SEPARATOR_RE = re.compile(r"^\s*#[-#]{8,}\s*$")
 _UNDERSCORE_SEPARATOR_RE = re.compile(r"^\s*_{8,}\s*$")
-_INLINE_BRACKETED_CHORD_RE = re.compile(
-    r"\[(?:[A-Ha-h](?:#|b)?[A-Za-z0-9+#b]*(?:/[A-Ha-h](?:#|b)?)?|[0-9xX]{4,})\]"
-)
 _INLINE_COMMENTARY_PAREN_RE = re.compile(
     r"\s*\((?:this\s+is\s+just|the\s+chords\s+repeat|one,\s*two,\s*three,\s*four)[^)]*\)",
     flags=re.IGNORECASE,
@@ -349,11 +352,10 @@ def _expand_slash_compacted_chord_lines(lines):
     return expanded
 
 
-def _strip_inline_bracketed_chords(lines):
+def _strip_inline_parenthetical_commentary(lines):
     cleaned = []
     for line in lines:
-        updated = _INLINE_BRACKETED_CHORD_RE.sub("", line)
-        updated = _INLINE_COMMENTARY_PAREN_RE.sub("", updated)
+        updated = _INLINE_COMMENTARY_PAREN_RE.sub("", line)
         updated = re.sub(r"\s{2,}", " ", updated).rstrip()
         cleaned.append(updated)
     return cleaned
@@ -363,6 +365,7 @@ def clean_chords(chords):
     if chords is None or not isinstance(chords, str):
         return ''
     chords = _normalize_line_endings(chords)
+    chords = _strip_tab_blocks(chords)
     # Remove lines starting with {t:...} and {st:...}
     chords = re.sub(r'{t:.*?}\n', '', chords)
     chords = re.sub(r'{st:.*?}\n', '', chords)
@@ -382,7 +385,7 @@ def clean_chords(chords):
     lines = [line.rstrip() for line in chords.split("\n")]
     lines = _strip_commentary_blocks(lines)
     lines = [line for line in lines if not _is_non_musical_chord_line(line)]
-    lines = _strip_inline_bracketed_chords(lines)
+    lines = _strip_inline_parenthetical_commentary(lines)
     lines = _expand_slash_compacted_chord_lines(lines)
     lines = _collapse_vertical_chord_runs(lines)
     out = []

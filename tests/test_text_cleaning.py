@@ -205,6 +205,21 @@ class TestTextCleaning(unittest.TestCase):
 
         self.assertEqual(cleaned, "C, Am, C, Am\n")
 
+    def test_clean_chords_removes_sot_eot_tab_blocks_and_riff_labels(self):
+        chords = (
+            "Intro Riff:\n"
+            "{sot}\n"
+            "e|-----|\n"
+            "B|-----|\n"
+            "{eot}\n"
+            "Am\n"
+            "Lyric line\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "Am\nLyric line\n")
+
     def test_clean_chords_expands_slash_compacted_chord_only_lines(self):
         chords = (
             "C G D / C G D / Em Bm C\n"
@@ -215,11 +230,11 @@ class TestTextCleaning(unittest.TestCase):
 
         self.assertEqual(cleaned, "C G D\nC G D\nEm Bm C\nLyric line\n")
 
-    def test_clean_chords_strips_inline_bracketed_chords(self):
+    def test_clean_chords_preserves_inline_bracketed_chords(self):
         chords = (
             "[Cmaj7]we are in love [H7sus4]we are in love [242222]\n"
         )
 
         cleaned = clean_chords(chords)
 
-        self.assertEqual(cleaned, "we are in love we are in love\n")
+        self.assertEqual(cleaned, "[Cmaj7]we are in love [H7sus4]we are in love [242222]\n")
