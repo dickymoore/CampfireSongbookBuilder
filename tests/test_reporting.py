@@ -158,6 +158,7 @@ class TestReporting(unittest.TestCase):
         self.assertEqual(report["summary"]["counts"]["questionable"], 1)
         self.assertEqual(report["summary"]["counts"]["missing"], 1)
         self.assertEqual(report["summary"]["counts"]["invalid_input"], 1)
+        self.assertEqual(report["summary"]["counts"]["chords_wrap_risk_song"], 0)
         self.assertEqual(
             report["summary"]["clean_songs"][0]["song_key"],
             "The Campfire Trio - Trail Song",
@@ -466,6 +467,7 @@ class TestReporting(unittest.TestCase):
         self.assertEqual(report["summary"]["counts"]["clean"], 3)
         self.assertEqual(report["summary"]["counts"]["excluded_clean"], 2)
         self.assertEqual(report["summary"]["counts"]["excluded_due_to_missing_counterpart"], 1)
+        self.assertEqual(report["summary"]["counts"]["chords_wrap_risk_song"], 0)
         self.assertEqual(
             [song["song_key"] for song in report["summary"]["clean_songs"]],
             [
@@ -489,6 +491,33 @@ class TestReporting(unittest.TestCase):
         self.assertIsNone(report["summary"]["invalid_input_rows"][0]["raw_artist"])
         self.assertIsNone(report["summary"]["invalid_input_rows"][0]["raw_title"])
         json.dumps(report, allow_nan=False)
+
+    def test_build_traceable_quality_report_includes_chords_wrap_risk_audit(self):
+        report = build_traceable_quality_report(
+            generation_results=[],
+            source="generate_from_cache",
+            generated_at="2026-05-19T15:14:19+01:00",
+            chords_layout_audit=[
+                {
+                    "song_key": "The Campfire Trio - Trail Song",
+                    "artist": "The Campfire Trio",
+                    "title": "Trail Song",
+                    "font_name": "Courier New",
+                    "font_size": 11,
+                    "max_safe_length": 38,
+                    "has_overlong_lines": True,
+                    "overlong_line_count": 2,
+                    "overlong_lines": [
+                        {"line_number": 1, "line_length": 50, "max_safe_length": 38, "preview": "X" * 50}
+                    ],
+                }
+            ],
+        )
+
+        self.assertEqual(report["summary"]["chords_wrap_risk_song_count"], 1)
+        self.assertEqual(report["summary"]["counts"]["chords_wrap_risk_song"], 1)
+        self.assertEqual(report["summary"]["chords_layout_audit"][0]["font_name"], "Courier New")
+        self.assertEqual(report["chords_layout_audit"][0]["overlong_line_count"], 2)
 
     def test_build_traceable_quality_report_includes_review_gate_decisions(self):
         generation_results = []

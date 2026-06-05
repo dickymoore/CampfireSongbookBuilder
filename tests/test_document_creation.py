@@ -198,6 +198,34 @@ class TestDocumentCreation(unittest.TestCase):
                 {("The Campfire Trio - Trail Song", "lyrics"), ("The Campfire Trio - Trail Song", "chords")},
             )
 
+    def test_create_document_from_cache_reports_chords_wrap_risk_audit(self):
+        song_list = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
+        chords_cache = {
+            "The Campfire Trio - Trail Song": "X" * 61 + "\nShort line"
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            output_path = tmp_path / "chords.docx"
+
+            report_data = self._run_create_document(
+                tmp_path,
+                song_list,
+                {},
+                chords_cache,
+                chords_output=output_path,
+                include_questionable=True,
+            )
+
+            self.assertEqual(len(report_data["chords_layout_audit"]), 1)
+            audit_entry = report_data["chords_layout_audit"][0]
+            self.assertEqual(audit_entry["song_key"], "The Campfire Trio - Trail Song")
+            self.assertEqual(audit_entry["font_name"], "Courier New")
+            self.assertEqual(audit_entry["font_size"], 8)
+            self.assertTrue(audit_entry["has_overlong_lines"])
+            self.assertEqual(audit_entry["overlong_line_count"], 1)
+            self.assertEqual(audit_entry["overlong_lines"][0]["line_number"], 1)
+
     def test_create_document_from_cache_includes_questionable_content_with_override(self):
         song_list = [
             {"Artist": "The Campfire Trio", "Title": "Trail Song"},

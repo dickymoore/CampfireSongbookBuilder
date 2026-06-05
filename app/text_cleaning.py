@@ -148,6 +148,82 @@ MARKUP_TAGS = [
 _CHORD_TOKEN_RE = re.compile(
     r"^[A-Ga-g](?:#|b)?(?:maj|min|m|sus|add|dim|aug)?[0-9]*(?:/[A-Ga-g](?:#|b)?)?$"
 )
+_TAB_STAFF_RE = re.compile(r"^\s*[eEBGDA]\|")
+_CHORD_DIAGRAM_RE = re.compile(r"^\s*\|[-0-9xXhpb/\\~() ]+\|\s*$")
+_BEAT_COUNT_RE = re.compile(r"^(?:\s*\[\d+\]\s*\[\+\]\s*){4,}$")
+_COMMENTARY_LINE_RE = re.compile(
+    r"^\s*(?:"
+    r"tab(?:bed)?\s+by\b|"
+    r"tab\s+from\b|"
+    r"note\b|"
+    r"received:\s+from\b|"
+    r"this\s+is\s+the\b|"
+    r"when\s+playing\b|"
+    r"i\s+prefer\b|"
+    r"i\s+added\b|"
+    r"also,\s+i(?:'|’)m\s+not\s+certain\b|"
+    r"sounds\s+like\b|"
+    r"chords\s+used\b|"
+    r"updated\s+the\s+tab\b"
+    r")",
+    flags=re.IGNORECASE,
+)
+_COMMENTARY_BLOCK_START_RE = re.compile(
+    r"^\s*(?:"
+    r"\(?\s*tab\s+from\b|"
+    r"note:|"
+    r"this\s+is\s+the\b|"
+    r"in\s+the\s+recording\b|"
+    r"i\s+prefer\b|"
+    r"four\s+chords\s+for\s+the\s+whole\s+song\b|"
+    r"david\s+bowie\s+lyrics\s+as\s+written\b|"
+    r"the\s+chords\s+repeat\s+themselves\b|"
+    r"also,\s+i(?:'|’)m\s+not\s+certain\b|"
+    r"when\s+playing\b|"
+    r"updated\s+the\s+tab\b"
+    r")",
+    flags=re.IGNORECASE,
+)
+_ASTERISK_SEPARATOR_RE = re.compile(r"^\s*\*{8,}\s*$")
+
+
+def _is_non_musical_chord_line(line):
+    stripped = line.strip()
+    if not stripped:
+        return False
+    return bool(
+        _TAB_STAFF_RE.match(stripped)
+        or _CHORD_DIAGRAM_RE.match(stripped)
+        or _BEAT_COUNT_RE.match(stripped)
+        or _ASTERISK_SEPARATOR_RE.match(stripped)
+        or _COMMENTARY_LINE_RE.match(stripped)
+    )
+
+
+def _strip_commentary_blocks(lines):
+    stripped_lines = []
+    skipping = False
+
+    for line in lines:
+        stripped = line.strip()
+        if skipping:
+            if (
+                not stripped
+                or stripped.startswith("[")
+                or _is_chord_only_line(line)
+                or _CHORD_TOKEN_RE.match(stripped)
+            ):
+                skipping = False
+            else:
+                continue
+
+        if _COMMENTARY_BLOCK_START_RE.match(stripped):
+            skipping = True
+            continue
+
+        stripped_lines.append(line)
+
+    return stripped_lines
 
 
 def _is_chord_only_line(line):
@@ -210,6 +286,8 @@ def clean_chords(chords):
 
     # Normalize whitespace without destroying chord/lyric separation.
     lines = [line.rstrip() for line in chords.split("\n")]
+    lines = _strip_commentary_blocks(lines)
+    lines = [line for line in lines if not _is_non_musical_chord_line(line)]
     lines = _collapse_vertical_chord_runs(lines)
     out = []
     blank_run = 0

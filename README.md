@@ -55,52 +55,92 @@ Campfire Songbook Builder is a Python-based application designed to generate son
    }
    ```
 
-6. Place your song list in `data/src/CampfireSongs.csv`. The CSV file should have the following columns: `Artist`, `Title`, and optionally `Skip` and `Favourite`.
+6. Place your song list in `data/src/CampfireSongs.csv`. The CSV file should have the following columns: `Artist`, `Title`, and optionally `Skip`, `Favourite`, and `Tags`.
    Use `Favourite` for simple per-song membership in favourite-only workflows. Truthy values such as `yes`, `true`, or `1` are treated as favourite rows.
+   Use `Tags` for arbitrary grouping such as `Jessica Protest Karaoke` or `Dicky Karaoke`. Tags are parsed from comma / semicolon / pipe separated values.
 
 ## Usage
 
-Run the application from the command line with various options:
+Run the application from the repo root.
 
-- To get song titles and character lengths of the lyrics:
-  ```sh
-  python main.py --get-song-info
-  ```
+### Core generation
 
-- To generate a document with lyrics only:
-  ```sh
-  python main.py --lyrics-only
-  ```
-
-- To generate a document with chords only:
-  ```sh
-  python main.py --chords-only
-  ```
-
-- To generate documents from the cache:
+- Generate full books from the current cache using the default quality gate:
   ```sh
   python main.py --generate-from-cache
   ```
 
-- To generate documents from the cache and also produce PDFs:
+- Generate full books from cache and produce PDFs:
   ```sh
   python main.py --generate-from-cache --pdf
   ```
 
-- To restrict any run to songs marked as favourites in the source CSV:
+- Generate full books from cache, including `questionable` content and excluding only true `missing` / `unusable` content:
   ```sh
-  python main.py --favourites-only --generate-from-cache
+  python main.py --generate-from-cache --pdf --include-questionable
   ```
 
-- To generate favourite-only DOCX and PDF outputs:
+  This is the mode to use if you want broad output and do not want the quality gate to suppress noisy-but-present songs.
+
+- Rebuild the quality state from the current cache and write a fresh report:
+  ```sh
+  python main.py --refresh-quality-state
+  ```
+
+### Lyrics-only / chords-only
+
+- Generate lyrics only:
+  ```sh
+  python main.py --lyrics-only
+  ```
+
+- Generate chords only:
+  ```sh
+  python main.py --chords-only
+  ```
+
+- Get song titles and lyric character counts:
+  ```sh
+  python main.py --get-song-info
+  ```
+
+### Filtering by favourites, selections, and tags
+
+- Restrict any run to songs marked as favourites:
   ```sh
   python main.py --favourites-only --generate-from-cache --pdf
   ```
 
-- To restrict any run to a named selection from `data/selections/<name>.json`:
+- Restrict any run to a named selection from `data/selections/<name>.json`:
   ```sh
-  python main.py --selection trip-night --generate-from-cache
+  python main.py --selection trip-night --generate-from-cache --pdf
   ```
+
+- Restrict any run to songs whose tags contain a case-insensitive match:
+  ```sh
+  python main.py --tags "Jessica Protest Karaoke" --generate-from-cache --pdf
+  python main.py --tags "Dicky Karaoke" --generate-from-cache --pdf
+  python main.py --tags "Karaoke" --generate-from-cache --pdf
+  ```
+
+  Tag matching is substring-based, so `Karaoke` will match both `Jessica Protest Karaoke` and `Dicky Karaoke`.
+
+- Combine tag filtering with `--include-questionable`:
+  ```sh
+  python main.py --tags "Karaoke" --generate-from-cache --pdf --include-questionable
+  ```
+
+- Combine tag filtering with favourites:
+  ```sh
+  python main.py --favourites-only --tags "Karaoke" --generate-from-cache --pdf
+  ```
+
+Generated file names reflect the filter where possible, for example:
+
+- `data/output/Favourites_Lyrics_Document.pdf`
+- `data/output/Selection_trip-night_Chords_Document.pdf`
+- `data/output/Tag_Karaoke_Lyrics_Document.pdf`
+- `data/output/Favourites_Tag_Karaoke_Chords_Document.pdf`
 
 ### Manual Lyrics / Chords Import
 
@@ -128,6 +168,24 @@ What each step does:
 - `--import-manual` parses pasted sections such as `# Artist - Title lyrics`, `# Title chords`, or `# Title by Artist` and writes deterministic local overrides.
 - `--cache-only` refreshes the cache from those manual overrides so later generation uses the cleaned local text.
 - `--generate-from-cache --pdf` builds the DOCX and PDF outputs from the refreshed cache.
+
+If you want the refreshed manual content to be included even when it is still scored as `questionable`, add `--include-questionable` on the generation step:
+
+```sh
+python main.py --import-manual data/manual_import.txt
+python main.py --cache-only
+python main.py --generate-from-cache --pdf --include-questionable
+```
+
+### Duplicate detection
+
+To scan the source catalogue for exact duplicates and fuzzy near-duplicates:
+
+```sh
+python main.py --find-duplicate-songs
+```
+
+This writes a report to `data/review/reports/song_duplicate_report-YYYYMMDD.md`.
 
 Current output files:
 

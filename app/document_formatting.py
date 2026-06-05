@@ -13,10 +13,12 @@ def set_document_margins(document, margin_in_inches):
         section.left_margin = Inches(margin_in_inches)
         section.right_margin = Inches(margin_in_inches)
 
-def set_paragraph_font(paragraph, font_size):
+def set_paragraph_font(paragraph, font_size, font_name=None):
     """Set the font size of a paragraph."""
     for run in paragraph.runs:
         run.font.size = Pt(font_size)
+        if font_name:
+            run.font.name = font_name
 
 
 def _set_cell_text(cell, text, font_size, bold=False):
@@ -126,24 +128,24 @@ def _get_or_add_cols(sect_pr):
     return cols
 
 
-def create_two_column_section(target):
+def create_two_column_section(target, column_gap_inches=0.5):
     """Configure a document or section to use two columns."""
     sections = getattr(target, "sections", None)
     if sections is not None:
         for section in sections:
-            create_two_column_section(section)
+            create_two_column_section(section, column_gap_inches=column_gap_inches)
         return
 
     sectPr = target._sectPr
     cols = _get_or_add_cols(sectPr)
     cols.set(qn('w:num'), '2')
-    cols.set(qn('w:space'), '720')
+    cols.set(qn('w:space'), str(int(column_gap_inches * 1440)))
 
 
 def add_contents_page(document, songs):
     """Add a deterministic contents table before the song content."""
     heading = document.add_paragraph("Contents")
-    set_paragraph_font(heading, 16)
+    set_paragraph_font(heading, 15)
 
     table = document.add_table(rows=1, cols=2)
     table.autofit = False
@@ -152,10 +154,10 @@ def add_contents_page(document, songs):
     _set_table_borders(table)
     table.columns[0].width = Inches(6.2)
     table.columns[1].width = Inches(0.8)
-    header_song = _set_cell_text(table.rows[0].cells[0], "Song", 10, bold=True)
-    header_page = _set_cell_text(table.rows[0].cells[1], "Page", 10, bold=True)
-    set_paragraph_font(header_song, 10)
-    set_paragraph_font(header_page, 10)
+    header_song = _set_cell_text(table.rows[0].cells[0], "Song", 9, bold=True)
+    header_page = _set_cell_text(table.rows[0].cells[1], "Page", 9, bold=True)
+    set_paragraph_font(header_song, 9)
+    set_paragraph_font(header_page, 9)
     table.rows[0].cells[0].width = Inches(6.2)
     table.rows[0].cells[1].width = Inches(0.8)
     _set_cell_no_wrap(table.rows[0].cells[0])
@@ -181,8 +183,8 @@ def add_contents_page(document, songs):
         page_paragraph = row[1].paragraphs[0]
         page_paragraph.text = ""
         add_page_ref_field(page_paragraph, bookmark_name)
-        set_paragraph_font(song_paragraph, 9)
-        set_paragraph_font(page_paragraph, 9)
+        set_paragraph_font(song_paragraph, 8)
+        set_paragraph_font(page_paragraph, 8)
 
 
 def add_header_footer(document):

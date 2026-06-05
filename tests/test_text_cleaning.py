@@ -86,3 +86,53 @@ class TestTextCleaning(unittest.TestCase):
         cleaned = clean_chords(chords)
 
         self.assertEqual(cleaned, "Intro 1\nF / Am / F / Am\nToday I\n")
+
+    def test_clean_chords_removes_tab_staff_and_commentary(self):
+        chords = (
+            "Tab from: somewhere\n"
+            "e|----------------|\n"
+            "B|----------------|\n"
+            "When playing Em, add an accent\n"
+            "Em\n"
+            "Hello there\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "Em\nHello there\n")
+
+    def test_clean_chords_removes_chord_diagram_and_beat_count_lines(self):
+        chords = (
+            "Chords used :\n"
+            "|---0----0------0-----0---0---|\n"
+            "[1] [+] [2] [+] [3] [+] [4] [+] [1] [+] [2] [+] [3] [+] [4] [+]\n"
+            "Am\n"
+            "A lyric line\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "Am\nA lyric line\n")
+
+    def test_clean_chords_removes_multiline_commentary_block(self):
+        chords = (
+            "In the recording off of Bryter Layter it sounds like Nick is using an open tuning of some sort.\n"
+            "I prefer to stay in standard tuning when I play so here's how I have written out the chords.\n"
+            "A\n"
+            "Real line\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "A\nReal line\n")
+
+    def test_clean_chords_removes_asterisk_separator_lines(self):
+        chords = (
+            "**************\n"
+            "Am\n"
+            "Line\n"
+        )
+
+        cleaned = clean_chords(chords)
+
+        self.assertEqual(cleaned, "Am\nLine\n")

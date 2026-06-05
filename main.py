@@ -80,6 +80,7 @@ def _write_generation_report(report_data):
         document_verification=report_data.get("document_verification", []),
         review_gate_decisions=report_data.get("review_gate_decisions", []),
         content_scores=report_data.get("content_scores", []),
+        chords_layout_audit=report_data.get("chords_layout_audit", []),
     )
     report_path = write_traceable_quality_report(report)
     print(summarize_traceable_quality_report(report, report_path))

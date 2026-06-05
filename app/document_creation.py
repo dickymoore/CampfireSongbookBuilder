@@ -47,6 +47,15 @@ REVIEW_DECISIONS_PATH = DEFAULT_REVIEW_DECISIONS_PATH
 DOCUMENT_QUALITY_PATH = DEFAULT_DOCUMENT_QUALITY_PATH
 CONTENT_SCORES_PATH = DEFAULT_CONTENT_SCORES_PATH
 DEFAULT_REPORT_SOURCE = "generate_from_cache"
+CHORDS_MONOSPACE_FONT = "Courier New"
+CHORDS_BODY_FONT_SIZE = 10
+CHORDS_MIN_BODY_FONT_SIZE = 8
+CHORDS_COLUMN_COUNT = 2
+CHORDS_COLUMN_GAP_INCHES = 0.3
+PAGE_WIDTH_INCHES = 8.5
+DEFAULT_MARGIN_INCHES = 0.5
+CHORDS_MARGIN_INCHES = 0.4
+MONOSPACE_CHAR_WIDTH_FACTOR = 0.55
 
 
 def _has_missing_or_unusable_signal(generation_result):
@@ -74,6 +83,55 @@ def _xml_safe_text(value):
         for ch in value
         if ch in ("\n", "\r", "\t") or ord(ch) >= 32
     )
+
+
+def _max_safe_chords_line_length(font_size=None):
+    effective_font_size = font_size or CHORDS_BODY_FONT_SIZE
+    usable_width = PAGE_WIDTH_INCHES - (CHORDS_MARGIN_INCHES * 2)
+    total_gap = CHORDS_COLUMN_GAP_INCHES * (CHORDS_COLUMN_COUNT - 1)
+    column_width_points = ((usable_width - total_gap) / CHORDS_COLUMN_COUNT) * 72
+    monospace_char_width_points = effective_font_size * MONOSPACE_CHAR_WIDTH_FACTOR
+    return max(1, int(column_width_points // monospace_char_width_points))
+
+
+def _audit_chords_wrapping(artist, title, content):
+    safe_content = _xml_safe_text(content) or ""
+    lines = safe_content.split("\n")
+
+    chosen_font_size = CHORDS_BODY_FONT_SIZE
+    overlong_lines = []
+    max_chars = _max_safe_chords_line_length(chosen_font_size)
+
+    for font_size in range(CHORDS_BODY_FONT_SIZE, CHORDS_MIN_BODY_FONT_SIZE - 1, -1):
+        max_chars = _max_safe_chords_line_length(font_size)
+        candidate_overlong_lines = []
+        for line_number, line in enumerate(lines, start=1):
+            line_length = len(line)
+            if line_length > max_chars:
+                candidate_overlong_lines.append(
+                    {
+                        "line_number": line_number,
+                        "line_length": line_length,
+                        "max_safe_length": max_chars,
+                        "preview": line[:120],
+                    }
+                )
+        chosen_font_size = font_size
+        overlong_lines = candidate_overlong_lines
+        if not overlong_lines:
+            break
+
+    return {
+        "artist": artist,
+        "title": title,
+        "song_key": derive_song_key(artist, title),
+        "font_name": CHORDS_MONOSPACE_FONT,
+        "font_size": chosen_font_size,
+        "max_safe_length": max_chars,
+        "has_overlong_lines": bool(overlong_lines),
+        "overlong_line_count": len(overlong_lines),
+        "overlong_lines": overlong_lines,
+    }
 
 
 def _song_value(song, preferred_key, fallback_key):
@@ -130,7 +188,14 @@ def _markdown_song_block(artist, title, content):
     ]
 
 
-def _render_song_item(document, song_item, heading_font_size, body_font_size, bookmark_id):
+def _render_song_item(
+    document,
+    song_item,
+    heading_font_size,
+    body_font_size,
+    bookmark_id,
+    body_font_name=None,
+):
     artist = song_item["artist"]
     title = song_item["title"]
     content = _xml_safe_text(song_item["content"])
@@ -146,7 +211,7 @@ def _render_song_item(document, song_item, heading_font_size, body_font_size, bo
         if i > 0:
             paragraph.add_run().add_break()
         paragraph.add_run(line)
-    set_paragraph_font(paragraph, body_font_size)
+    set_paragraph_font(paragraph, body_font_size, font_name=body_font_name)
 
 
 def _write_markdown_document(output_path, lines):
@@ -210,7 +275,7 @@ def create_document_from_cache(
     if lyrics_output:
         logger.debug("Initializing lyrics document")
         lyrics_document = Document()
-        set_document_margins(lyrics_document, 0.5)
+        set_document_margins(lyrics_document, DEFAULT_MARGIN_INCHES)
         add_header_footer(lyrics_document)
         lyrics_markdown_lines = []
         lyrics_render_items = []
@@ -218,7 +283,7 @@ def create_document_from_cache(
     if chords_output:
         logger.debug("Initializing chords document")
         chords_document = Document()
-        set_document_margins(chords_document, 0.5)
+        set_document_margins(chords_document, CHORDS_MARGIN_INCHES)
         add_header_footer(chords_document)
         chords_markdown_lines = []
         chords_render_items = []
@@ -229,6 +294,7 @@ def create_document_from_cache(
     document_verification_records = []
     remove_stale_verification_paths = []
     content_score_records = []
+    chords_layout_audit = []
 
     for song in songs_to_process:
         artist = _song_artist(song)
@@ -420,10 +486,13 @@ def create_document_from_cache(
         if chords_output and chords_generation_result["included"] and isinstance(chords, str) and chords != "":
             chords = clean_chords(chords)
             logger.debug("Adding chords for %s by %s", title, artist)
+            chords_audit = _audit_chords_wrapping(artist, title, chords)
+            chords_layout_audit.append(chords_audit)
             pending_chords_render_item = {
                 "artist": artist,
                 "title": title,
                 "content": chords,
+                "body_font_size": chords_audit["font_size"],
             }
             pending_chords_markdown_lines = _markdown_song_block(artist, title, chords)
         elif chords_output:
@@ -463,9 +532,12 @@ def create_document_from_cache(
 
     if lyrics_output:
         add_contents_page(lyrics_document, lyrics_render_items)
-        create_two_column_section(lyrics_document.add_section(WD_SECTION.NEW_PAGE))
+        create_two_column_section(
+            lyrics_document.add_section(WD_SECTION.NEW_PAGE),
+            column_gap_inches=0.5,
+        )
         for index, song_item in enumerate(lyrics_render_items, start=1):
-            _render_song_item(lyrics_document, song_item, 14, 12, index)
+            _render_song_item(lyrics_document, song_item, 13, 11, index)
         lyrics_markdown_path = Path(lyrics_output).with_suffix(".md")
         _write_markdown_document(lyrics_markdown_path, lyrics_markdown_lines)
         document_verification_records.append(
@@ -510,9 +582,19 @@ def create_document_from_cache(
 
     if chords_output:
         add_contents_page(chords_document, chords_render_items)
-        create_two_column_section(chords_document.add_section(WD_SECTION.NEW_PAGE))
+        create_two_column_section(
+            chords_document.add_section(WD_SECTION.NEW_PAGE),
+            column_gap_inches=CHORDS_COLUMN_GAP_INCHES,
+        )
         for index, song_item in enumerate(chords_render_items, start=1):
-            _render_song_item(chords_document, song_item, 14, 12, index)
+            _render_song_item(
+                chords_document,
+                song_item,
+                13,
+                song_item.get("body_font_size", CHORDS_BODY_FONT_SIZE),
+                index,
+                body_font_name=CHORDS_MONOSPACE_FONT,
+            )
         chords_markdown_path = Path(chords_output).with_suffix(".md")
         _write_markdown_document(chords_markdown_path, chords_markdown_lines)
         document_verification_records.append(
@@ -611,4 +693,5 @@ def create_document_from_cache(
         "document_verification": document_verification_records,
         "review_gate_decisions": review_gate_decisions,
         "content_scores": content_score_records,
+        "chords_layout_audit": chords_layout_audit,
     }

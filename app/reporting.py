@@ -295,6 +295,7 @@ def build_traceable_quality_report(
     review_gate_decisions=None,
     content_scores=None,
     include_clean_priority=False,
+    chords_layout_audit=None,
 ):
     generated_at_value = generated_at or _now_iso()
     source_attempts_by_song = _group_source_attempts(source_attempts)
@@ -339,6 +340,11 @@ def build_traceable_quality_report(
     content_score_rows = [
         copy.deepcopy(record)
         for record in content_scores or []
+        if isinstance(record, dict)
+    ]
+    chords_layout_audit_rows = [
+        copy.deepcopy(record)
+        for record in chords_layout_audit or []
         if isinstance(record, dict)
     ]
     manual_review_gate = _build_manual_review_gate(
@@ -407,6 +413,11 @@ def build_traceable_quality_report(
         "manual_review_ready_count": manual_review_gate["ready_count"],
         "manual_review_blocked_count": manual_review_gate["blocked_count"],
         "priority_item_count": priority_report["count"],
+        "chords_wrap_risk_song_count": sum(
+            1
+            for row in chords_layout_audit_rows
+            if row.get("has_overlong_lines")
+        ),
         "counts": {
             "clean": len(clean_songs),
             "excluded_clean": len(excluded_clean_songs),
@@ -426,6 +437,11 @@ def build_traceable_quality_report(
             "manual_review_ready": manual_review_gate["ready_count"],
             "manual_review_blocked": manual_review_gate["blocked_count"],
             "priority_item": priority_report["count"],
+            "chords_wrap_risk_song": sum(
+                1
+                for row in chords_layout_audit_rows
+                if row.get("has_overlong_lines")
+            ),
         },
         "clean_songs": clean_songs,
         "excluded_clean_songs": excluded_clean_songs,
@@ -440,6 +456,7 @@ def build_traceable_quality_report(
         "review_gate_decisions": review_gate_rows,
         "manual_review_gate": manual_review_gate,
         "priority_report": priority_report,
+        "chords_layout_audit": chords_layout_audit_rows,
     }
 
     report = {
@@ -456,6 +473,7 @@ def build_traceable_quality_report(
         "manual_review_gate": manual_review_gate,
         "content_scores": content_score_rows,
         "priority_report": priority_report,
+        "chords_layout_audit": chords_layout_audit_rows,
     }
 
     return _sanitize_value(report)

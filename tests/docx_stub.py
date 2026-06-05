@@ -15,6 +15,7 @@ from pathlib import Path
 class _FakeFont:
     def __init__(self):
         self.size = None
+        self.name = None
 
 
 class _FakeStyle:
