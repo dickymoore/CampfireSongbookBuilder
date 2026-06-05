@@ -484,7 +484,6 @@ def create_document_from_cache(
             )
 
         if chords_output and chords_generation_result["included"] and isinstance(chords, str) and chords != "":
-            chords = clean_chords(chords)
             logger.debug("Adding chords for %s by %s", title, artist)
             chords_audit = _audit_chords_wrapping(artist, title, chords)
             chords_layout_audit.append(chords_audit)
