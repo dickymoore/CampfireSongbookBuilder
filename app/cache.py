@@ -2,6 +2,8 @@ import json
 import os
 import logging
 import sys
+import shutil
+from datetime import datetime
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -61,3 +63,32 @@ def jsonl_load_all(filename, value_field):
             except Exception:
                 continue
     return result
+
+
+def backup_jsonl_file(filename, backups_dir, label):
+    source = os.fspath(filename)
+    if not os.path.exists(source):
+        return None
+
+    target_dir = os.fspath(backups_dir)
+    os.makedirs(target_dir, exist_ok=True)
+
+    base_name = os.path.basename(source)
+    timestamp = datetime.now().astimezone().strftime("%Y%m%dT%H%M%S%z")
+    backup_name = f"{base_name}.{label}-{timestamp}"
+    backup_path = os.path.join(target_dir, backup_name)
+    shutil.copy2(source, backup_path)
+    return backup_path
+
+
+def jsonl_sync_entries_from_mapping(filename, value_field, mapping):
+    updated = 0
+    for key, value in mapping.items():
+        if not isinstance(key, str) or " - " not in key:
+            continue
+        if not isinstance(value, str) or not value.strip():
+            continue
+        artist, title = key.split(" - ", 1)
+        jsonl_save_entry(filename, artist.strip(), title.strip(), value, value_field)
+        updated += 1
+    return updated

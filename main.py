@@ -20,6 +20,7 @@ from app.duplicate_detection import find_song_duplicates, write_duplicate_report
 from app.source_attempts import load_source_attempts
 from app.selection_state import load_named_selection
 from app.manual_import import parse_manual_import, write_manual_json
+from app.cache import backup_jsonl_file, jsonl_sync_entries_from_mapping
 # from app.cache import load_cache  # Remove this import, not needed with JSONL
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -33,6 +34,7 @@ CHORDS_DOC_PATH = 'data/output/Chords_Document.docx'
 SELECTIONS_DIR = Path('data/selections')
 MANUAL_LYRICS_PATH = Path('data/manual_lyrics.json')
 MANUAL_CHORDS_PATH = Path('data/manual_chords.json')
+CACHE_BACKUPS_DIR = Path('data/cache/backups')
 
 
 def _resolve_output_paths(args):
@@ -117,6 +119,28 @@ def _load_caches_with_manual_overrides(include_lyrics=True, include_chords=True)
         chords_cache.update(_load_manual_override_entries(MANUAL_CHORDS_PATH))
 
     return lyrics_cache, chords_cache
+
+
+def _sync_manual_chords_to_cache():
+    manual_chords = _load_manual_override_entries(MANUAL_CHORDS_PATH)
+    if not manual_chords:
+        return {
+            "manual_entry_count": 0,
+            "updated_count": 0,
+            "backup_path": None,
+        }
+
+    backup_path = backup_jsonl_file(CHORDS_CACHE_PATH, CACHE_BACKUPS_DIR, "pre_manual_sync")
+    updated_count = jsonl_sync_entries_from_mapping(
+        CHORDS_CACHE_PATH,
+        "chords",
+        manual_chords,
+    )
+    return {
+        "manual_entry_count": len(manual_chords),
+        "updated_count": updated_count,
+        "backup_path": backup_path,
+    }
 
 
 def _selection_issue(file_path, field, reason, record=None):
@@ -236,6 +260,11 @@ def main():
         action='store_true',
         help='Analyze the source CSV for exact and fuzzy duplicate song entries and write a report',
     )
+    parser.add_argument(
+        '--sync-manual-chords-to-cache',
+        action='store_true',
+        help='Backup data/cache/chords_cache.jsonl and overwrite matching entries from data/manual_chords.json',
+    )
     args = parser.parse_args()
 
     # Load config
@@ -297,6 +326,20 @@ def main():
             MANUAL_LYRICS_PATH,
             MANUAL_CHORDS_PATH,
         )
+        return
+
+    if args.sync_manual_chords_to_cache:
+        summary = _sync_manual_chords_to_cache()
+        logging.info(
+            "Synced %d manual chord entr%s into %s.",
+            summary["updated_count"],
+            "y" if summary["updated_count"] == 1 else "ies",
+            CHORDS_CACHE_PATH,
+        )
+        if summary["backup_path"]:
+            logging.info("Chord cache backup saved to %s.", summary["backup_path"])
+        else:
+            logging.info("No existing chord cache file was present to back up.")
         return
 
     # Load songs

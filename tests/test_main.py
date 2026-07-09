@@ -316,6 +316,33 @@ class TestMain(unittest.TestCase):
         self.assertEqual(lyrics_cache["The Campfire Trio - Trail Song"], "manual lyrics\n")
         self.assertEqual(chords_cache["The Campfire Trio - Trail Song"], "manual chords\n")
 
+    def test_sync_manual_chords_to_cache_backs_up_then_updates_cache(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            manual_chords = Path(tmp_dir) / "manual_chords.json"
+            cache_path = Path(tmp_dir) / "chords_cache.jsonl"
+            backups_dir = Path(tmp_dir) / "backups"
+
+            manual_chords.write_text(
+                '{\n  "The Campfire Trio - Trail Song": "manual chords\\n"\n}\n',
+                encoding="utf-8",
+            )
+            cache_path.write_text(
+                '{"artist":"The Campfire Trio","title":"Trail Song","chords":"cached chords"}\n',
+                encoding="utf-8",
+            )
+
+            with patch.object(main, "MANUAL_CHORDS_PATH", manual_chords):
+                with patch.object(main, "CHORDS_CACHE_PATH", str(cache_path)):
+                    with patch.object(main, "CACHE_BACKUPS_DIR", backups_dir):
+                        summary = main._sync_manual_chords_to_cache()
+
+            self.assertEqual(summary["manual_entry_count"], 1)
+            self.assertEqual(summary["updated_count"], 1)
+            self.assertIsNotNone(summary["backup_path"])
+            self.assertTrue(Path(summary["backup_path"]).exists())
+            self.assertIn("cached chords", Path(summary["backup_path"]).read_text(encoding="utf-8"))
+            self.assertIn("manual chords", cache_path.read_text(encoding="utf-8"))
+
 
 if __name__ == "__main__":
     unittest.main()
