@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -142,10 +143,19 @@ def create_two_column_section(target, column_gap_inches=0.5):
     cols.set(qn('w:space'), str(int(column_gap_inches * 1440)))
 
 
-def add_contents_page(document, songs):
-    """Add a deterministic contents table before the song content."""
-    heading = document.add_paragraph("Contents")
-    set_paragraph_font(heading, 15)
+def add_contents_page(document, songs, generated_at=None):
+    """Add a deterministic title and contents table before the song content."""
+    song_count = len(songs or [])
+    title_text = "{} Campfire Songs".format(song_count)
+    if generated_at:
+        try:
+            generated_date = datetime.fromisoformat(generated_at).strftime("%Y-%m-%d")
+        except ValueError:
+            generated_date = str(generated_at)[:10]
+        title_text = "{} | {}".format(title_text, generated_date)
+
+    title = document.add_paragraph(title_text)
+    set_paragraph_font(title, 14)
 
     table = document.add_table(rows=1, cols=2)
     table.autofit = False
@@ -187,13 +197,19 @@ def add_contents_page(document, songs):
         set_paragraph_font(page_paragraph, 8)
 
 
-def add_header_footer(document):
+def add_header_footer(document, header_text="Campfire Songs"):
     """Add a header and footer with page numbers to the document."""
+    document.sections[0].different_first_page_header_footer = True
+
     # Add header
     header = document.sections[0].header
     paragraph = header.paragraphs[0]
-    paragraph.text = "Campfire Songs"
+    paragraph.text = header_text
     paragraph.style.font.size = Pt(14)
+
+    first_page_header = document.sections[0].first_page_header
+    if first_page_header.paragraphs:
+        first_page_header.paragraphs[0].text = ""
 
     # Add footer with page numbers
     footer = document.sections[0].footer

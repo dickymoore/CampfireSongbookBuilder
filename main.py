@@ -143,6 +143,28 @@ def _sync_manual_chords_to_cache():
     }
 
 
+def _sync_manual_lyrics_to_cache():
+    manual_lyrics = _load_manual_override_entries(MANUAL_LYRICS_PATH)
+    if not manual_lyrics:
+        return {
+            "manual_entry_count": 0,
+            "updated_count": 0,
+            "backup_path": None,
+        }
+
+    backup_path = backup_jsonl_file(LYRICS_CACHE_PATH, CACHE_BACKUPS_DIR, "pre_manual_sync")
+    updated_count = jsonl_sync_entries_from_mapping(
+        LYRICS_CACHE_PATH,
+        "lyrics",
+        manual_lyrics,
+    )
+    return {
+        "manual_entry_count": len(manual_lyrics),
+        "updated_count": updated_count,
+        "backup_path": backup_path,
+    }
+
+
 def _selection_issue(file_path, field, reason, record=None):
     issue = {
         "selection_name": Path(file_path).stem,
@@ -265,6 +287,11 @@ def main():
         action='store_true',
         help='Backup data/cache/chords_cache.jsonl and overwrite matching entries from data/manual_chords.json',
     )
+    parser.add_argument(
+        '--sync-manual-lyrics-to-cache',
+        action='store_true',
+        help='Backup data/cache/lyrics_cache.jsonl and overwrite matching entries from data/manual_lyrics.json',
+    )
     args = parser.parse_args()
 
     # Load config
@@ -340,6 +367,20 @@ def main():
             logging.info("Chord cache backup saved to %s.", summary["backup_path"])
         else:
             logging.info("No existing chord cache file was present to back up.")
+        return
+
+    if args.sync_manual_lyrics_to_cache:
+        summary = _sync_manual_lyrics_to_cache()
+        logging.info(
+            "Synced %d manual lyric entr%s into %s.",
+            summary["updated_count"],
+            "y" if summary["updated_count"] == 1 else "ies",
+            LYRICS_CACHE_PATH,
+        )
+        if summary["backup_path"]:
+            logging.info("Lyrics cache backup saved to %s.", summary["backup_path"])
+        else:
+            logging.info("No existing lyrics cache file was present to back up.")
         return
 
     # Load songs

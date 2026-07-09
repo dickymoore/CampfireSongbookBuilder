@@ -46,9 +46,10 @@ class TestDocumentFormatting(unittest.TestCase):
                     "bookmark_name": "song_2_the_campfire_trio_trail_song",
                 },
             ],
+            generated_at="2026-07-09T17:50:45+01:00",
         )
 
-        self.assertEqual(document.paragraphs[0].text, "Contents")
+        self.assertEqual(document.paragraphs[0].text, "2 Campfire Songs | 2026-07-09")
         self.assertEqual(len(document.tables), 1)
         table = document.tables[0]
         self.assertEqual(table.cell(0, 0).text, "Song")

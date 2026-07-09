@@ -188,6 +188,10 @@ def _markdown_song_block(artist, title, content):
     ]
 
 
+def _document_title(song_items):
+    return "{} Campfire Songs".format(len(song_items or []))
+
+
 def _render_song_item(
     document,
     song_item,
@@ -276,7 +280,6 @@ def create_document_from_cache(
         logger.debug("Initializing lyrics document")
         lyrics_document = Document()
         set_document_margins(lyrics_document, DEFAULT_MARGIN_INCHES)
-        add_header_footer(lyrics_document)
         lyrics_markdown_lines = []
         lyrics_render_items = []
 
@@ -284,7 +287,6 @@ def create_document_from_cache(
         logger.debug("Initializing chords document")
         chords_document = Document()
         set_document_margins(chords_document, CHORDS_MARGIN_INCHES)
-        add_header_footer(chords_document)
         chords_markdown_lines = []
         chords_render_items = []
     report_entries = []
@@ -530,7 +532,8 @@ def create_document_from_cache(
             chords_markdown_lines.extend(pending_chords_markdown_lines)
 
     if lyrics_output:
-        add_contents_page(lyrics_document, lyrics_render_items)
+        add_header_footer(lyrics_document, _document_title(lyrics_render_items))
+        add_contents_page(lyrics_document, lyrics_render_items, generated_at=generated_at)
         create_two_column_section(
             lyrics_document.add_section(WD_SECTION.NEW_PAGE),
             column_gap_inches=0.5,
@@ -580,7 +583,8 @@ def create_document_from_cache(
                 )
 
     if chords_output:
-        add_contents_page(chords_document, chords_render_items)
+        add_header_footer(chords_document, _document_title(chords_render_items))
+        add_contents_page(chords_document, chords_render_items, generated_at=generated_at)
         create_two_column_section(
             chords_document.add_section(WD_SECTION.NEW_PAGE),
             column_gap_inches=CHORDS_COLUMN_GAP_INCHES,

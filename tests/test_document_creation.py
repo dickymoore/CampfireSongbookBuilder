@@ -151,7 +151,7 @@ class TestDocumentCreation(unittest.TestCase):
             document = Document(output_path)
             paragraph_texts = [paragraph.text for paragraph in document.paragraphs]
 
-            self.assertEqual(paragraph_texts[0], "Contents")
+            self.assertEqual(paragraph_texts[0], "2 Campfire Songs | 2026-07-09")
             self.assertEqual(len(document.tables), 1)
             table = document.tables[0]
             self.assertEqual(table.cell(1, 0).text, "River Song - The Campfire Trio")
