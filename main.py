@@ -2,6 +2,7 @@ import logging
 import argparse
 import sys
 import re
+import json
 from pathlib import Path
 from app.load_config import load_config
 from app.load_songs import filter_favourite_songs, filter_tagged_songs, load_songs
@@ -85,6 +86,37 @@ def _write_generation_report(report_data):
     report_path = write_traceable_quality_report(report)
     print(summarize_traceable_quality_report(report, report_path))
     return report_path
+
+
+def _load_manual_override_entries(path):
+    target = Path(path)
+    if not target.exists():
+        return {}
+    try:
+        payload = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    return {
+        str(key): value
+        for key, value in payload.items()
+        if isinstance(key, str) and isinstance(value, str) and value.strip()
+    }
+
+
+def _load_caches_with_manual_overrides(include_lyrics=True, include_chords=True):
+    from app.cache import jsonl_load_all
+
+    lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics') if include_lyrics else {}
+    chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords') if include_chords else {}
+
+    if include_lyrics:
+        lyrics_cache.update(_load_manual_override_entries(MANUAL_LYRICS_PATH))
+    if include_chords:
+        chords_cache.update(_load_manual_override_entries(MANUAL_CHORDS_PATH))
+
+    return lyrics_cache, chords_cache
 
 
 def _selection_issue(file_path, field, reason, record=None):
@@ -349,10 +381,7 @@ def main():
         logging.info("Generating documents from cache only.")
         lyrics_output = lyrics_doc_path if not args.chords_only else None
         chords_output = chords_doc_path if not args.lyrics_only else None
-        # The document generation functions will now load from JSONL as needed
-        from app.cache import jsonl_load_all
-        lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
-        chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+        lyrics_cache, chords_cache = _load_caches_with_manual_overrides()
         from app.document_creation import create_document_from_cache
         report_data = create_document_from_cache(
             songs,
@@ -373,9 +402,7 @@ def main():
 
     if args.refresh_quality_state:
         logging.info("Refreshing quality state from cache only.")
-        from app.cache import jsonl_load_all
-        lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
-        chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+        lyrics_cache, chords_cache = _load_caches_with_manual_overrides()
         refresh_summary = refresh_quality_status_from_cache(
             songs,
             lyrics_cache,
@@ -404,8 +431,7 @@ def main():
 
     if args.lyrics_only:
         cache_lyrics(songs, _lazy_genius_client())
-        from app.cache import jsonl_load_all
-        lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
+        lyrics_cache, _ = _load_caches_with_manual_overrides(include_chords=False)
         from app.document_creation import create_document_from_cache
         report_data = create_document_from_cache(
             songs,
@@ -424,8 +450,7 @@ def main():
 
     if args.chords_only:
         cache_chords(songs)
-        from app.cache import jsonl_load_all
-        chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+        _, chords_cache = _load_caches_with_manual_overrides(include_lyrics=False)
         from app.document_creation import create_document_from_cache
         report_data = create_document_from_cache(
             songs,
@@ -445,9 +470,7 @@ def main():
     # Default: cache both and generate both docs
     cache_lyrics(songs, _lazy_genius_client())
     cache_chords(songs)
-    from app.cache import jsonl_load_all
-    lyrics_cache = jsonl_load_all(LYRICS_CACHE_PATH, 'lyrics')
-    chords_cache = jsonl_load_all(CHORDS_CACHE_PATH, 'chords')
+    lyrics_cache, chords_cache = _load_caches_with_manual_overrides()
     from app.document_creation import create_document_from_cache
     report_data = create_document_from_cache(
         songs,

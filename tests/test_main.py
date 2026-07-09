@@ -289,6 +289,33 @@ class TestMain(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             main._load_selection_records("missing-selection", [])
 
+    def test_load_caches_with_manual_overrides_prefers_manual_entries(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            lyrics_manual = Path(tmp_dir) / "manual_lyrics.json"
+            chords_manual = Path(tmp_dir) / "manual_chords.json"
+            lyrics_manual.write_text(
+                '{\n  "The Campfire Trio - Trail Song": "manual lyrics\\n"\n}\n',
+                encoding="utf-8",
+            )
+            chords_manual.write_text(
+                '{\n  "The Campfire Trio - Trail Song": "manual chords\\n"\n}\n',
+                encoding="utf-8",
+            )
+
+            with patch.object(main, "MANUAL_LYRICS_PATH", lyrics_manual):
+                with patch.object(main, "MANUAL_CHORDS_PATH", chords_manual):
+                    with patch(
+                        "app.cache.jsonl_load_all",
+                        side_effect=[
+                            {"The Campfire Trio - Trail Song": "cached lyrics"},
+                            {"The Campfire Trio - Trail Song": "cached chords"},
+                        ],
+                    ):
+                        lyrics_cache, chords_cache = main._load_caches_with_manual_overrides()
+
+        self.assertEqual(lyrics_cache["The Campfire Trio - Trail Song"], "manual lyrics\n")
+        self.assertEqual(chords_cache["The Campfire Trio - Trail Song"], "manual chords\n")
+
 
 if __name__ == "__main__":
     unittest.main()

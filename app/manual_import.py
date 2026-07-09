@@ -118,7 +118,7 @@ def _is_chord_line(line: str) -> bool:
     allowed = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#b/()|:+-_.%xX\t ")
     if any(ch not in allowed for ch in stripped):
         return False
-    tokens = [t for t in re.split(r"\s+", stripped) if t and t != "|"]
+    tokens = [t for t in re.split(r"\s+", stripped) if t and t not in {"|", "/"}]
     if not tokens:
         return False
     chordish = 0
@@ -148,6 +148,8 @@ def _extract_lyrics_from_chords(chords_text: str) -> str:
     )
 
     def _is_chord_token(tok: str) -> bool:
+        if tok in {"/", "|"}:
+            return True
         if tok in {"x", "X", "%"} or re.match(r"^(?:[xX]\d+|\d+[xX])$", tok):
             return True
         if re.match(
@@ -169,6 +171,9 @@ def _extract_lyrics_from_chords(chords_text: str) -> str:
         stripping = True
         removed = 0
         for tok in tokens:
+            if stripping and tok in {"/", "|"}:
+                removed += 1
+                continue
             if stripping and _is_chord_token(tok):
                 removed += 1
                 continue
