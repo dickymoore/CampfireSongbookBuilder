@@ -20,6 +20,7 @@ from app.document_formatting import (
     build_song_bookmark_name,
     create_two_column_section,
     set_document_margins,
+    set_document_mirrored_margins,
     set_paragraph_font,
     sort_songs,
 )
@@ -55,6 +56,10 @@ CHORDS_COLUMN_GAP_INCHES = 0.3
 PAGE_WIDTH_INCHES = 8.5
 DEFAULT_MARGIN_INCHES = 0.5
 CHORDS_MARGIN_INCHES = 0.4
+DEFAULT_INSIDE_MARGIN_INCHES = 0.99
+DEFAULT_OUTSIDE_MARGIN_INCHES = 0.1
+CHORDS_INSIDE_MARGIN_INCHES = 0.89
+CHORDS_OUTSIDE_MARGIN_INCHES = 0.1
 MONOSPACE_CHAR_WIDTH_FACTOR = 0.55
 
 
@@ -87,7 +92,9 @@ def _xml_safe_text(value):
 
 def _max_safe_chords_line_length(font_size=None):
     effective_font_size = font_size or CHORDS_BODY_FONT_SIZE
-    usable_width = PAGE_WIDTH_INCHES - (CHORDS_MARGIN_INCHES * 2)
+    usable_width = PAGE_WIDTH_INCHES - (
+        CHORDS_INSIDE_MARGIN_INCHES + CHORDS_OUTSIDE_MARGIN_INCHES
+    )
     total_gap = CHORDS_COLUMN_GAP_INCHES * (CHORDS_COLUMN_COUNT - 1)
     column_width_points = ((usable_width - total_gap) / CHORDS_COLUMN_COUNT) * 72
     monospace_char_width_points = effective_font_size * MONOSPACE_CHAR_WIDTH_FACTOR
@@ -280,6 +287,11 @@ def create_document_from_cache(
         logger.debug("Initializing lyrics document")
         lyrics_document = Document()
         set_document_margins(lyrics_document, DEFAULT_MARGIN_INCHES)
+        set_document_mirrored_margins(
+            lyrics_document,
+            DEFAULT_INSIDE_MARGIN_INCHES,
+            DEFAULT_OUTSIDE_MARGIN_INCHES,
+        )
         lyrics_markdown_lines = []
         lyrics_render_items = []
 
@@ -287,6 +299,11 @@ def create_document_from_cache(
         logger.debug("Initializing chords document")
         chords_document = Document()
         set_document_margins(chords_document, CHORDS_MARGIN_INCHES)
+        set_document_mirrored_margins(
+            chords_document,
+            CHORDS_INSIDE_MARGIN_INCHES,
+            CHORDS_OUTSIDE_MARGIN_INCHES,
+        )
         chords_markdown_lines = []
         chords_render_items = []
     report_entries = []

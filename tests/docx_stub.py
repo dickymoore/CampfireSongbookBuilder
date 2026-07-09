@@ -16,6 +16,8 @@ class _FakeFont:
     def __init__(self):
         self.size = None
         self.name = None
+        self.bold = None
+        self.color = types.SimpleNamespace(rgb=None)
 
 
 class _FakeStyle:
@@ -103,12 +105,15 @@ class _FakeTc:
 class _FakeSection:
     def __init__(self):
         self.header = _FakeHeaderFooter()
+        self.first_page_header = _FakeHeaderFooter()
         self.footer = _FakeHeaderFooter()
         self._sectPr = _FakeSectPr()
         self.top_margin = None
         self.bottom_margin = None
         self.left_margin = None
         self.right_margin = None
+        self.gutter = None
+        self.different_first_page_header_footer = False
 
 
 class _FakeCell:
@@ -268,6 +273,7 @@ def install_docx_stub():
     shared_stub = types.ModuleType("docx.shared")
     shared_stub.Pt = lambda value: value
     shared_stub.Inches = lambda value: value
+    shared_stub.RGBColor = lambda r, g, b: (r, g, b)
 
     enum_stub = types.ModuleType("docx.enum")
     section_stub = types.ModuleType("docx.enum.section")

@@ -3,7 +3,10 @@ from datetime import datetime
 
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.shared import Inches, Pt
+from docx.shared import Inches, Pt, RGBColor
+
+HEADER_COLOR = RGBColor(0xD9, 0x77, 0x06)
+PAGE_NUMBER_COLOR = RGBColor(0x9E, 0x2A, 0x2B)
 
 def set_document_margins(document, margin_in_inches):
     """Set the margins of the document."""
@@ -13,6 +16,24 @@ def set_document_margins(document, margin_in_inches):
         section.bottom_margin = Inches(margin_in_inches)
         section.left_margin = Inches(margin_in_inches)
         section.right_margin = Inches(margin_in_inches)
+
+
+def set_document_mirrored_margins(document, inside_margin_in_inches, outside_margin_in_inches):
+    """Set mirrored margins so odd/even pages swap the binding edge automatically."""
+    settings = getattr(document, "settings", None)
+    settings_element = getattr(settings, "_element", None)
+    if settings_element is not None:
+        mirror = settings_element.find(qn("w:mirrorMargins"))
+        if mirror is None:
+            mirror = OxmlElement("w:mirrorMargins")
+            settings_element.append(mirror)
+
+    gutter_inches = max(0, inside_margin_in_inches - outside_margin_in_inches)
+    for section in document.sections:
+        section.left_margin = Inches(outside_margin_in_inches)
+        section.right_margin = Inches(outside_margin_in_inches)
+        if hasattr(section, "gutter"):
+            section.gutter = Inches(gutter_inches)
 
 def set_paragraph_font(paragraph, font_size, font_name=None):
     """Set the font size of a paragraph."""
@@ -120,6 +141,61 @@ def add_page_ref_field(paragraph, bookmark_name):
     run._r.append(fld_char)
 
 
+def _append_field_run_properties(run, font_size=None, bold=False, color_rgb=None):
+    if font_size is not None:
+        run.font.size = Pt(font_size)
+    run.font.bold = bool(bold)
+    if color_rgb is not None:
+        run.font.color.rgb = color_rgb
+
+    r_pr = OxmlElement("w:rPr")
+    if bold:
+        r_pr.append(OxmlElement("w:b"))
+    if font_size is not None:
+        size = OxmlElement("w:sz")
+        size.set(qn("w:val"), str(int(font_size * 2)))
+        r_pr.append(size)
+    if color_rgb is not None:
+        color = OxmlElement("w:color")
+        if isinstance(color_rgb, tuple):
+            hex_value = "".join("{:02X}".format(component) for component in color_rgb)
+        else:
+            hex_value = str(color_rgb)
+        color.set(qn("w:val"), hex_value)
+        r_pr.append(color)
+    run._r.insert(0, r_pr)
+
+
+def add_page_number_field(paragraph, font_size=12, color_rgb=None, bold=False):
+    begin_run = paragraph.add_run()
+    _append_field_run_properties(begin_run, font_size=font_size, color_rgb=color_rgb, bold=bold)
+    fld_char = OxmlElement("w:fldChar")
+    fld_char.set(qn("w:fldCharType"), "begin")
+    begin_run._r.append(fld_char)
+
+    instr_run = paragraph.add_run()
+    _append_field_run_properties(instr_run, font_size=font_size, color_rgb=color_rgb, bold=bold)
+    instr_text = OxmlElement("w:instrText")
+    instr_text.set(qn("xml:space"), "preserve")
+    instr_text.text = "PAGE"
+    instr_run._r.append(instr_text)
+
+    separate_run = paragraph.add_run()
+    _append_field_run_properties(separate_run, font_size=font_size, color_rgb=color_rgb, bold=bold)
+    separate_char = OxmlElement("w:fldChar")
+    separate_char.set(qn("w:fldCharType"), "separate")
+    separate_run._r.append(separate_char)
+
+    result_run = paragraph.add_run("1")
+    _append_field_run_properties(result_run, font_size=font_size, color_rgb=color_rgb, bold=bold)
+
+    end_run = paragraph.add_run()
+    _append_field_run_properties(end_run, font_size=font_size, color_rgb=color_rgb, bold=bold)
+    end_char = OxmlElement("w:fldChar")
+    end_char.set(qn("w:fldCharType"), "end")
+    end_run._r.append(end_char)
+
+
 def _get_or_add_cols(sect_pr):
     cols = sect_pr.xpath('./w:cols')
     if cols:
@@ -204,8 +280,11 @@ def add_header_footer(document, header_text="Campfire Songs"):
     # Add header
     header = document.sections[0].header
     paragraph = header.paragraphs[0]
-    paragraph.text = header_text
-    paragraph.style.font.size = Pt(14)
+    paragraph.text = ""
+    run = paragraph.add_run(header_text)
+    run.font.size = Pt(14)
+    run.font.bold = True
+    run.font.color.rgb = HEADER_COLOR
 
     first_page_header = document.sections[0].first_page_header
     if first_page_header.paragraphs:
@@ -214,21 +293,12 @@ def add_header_footer(document, header_text="Campfire Songs"):
     # Add footer with page numbers
     footer = document.sections[0].footer
     paragraph = footer.paragraphs[0]
-    paragraph.text = "Page "
-    paragraph.style.font.size = Pt(12)
-    
-    # Add the page number field to the footer
-    run = paragraph.add_run()
-    fldChar = OxmlElement('w:fldChar')
-    fldChar.set(qn('w:fldCharType'), 'begin')
-    run._r.append(fldChar)
-    instrText = OxmlElement('w:instrText')
-    instrText.set(qn('xml:space'), 'preserve')
-    instrText.text = 'PAGE'
-    run._r.append(instrText)
-    fldChar = OxmlElement('w:fldChar')
-    fldChar.set(qn('w:fldCharType'), 'end')
-    run._r.append(fldChar)
+    paragraph.text = ""
+    label_run = paragraph.add_run("Page ")
+    label_run.font.size = Pt(12)
+    label_run.font.bold = True
+    label_run.font.color.rgb = PAGE_NUMBER_COLOR
+    add_page_number_field(paragraph, font_size=12, color_rgb=PAGE_NUMBER_COLOR, bold=True)
 
 def sort_songs(song_list):
     """Sort songs case-insensitively and ignoring special characters."""

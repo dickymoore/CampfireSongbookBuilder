@@ -8,7 +8,11 @@ install_docx_stub()
 
 from docx import Document  # noqa: E402
 
-from app.document_formatting import add_contents_page, create_two_column_section  # noqa: E402
+from app.document_formatting import (  # noqa: E402
+    add_contents_page,
+    create_two_column_section,
+    set_document_mirrored_margins,
+)
 
 
 class TestDocumentFormatting(unittest.TestCase):
@@ -61,3 +65,14 @@ class TestDocumentFormatting(unittest.TestCase):
         self.assertIn("tblBorders", table._tbl.xml)
         self.assertIn("tblLayout", table._tbl.xml)
         self.assertIn("noWrap", table.cell(0, 0)._tc.xml)
+
+    def test_set_document_mirrored_margins_enables_mirror_margins_and_sets_inside_outside(self):
+        document = Document()
+
+        set_document_mirrored_margins(document, 0.79, 0.01)
+
+        section = document.sections[0]
+        self.assertAlmostEqual(section.left_margin.inches, 0.01, places=2)
+        self.assertAlmostEqual(section.right_margin.inches, 0.01, places=2)
+        self.assertAlmostEqual(section.gutter.inches, 0.78, places=2)
+        self.assertIsNotNone(document.settings._element.find(qn("w:mirrorMargins")))
