@@ -56,10 +56,10 @@ CHORDS_COLUMN_GAP_INCHES = 0.3
 PAGE_WIDTH_INCHES = 8.5
 DEFAULT_MARGIN_INCHES = 0.5
 CHORDS_MARGIN_INCHES = 0.4
-DEFAULT_INSIDE_MARGIN_INCHES = 0.99
-DEFAULT_OUTSIDE_MARGIN_INCHES = 0.1
-CHORDS_INSIDE_MARGIN_INCHES = 0.89
-CHORDS_OUTSIDE_MARGIN_INCHES = 0.1
+DEFAULT_INSIDE_MARGIN_INCHES = 0.95
+DEFAULT_OUTSIDE_MARGIN_INCHES = 0.25
+CHORDS_INSIDE_MARGIN_INCHES = 0.85
+CHORDS_OUTSIDE_MARGIN_INCHES = 0.25
 MONOSPACE_CHAR_WIDTH_FACTOR = 0.55
 
 
@@ -259,6 +259,7 @@ def create_document_from_cache(
     pdf_output=False,
     report_all_content=False,
     include_questionable=False,
+    equal_margins=False,
 ):
     logger.debug("Running create_document_from_cache function")
 
@@ -287,11 +288,12 @@ def create_document_from_cache(
         logger.debug("Initializing lyrics document")
         lyrics_document = Document()
         set_document_margins(lyrics_document, DEFAULT_MARGIN_INCHES)
-        set_document_mirrored_margins(
-            lyrics_document,
-            DEFAULT_INSIDE_MARGIN_INCHES,
-            DEFAULT_OUTSIDE_MARGIN_INCHES,
-        )
+        if not equal_margins:
+            set_document_mirrored_margins(
+                lyrics_document,
+                DEFAULT_INSIDE_MARGIN_INCHES,
+                DEFAULT_OUTSIDE_MARGIN_INCHES,
+            )
         lyrics_markdown_lines = []
         lyrics_render_items = []
 
@@ -299,11 +301,12 @@ def create_document_from_cache(
         logger.debug("Initializing chords document")
         chords_document = Document()
         set_document_margins(chords_document, CHORDS_MARGIN_INCHES)
-        set_document_mirrored_margins(
-            chords_document,
-            CHORDS_INSIDE_MARGIN_INCHES,
-            CHORDS_OUTSIDE_MARGIN_INCHES,
-        )
+        if not equal_margins:
+            set_document_mirrored_margins(
+                chords_document,
+                CHORDS_INSIDE_MARGIN_INCHES,
+                CHORDS_OUTSIDE_MARGIN_INCHES,
+            )
         chords_markdown_lines = []
         chords_render_items = []
     report_entries = []

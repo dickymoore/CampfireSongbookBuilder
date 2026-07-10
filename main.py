@@ -258,6 +258,11 @@ def main():
         help='Rebuild data/review/quality_status.json from the current cache, then write a fresh quality report',
     )
     parser.add_argument('--pdf', action='store_true', help='Also generate PDFs when producing DOCX outputs (requires pandoc or LibreOffice)')
+    parser.add_argument(
+        '--equal-margins',
+        action='store_true',
+        help='Use equal left/right page margins instead of the default mirrored binding margins',
+    )
     parser.add_argument('--test-api', action='store_true', help='Test the Genius API key')
     parser.add_argument('--cache-only', action='store_true', help='Fetch and cache all lyrics and chords, but do not generate documents')
     parser.add_argument(
@@ -477,6 +482,7 @@ def main():
             report_source="generate_from_selection" if args.selection else "generate_from_cache",
             pdf_output=bool(args.pdf),
             include_questionable=bool(args.include_questionable),
+            equal_margins=bool(args.equal_margins),
         )
         report_data["source"] = "generate_from_selection" if args.selection else "generate_from_cache"
         report_data["invalid_song_rows"] = invalid_song_rows
@@ -506,6 +512,7 @@ def main():
             report_source="refresh_quality_state",
             pdf_output=False,
             report_all_content=True,
+            equal_margins=bool(args.equal_margins),
         )
         report_data["source"] = "refresh_quality_state"
         report_data["invalid_song_rows"] = invalid_song_rows
@@ -525,6 +532,7 @@ def main():
             selection_records=selection_records,
             report_source="lyrics_only_selection" if args.selection else "lyrics_only",
             include_questionable=bool(args.include_questionable),
+            equal_margins=bool(args.equal_margins),
         )
         report_data["source"] = "lyrics_only_selection" if args.selection else "lyrics_only"
         report_data["invalid_song_rows"] = invalid_song_rows
@@ -544,6 +552,7 @@ def main():
             selection_records=selection_records,
             report_source="chords_only_selection" if args.selection else "chords_only",
             include_questionable=bool(args.include_questionable),
+            equal_margins=bool(args.equal_margins),
         )
         report_data["source"] = "chords_only_selection" if args.selection else "chords_only"
         report_data["invalid_song_rows"] = invalid_song_rows
@@ -565,6 +574,7 @@ def main():
         selection_records=selection_records,
         report_source="full_generation_selection" if args.selection else "full_generation",
         include_questionable=bool(args.include_questionable),
+        equal_margins=bool(args.equal_margins),
     )
     report_data["source"] = "full_generation_selection" if args.selection else "full_generation"
     report_data["invalid_song_rows"] = invalid_song_rows

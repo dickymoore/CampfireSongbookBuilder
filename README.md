@@ -82,6 +82,23 @@ Run the application from the repo root.
 
   This is the mode to use if you want broad output and do not want the quality gate to suppress noisy-but-present songs.
 
+### Layout and margins
+
+- Default PDF/DOCX generation uses mirrored binding margins, so odd and even pages have different inside/outside spacing for printing and stapling:
+  ```sh
+  python main.py --generate-from-cache --pdf
+  ```
+
+- Use equal left/right margins instead:
+  ```sh
+  python main.py --generate-from-cache --pdf --equal-margins
+  ```
+
+- Equal margins also work with broader catalogue generation:
+  ```sh
+  python main.py --generate-from-cache --pdf --include-questionable --equal-margins
+  ```
+
 - Rebuild the quality state from the current cache and write a fresh report:
   ```sh
   python main.py --refresh-quality-state

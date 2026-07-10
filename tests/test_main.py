@@ -93,6 +93,7 @@ class TestMain(unittest.TestCase):
             create_document.call_args.args[4],
             "data/output/Favourites_Chords_Document.docx",
         )
+        self.assertFalse(create_document.call_args.kwargs["equal_margins"])
         write_report.assert_called_once()
 
     def test_generate_from_cache_tags_filters_song_list_before_generation(self):
@@ -139,7 +140,33 @@ class TestMain(unittest.TestCase):
             create_document.call_args.args[4],
             "data/output/Tag_Karaoke_Chords_Document.docx",
         )
+        self.assertFalse(create_document.call_args.kwargs["equal_margins"])
         write_report.assert_called_once()
+
+    def test_generate_from_cache_can_request_equal_margins(self):
+        songs = [{"Artist": "The Campfire Trio", "Title": "Trail Song"}]
+        report_data = {
+            "generated_at": "2026-05-20T12:00:00+01:00",
+            "report_type": "quality_run",
+            "source": "generate_from_cache",
+            "entries": [],
+            "selection_issues": [],
+            "pdf_outputs": [],
+            "pdf_errors": [],
+        }
+
+        with patch.object(sys, "argv", ["main.py", "--generate-from-cache", "--equal-margins"]):
+            with patch("main.load_config", return_value={"genius": {"client_access_token": "token"}}):
+                with patch("main.load_songs", return_value=(songs, [])):
+                    with patch("app.cache.jsonl_load_all", return_value={}):
+                        with patch(
+                            "app.document_creation.create_document_from_cache",
+                            return_value=report_data,
+                        ) as create_document:
+                            with patch("main._write_generation_report"):
+                                main.main()
+
+        self.assertTrue(create_document.call_args.kwargs["equal_margins"])
 
     def test_generate_from_cache_selection_uses_named_selection_records_and_reports_issues(self):
         songs = [
